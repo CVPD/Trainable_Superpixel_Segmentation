@@ -12,17 +12,17 @@
 		<relativePath />
 	</parent>
 
-	<groupId>com.mycompany</groupId>
-	<artifactId>Process_Pixels</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<groupId>EHU</groupId>
+	<artifactId>Trainable_Superpixel_Segmentation</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
 
-	<name>Process Pixels</name>
+	<name>Trainable Superpixel Segmentation</name>
 	<description>A Maven project implementing an ImageJ 1.x plugin.</description>
-	<url>http://mycompany.com/imagej/process-pixels/</url>
-	<inceptionYear>2012</inceptionYear>
+	<url></url>
+	<inceptionYear>2018</inceptionYear>
 	<organization>
-		<name>My Company</name>
-		<url>http://mycompany.com/</url>
+		<name>EHU</name>
+		<url>https://www.ehu.eus/es/web/informatika-fakultatea</url>
 	</organization>
 	<licenses>
 		<license>
@@ -33,9 +33,8 @@
 
 	<developers>
 		<developer>
-			<id>ctrueden</id>
-			<name>Curtis Rueden</name>
-			<url>http://imagej.net/User:Rueden</url>
+			<id>96jsalinas</id>
+			<name>Josu Salinas</name>
 			<roles>
 				<role>lead</role>
 				<role>developer</role>
@@ -45,45 +44,14 @@
 				<role>maintainer</role>
 			</roles>
 		</developer>
+		<developer>
+			<id>iarganda</id>
+			<name>Ignacio Arganda-Carreras</name>
+			<roles>
+				<role>Supervisor</role>
+			</roles>
+		</developer>
 	</developers>
-	<contributors>
-		<contributor>
-			<name>Johannes Schindelin</name>
-			<url>http://imagej.net/User:Schindelin</url>
-			<roles><role>founder</role></roles>
-			<properties><id>dscho</id></properties>
-		</contributor>
-		<contributor>
-			<name>Olivier Burri</name>
-			<url>http://imagej.net/User:Oburri</url>
-			<properties><id>lacan</id></properties>
-		</contributor>
-		<contributor>
-			<name>Mark Hiner</name>
-			<url>http://imagej.net/User:Hinerm</url>
-			<properties><id>hinerm</id></properties>
-		</contributor>
-		<contributor>
-			<name>Jules Maselbas</name>
-		</contributor>
-		<contributor>
-			<name>Kota Miura</name>
-			<url>http://imagej.net/User:Miura</url>
-			<properties><id>cmci</id></properties>
-		</contributor>
-		<contributor>
-			<name>Yili Zhao</name>
-			<url>http://imagej.net/User:Panovr</url>
-			<properties><id>panovr</id></properties>
-		</contributor>
-	</contributors>
-
-	<mailingLists>
-		<mailingList>
-			<name>ImageJ Forum</name>
-			<archive>http://forum.imagej.net/</archive>
-		</mailingList>
-	</mailingLists>
 
 	<scm>
 		<connection>scm:git:git://github.com/imagej/example-legacy-plugin</connection>
@@ -110,6 +78,16 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>ij</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nz.ac.waikato.cms.weka</groupId>
+			<artifactId>weka-stable</artifactId>
+			<version>3.8.0</version>
+		</dependency>
+		<dependency>
+			<groupId>fr.inra.ijpb</groupId>
+			<artifactId>MorphoLibJ_</artifactId>
+			<version>1.3.2</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -6,6 +6,8 @@
  *     http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+//Have just changed the name of the file
+
 package com.mycompany.imagej;
 
 import ij.IJ;
@@ -21,7 +23,7 @@ import ij.process.ImageProcessor;
  *
  * @author Johannes Schindelin
  */
-public class Process_Pixels implements PlugInFilter {
+public class Trainable_Superpixel_Segmentation implements PlugInFilter {
 	protected ImagePlus image;
 
 	// image property members
