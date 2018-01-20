@@ -8,7 +8,7 @@
 
 //Have just changed the name of the file
 
-package com.mycompany.imagej;
+package com.EHU.imagej;
 
 import ij.IJ;
 import ij.ImageJ;
@@ -172,7 +172,7 @@ public class Trainable_Superpixel_Segmentation implements PlugInFilter {
 	 */
 	public static void main(String[] args) {
 		// set the plugins.dir property to make the plugin appear in the Plugins menu
-		Class<?> clazz = Process_Pixels.class;
+		Class<?> clazz = Trainable_Superpixel_Segmentation.class;
 		String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
 		String pluginsDir = url.substring("file:".length(), url.length() - clazz.getName().length() - ".class".length());
 		System.setProperty("plugins.dir", pluginsDir);
