@@ -1,1 +1,2 @@
-TODO: Add description of the project.
+#Trainable Superpixel Segmentation
+This plugin has as a purpose the supervised classification of images using superpixels. This plugin will be based on a number of plugins that have already been developed and are available as open source tools that offer the ability to segment images in superpixels and to do supervised segmentation of images based on pixels. This document will be further updated.
