@@ -1,13 +1,60 @@
 package com.EHU.imagej;
 
+
+import ij.ImagePlus;
+import ij.measure.ResultsTable;
+import inra.ijpb.measure.IntensityMeasures;
+
+import java.util.ArrayList;
+
+
 /**
  * This class will hold the features that each superpixel region has.
  * This features will be the intensity measures from the MorphoLibJ library.
  */
-
-import inra.ijpb.measure.IntensityMeasures;
-
 public class RegionFeatures {
+
+    private ResultsTable maxTable = null;
+    private ResultsTable minTable = null;
+    private ResultsTable meanTable = null;
+    private ResultsTable modeTable = null;
+    private ResultsTable medianTable = null;
+    private ResultsTable stdDevTable = null;
+    private ResultsTable kurtosisTable = null;
+    private ResultsTable skewnessTable = null;
+
+    public ResultsTable getMaxTable() {
+        return maxTable;
+    }
+
+    public ResultsTable getMinTable() {
+        return minTable;
+    }
+
+    public ResultsTable getMeanTable() {
+        return meanTable;
+    }
+
+    public ResultsTable getModeTable() {
+        return modeTable;
+    }
+
+    public ResultsTable getMedianTable() {
+        return medianTable;
+    }
+
+    public ResultsTable getStdDevTable() {
+        return stdDevTable;
+    }
+
+    public ResultsTable getKurtosisTable() {
+        return kurtosisTable;
+    }
+
+    public ResultsTable getSkewnessTable() {
+        return skewnessTable;
+    }
+
 
     /**
      * enum that lists the Features that can be obtained from the MorphoLibJ Intensity Measures
@@ -63,7 +110,7 @@ public class RegionFeatures {
         }
 
         /**
-         * Based on provided label returns Feature with that label
+         * Based on provided label returns Feature with that labelx
          * @param fLabel String with the name of the feature
          * @return Feature which matches the provided String
          */
@@ -82,5 +129,50 @@ public class RegionFeatures {
         }
 
     };
+
+    /**
+     * Calculate the features of every region
+     * @param inputImage ImagePlus with the features to be calculated
+     * @param labelImage ImagePlus with the regions
+     * @param selectedFeatures ArrayList with the features that are going to be calculated
+     */
+    public RegionFeatures(ImagePlus inputImage, ImagePlus labelImage, ArrayList<Feature> selectedFeatures){
+
+        IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
+
+        /*
+        Calculate features for selected features
+         */
+        for (Feature selectedFeature : selectedFeatures) {
+            switch (selectedFeature) {
+                case Max:
+                    maxTable = calculator.getMax();
+                    break;
+                case Min:
+                    minTable = calculator.getMin();
+                    break;
+                case Mean:
+                    meanTable = calculator.getMean();
+                    break;
+                case Mode:
+                    modeTable = calculator.getMode();
+                    break;
+                case Median:
+                    medianTable = calculator.getMedian();
+                    break;
+                case StdDev:
+                    stdDevTable = calculator.getStdDev();
+                    break;
+                case Kurtosis:
+                    kurtosisTable = calculator.getKurtosis();
+                    break;
+                case Skewness:
+                    skewnessTable = calculator.getSkewness();
+                    break;
+            }
+        }
+
+    }
+
 
 }
