@@ -1,10 +1,9 @@
 package trainableSuperpixelSegmentation;
 
 import com.EHU.imagej.RegionFeatures;
+import com.EHU.imagej.TrainableSuperpixelSegmentation;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.measure.ResultsTable;
-import inra.ijpb.measure.IntensityMeasures;
 
 import java.util.ArrayList;
 
@@ -23,36 +22,8 @@ public class testSuperpixelSegmentation{
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("StdDev"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Max"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Min"));
-        ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
-        final IntensityMeasures im = new IntensityMeasures( inputImage, labelImage );
-        results.add( im.getMean() );
-        results.add( im.getStdDev() );
-        results.add( im.getMax() );
-        results.add( im.getMin() );
-        results.add( im.getMedian() );
-        results.add( im.getMode() );
-        results.add( im.getSkewness() );
-        results.add( im.getKurtosis() );
-        results.add( im.getNumberOfVoxels() );
-        results.add( im.getVolume() );
-
-        ResultsTable mergedTable = new ResultsTable();
-        final int numLabels = results.get( 0 ).getCounter();
-
-        for(int i=0; i < numLabels; ++i)
-        {
-            mergedTable.incrementCounter();
-            String label = results.get( 0 ).getLabel( i );
-            mergedTable.addLabel(label);
-
-            for (ResultsTable result : results) {
-                String measure = result.getColumnHeading(0);
-                double value = result.getValue(measure, i);
-                mergedTable.addValue(measure, value);
-            }
-        }
-
-        mergedTable.show( inputImage.getShortTitle() +
-                "-intensity-measurements" );
+        ArrayList<Integer> temp = new ArrayList<Integer>();
+        TrainableSuperpixelSegmentation test = new TrainableSuperpixelSegmentation(inputImage,labelImage,temp, selectedFeatures);
+        test.showFeaturesByRegion();
     }
 }
