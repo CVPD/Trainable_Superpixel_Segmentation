@@ -23,7 +23,6 @@ public class testSuperpixelSegmentation{
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("StdDev"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Max"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Min"));
-        RegionFeatures regionFeatures = new RegionFeatures(inputImage,labelImage,selectedFeatures);
         ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
         final IntensityMeasures im = new IntensityMeasures( inputImage, labelImage );
         results.add( im.getMean() );
@@ -40,17 +39,16 @@ public class testSuperpixelSegmentation{
         ResultsTable mergedTable = new ResultsTable();
         final int numLabels = results.get( 0 ).getCounter();
 
-        for(int i=0; i < numLabels; i++ )
+        for(int i=0; i < numLabels; ++i)
         {
             mergedTable.incrementCounter();
             String label = results.get( 0 ).getLabel( i );
             mergedTable.addLabel(label);
 
-            for( int j=0; j<results.size(); j++ )
-            {
-                String measure = results.get( j ).getColumnHeading( 0 );
-                double value = results.get( j ).getValue( measure, i );
-                mergedTable.addValue( measure, value );
+            for (ResultsTable result : results) {
+                String measure = result.getColumnHeading(0);
+                double value = result.getValue(measure, i);
+                mergedTable.addValue(measure, value);
             }
         }
 
