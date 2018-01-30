@@ -2,6 +2,9 @@ package com.EHU.imagej;
 
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
 import weka.core.Instances;
 
 import java.util.ArrayList;
@@ -15,7 +18,7 @@ public class TrainableSuperpixelSegmentation {
     private ImagePlus inputImage;
     private ImagePlus labelImage;
     private ResultsTable mergedTable;
-    private ArrayList<Instances> instances;
+    private Instances instances;
 
     /**
      *
@@ -79,6 +82,23 @@ public class TrainableSuperpixelSegmentation {
                 mergedTable.addValue(measure, value);
             }
         }
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        int numFeatures = mergedTable.getLastColumn(); //Take into account it starts in index 0
+        for(int i=0;i<numFeatures+1;++i){
+            attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
+        }
+
+        instances = new Instances("dataset",attributes,0);
+        for(int i=0;i<mergedTable.size();++i){
+            Instance inst = new DenseInstance(numFeatures+1);//numFeatures is the index, add 1 to get number of attributes needed
+            for(int j=0;j<(numFeatures+1);++j){
+                inst.setValue(j,mergedTable.getValue(j,i));
+            }
+            instances.add(inst);
+        }
+        System.out.println(instances.toString());
+
+
 
     }
 
