@@ -54,14 +54,14 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:git://github.com/imagej/example-legacy-plugin</connection>
-		<developerConnection>scm:git:git@github.com:imagej/example-legacy-plugin</developerConnection>
+		<connection>scm:git:git://github.com/96jsalinas/Trainable_Superpixel_Segmentation</connection>
+		<developerConnection>scm:git:git@github.com:96jsalinas/Trainable_Superpixel_Segmentation</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://github.com/imagej/example-legacy-plugin</url>
+		<url>https://github.com/96jsalinas/Trainable_Superpixel_Segmentation</url>
 	</scm>
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url>https://github.com/imagej/example-legacy-plugin/issues</url>
+		<url>https://github.com/96jsalinas/Trainable_Superpixel_Segmentation/issues</url>
 	</issueManagement>
 	<ciManagement>
 		<system>None</system>
