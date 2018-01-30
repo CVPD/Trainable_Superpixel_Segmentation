@@ -96,14 +96,11 @@ public class TrainableSuperpixelSegmentation {
             }
             instances.add(inst);
         }
-        System.out.println(instances.toString());
-
-
-
     }
 
     public void showFeaturesByRegion(){
         mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
+        System.out.println(instances.toString());
     }
 
 
