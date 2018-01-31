@@ -27,12 +27,13 @@ public class testSuperpixelSegmentation{
         TrainableSuperpixelSegmentation test = new TrainableSuperpixelSegmentation(inputImage,labelImage, selectedFeatures);
         test.showFeaturesByRegion();
         IBk exampleClassifier = new IBk();
-        int[] rice = new int[2];
-        rice[0] = 30; rice[1]=43;
+        int[] rice = new int[4];
+        rice[0] = 30; rice[1]=43; rice[2]=96;rice[3]=99;
         int[] background = new int[1];
         background[0] = 1;
         ArrayList<int[]> tags = new ArrayList<>();
-        tags.add(rice); tags.add(background);
+        tags.add(background); tags.add(rice);
         test.trainClassifier(exampleClassifier,tags);
+        test.applyClassifier();
     }
 }

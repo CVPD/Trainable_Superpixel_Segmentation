@@ -19,7 +19,9 @@ public class TrainableSuperpixelSegmentation {
     private ImagePlus inputImage;
     private ImagePlus labelImage;
     private ResultsTable mergedTable;
-    private Instances instances;
+    private Instances unlabeled;
+    private Instances labeled;
+    private AbstractClassifier trainedClassifier;
 
     /**
      * Creates instance of TrainableSuperpixelSegmentation based on an image and it's corresponding label image and a list of selected features
@@ -35,7 +37,7 @@ public class TrainableSuperpixelSegmentation {
     }
 
     /**
-     * Calculates the selected features for each region and saves them on the private variable instances
+     * Calculates the selected features for each region and saves them on the private variable unlabeled
      */
     private void calculateRegionFeatures(){
         RegionFeatures features = new RegionFeatures(inputImage,labelImage,selectedFeatures);
@@ -87,15 +89,17 @@ public class TrainableSuperpixelSegmentation {
         for(int i=0;i<numFeatures+1;++i){
             attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
         }
-
-        instances = new Instances("dataset",attributes,0);
+        attributes.add(new Attribute("Class"));
+        unlabeled = new Instances("dataset",attributes,0);
         for(int i=0;i<mergedTable.size();++i){
-            Instance inst = new DenseInstance(numFeatures+1);//numFeatures is the index, add 1 to get number of attributes needed
+            Instance inst = new DenseInstance(numFeatures+2);//numFeatures is the index, add 1 to get number of attributes needed plus class
             for(int j=0;j<(numFeatures+1);++j){
                 inst.setValue(j,mergedTable.getValue(j,i));
             }
-            instances.add(inst);
+            inst.setValue(numFeatures+1,0);//set class as 0
+            unlabeled.add(inst);
         }
+        unlabeled.setClassIndex(numFeatures+1);
     }
 
     /**
@@ -103,7 +107,7 @@ public class TrainableSuperpixelSegmentation {
      */
     public void showFeaturesByRegion(){
         mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
-        System.out.println(instances.toString());
+        System.out.println(unlabeled.toString());
     }
 
     /**
@@ -135,6 +139,24 @@ public class TrainableSuperpixelSegmentation {
             classifier.buildClassifier(trainingData);
         } catch (Exception e) {
             System.out.println("Error when building classifier");
+            e.printStackTrace();
+        }
+        trainedClassifier = classifier;
+    }
+
+    /**
+     * Applies classifier to unlabeled data and creates ne Instances in labeled private variables
+     */
+    public void applyClassifier(){
+        try {
+            labeled = new Instances(unlabeled); //Copy of unlabeled to label
+            for (int i = 0; i < unlabeled.numInstances(); ++i) {
+                double classLabel = trainedClassifier.classifyInstance(unlabeled.instance(i));
+                labeled.instance(i).setClassValue(classLabel);
+            }
+            System.out.println(labeled.toString());
+        } catch (Exception e) {
+            System.out.println("Error when applying classifier");
             e.printStackTrace();
         }
     }
