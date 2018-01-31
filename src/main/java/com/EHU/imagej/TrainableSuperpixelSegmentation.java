@@ -2,6 +2,7 @@ package com.EHU.imagej;
 
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
+import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -21,12 +22,12 @@ public class TrainableSuperpixelSegmentation {
     private Instances instances;
 
     /**
-     *
-     * @param originalImage Original image ImagePlus
-     * @param labelImage clustered image ImagePlus
-     * @param tags ArrayList of Integers with the tags of the labeled clusters, it's length has to be equal to the number of clusters in labelImage
+     * Creates instance of TrainableSuperpixelSegmentation based on an image and it's corresponding label image and a list of selected features
+     * @param originalImage
+     * @param labels
+     * @param features
      */
-    public TrainableSuperpixelSegmentation(ImagePlus originalImage, ImagePlus labels, ArrayList<Integer> tags, ArrayList<RegionFeatures.Feature> features){
+    public TrainableSuperpixelSegmentation(ImagePlus originalImage, ImagePlus labels, ArrayList<RegionFeatures.Feature> features){
         selectedFeatures = features;
         inputImage = originalImage;
         labelImage = labels;
@@ -34,8 +35,7 @@ public class TrainableSuperpixelSegmentation {
     }
 
     /**
-     * This method will calculate the selected features for each region
-     * @param selectedFeatures
+     * Calculates the selected features for each region and saves them on the private variable instances
      */
     private void calculateRegionFeatures(){
         RegionFeatures features = new RegionFeatures(inputImage,labelImage,selectedFeatures);
@@ -98,9 +98,23 @@ public class TrainableSuperpixelSegmentation {
         }
     }
 
+    /**
+     * Outputs the features by region through a results table and through printing the created Instances
+     */
     public void showFeaturesByRegion(){
         mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
         System.out.println(instances.toString());
+    }
+
+    /**
+     * Trains classifiers based on previously created features and a list of classes with their corresponding regions
+     * @param classifier
+     * @param classRegions
+     */
+    public void trainClassifier(AbstractClassifier classifier, ArrayList<Integer[]> classRegions){
+
+
+
     }
 
 
