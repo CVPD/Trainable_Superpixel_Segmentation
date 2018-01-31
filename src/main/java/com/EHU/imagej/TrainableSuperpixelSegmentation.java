@@ -111,10 +111,32 @@ public class TrainableSuperpixelSegmentation {
      * @param classifier
      * @param classRegions
      */
-    public void trainClassifier(AbstractClassifier classifier, ArrayList<Integer[]> classRegions){
+    public void trainClassifier(AbstractClassifier classifier, ArrayList<int[]> classRegions){
 
-
-
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        int numFeatures = mergedTable.getLastColumn(); //Take into account it starts in index 0
+        for(int i=0;i<numFeatures+1;++i){
+            attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
+        }
+        attributes.add(new Attribute("Class"));
+        Instances trainingData = new Instances("training data",attributes,0);
+        for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
+            for(int j=0;j<classRegions.get(i).length;++j){
+                Instance inst = new DenseInstance(numFeatures+2);//numFeatures is the index, add 2 to get number of attributes needed plus class
+                for(int k=0;k<(numFeatures+1);++k){
+                    inst.setValue(k,mergedTable.getValue(k,classRegions.get(i)[j]));
+                }
+                inst.setValue(numFeatures+1,i);
+                trainingData.add(inst);
+            }
+        }
+        trainingData.setClassIndex(numFeatures+1);
+        try {
+            classifier.buildClassifier(trainingData);
+        } catch (Exception e) {
+            System.out.println("Error when building classifier");
+            e.printStackTrace();
+        }
     }
 
 

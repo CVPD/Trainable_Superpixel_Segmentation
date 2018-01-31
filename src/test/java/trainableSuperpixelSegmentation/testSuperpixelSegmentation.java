@@ -4,6 +4,7 @@ import com.EHU.imagej.RegionFeatures;
 import com.EHU.imagej.TrainableSuperpixelSegmentation;
 import ij.IJ;
 import ij.ImagePlus;
+import weka.classifiers.lazy.IBk;
 
 import java.util.ArrayList;
 
@@ -13,7 +14,7 @@ public class testSuperpixelSegmentation{
         inputImage.show();
         ImagePlus labelImage = IJ.openImage();
         labelImage.show();
-        ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<RegionFeatures.Feature>();
+        ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<>();
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mean"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Median"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mode"));
@@ -22,8 +23,16 @@ public class testSuperpixelSegmentation{
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("StdDev"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Max"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Min"));
-        ArrayList<Integer> temp = new ArrayList<Integer>();
-        TrainableSuperpixelSegmentation test = new TrainableSuperpixelSegmentation(inputImage,labelImage,temp, selectedFeatures);
+
+        TrainableSuperpixelSegmentation test = new TrainableSuperpixelSegmentation(inputImage,labelImage, selectedFeatures);
         test.showFeaturesByRegion();
+        IBk exampleClassifier = new IBk();
+        int[] rice = new int[2];
+        rice[0] = 30; rice[1]=43;
+        int[] background = new int[1];
+        background[0] = 1;
+        ArrayList<int[]> tags = new ArrayList<>();
+        tags.add(rice); tags.add(background);
+        test.trainClassifier(exampleClassifier,tags);
     }
 }
