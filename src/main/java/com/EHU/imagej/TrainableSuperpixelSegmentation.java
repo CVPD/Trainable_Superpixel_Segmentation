@@ -2,6 +2,11 @@ package com.EHU.imagej;
 
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
+import ij.process.ByteProcessor;
+import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
+import inra.ijpb.label.LabelImages;
+import org.w3c.dom.Attr;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -9,6 +14,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Main class of the library that will conduct the classification of the images.
@@ -22,6 +28,7 @@ public class TrainableSuperpixelSegmentation {
     private Instances unlabeled;
     private Instances labeled;
     private AbstractClassifier trainedClassifier;
+
 
     /**
      * Creates instance of TrainableSuperpixelSegmentation based on an image and it's corresponding label image and a list of selected features
@@ -159,6 +166,24 @@ public class TrainableSuperpixelSegmentation {
             System.out.println("Error when applying classifier");
             e.printStackTrace();
         }
+        int height = inputImage.getHeight();
+        int width = inputImage.getWidth();
+        float tags[] = new float[height*width];
+        ImageProcessor ip = labelImage.getProcessor();
+        for (int x=0;x<width;++x){
+            for(int y=0;y<height;++y){
+                int index = ip.getPixel(x,y);
+                if(index==0){ //edge pixel
+                    tags[x+y*width]= index;
+                }else {
+                    Instance instance = labeled.get(index - 1);
+                    tags[x+y*width]= (float) instance.classValue();
+                }
+            }
+        }
+        FloatProcessor processor = new FloatProcessor(width,height,tags);
+        ImagePlus result = new ImagePlus("Labeled image",processor);
+        result.show();
     }
 
 
