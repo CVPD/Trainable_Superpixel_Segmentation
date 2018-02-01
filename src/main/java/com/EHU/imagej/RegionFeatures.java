@@ -94,6 +94,13 @@ public class RegionFeatures {
     };
 
 
+    /**
+     * Calculates the selected features of each region based on an input image and a labeled image
+     * @param inputImage ImagePlus input image from which the features will be calculated
+     * @param labelImage ImagePlus where the labels are located
+     * @param selectedFeatures ArrayList of Feature with the features that need to be calculated
+     * @return ResultsTable with the features of each region from the labelImage
+     */
     public static ResultsTable calculateRegionFeatures(ImagePlus inputImage, ImagePlus labelImage, ArrayList<Feature> selectedFeatures){
         IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
         ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();

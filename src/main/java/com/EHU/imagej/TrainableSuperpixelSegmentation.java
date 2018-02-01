@@ -43,7 +43,6 @@ public class TrainableSuperpixelSegmentation {
      * Calculates the selected features for each region and saves them on the private variable unlabeled
      */
     private void calculateRegionFeatures(){
-        //RegionFeatures(inputImage, labelImage, selectedFeatures)
         mergedTable = RegionFeatures.calculateRegionFeatures(inputImage,labelImage,selectedFeatures);
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         int numFeatures = mergedTable.getLastColumn(); //Take into account it starts in index 0
