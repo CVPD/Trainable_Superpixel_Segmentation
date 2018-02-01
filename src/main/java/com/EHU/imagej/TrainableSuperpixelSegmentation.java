@@ -43,50 +43,8 @@ public class TrainableSuperpixelSegmentation {
      * Calculates the selected features for each region and saves them on the private variable unlabeled
      */
     private void calculateRegionFeatures(){
-        RegionFeatures features = new RegionFeatures(inputImage,labelImage,selectedFeatures);
-        ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
-        for (RegionFeatures.Feature selectedFeature : selectedFeatures) {
-            switch (selectedFeature) {
-                case Max:
-                    results.add( features.getMaxTable() );
-                    break;
-                case Min:
-                    results.add( features.getMinTable() );
-                    break;
-                case Mean:
-                    results.add( features.getMeanTable() );
-                    break;
-                case Mode:
-                    results.add( features.getModeTable() );
-                    break;
-                case Median:
-                    results.add( features.getMedianTable() );
-                    break;
-                case StdDev:
-                    results.add( features.getStdDevTable() );
-                    break;
-                case Kurtosis:
-                    results.add( features.getKurtosisTable() );
-                    break;
-                case Skewness:
-                    results.add( features.getSkewnessTable() );
-                    break;
-            }
-        }
-        mergedTable = new ResultsTable();
-        final int numLabels = results.get( 0 ).getCounter();
-        for(int i=0; i < numLabels; ++i)
-        {
-            mergedTable.incrementCounter();
-            String label = results.get( 0 ).getLabel( i );
-            mergedTable.addLabel(label);
-
-            for (ResultsTable result : results) {
-                String measure = result.getColumnHeading(0);
-                double value = result.getValue(measure, i);
-                mergedTable.addValue(measure, value);
-            }
-        }
+        //RegionFeatures(inputImage, labelImage, selectedFeatures)
+        mergedTable = RegionFeatures.calculateRegionFeatures(inputImage,labelImage,selectedFeatures);
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         int numFeatures = mergedTable.getLastColumn(); //Take into account it starts in index 0
         for(int i=0;i<numFeatures+1;++i){

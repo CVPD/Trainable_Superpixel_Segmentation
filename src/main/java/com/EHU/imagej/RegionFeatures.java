@@ -4,7 +4,12 @@ package com.EHU.imagej;
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
 import inra.ijpb.measure.IntensityMeasures;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 
@@ -13,48 +18,6 @@ import java.util.ArrayList;
  * This features will be the intensity measures from the MorphoLibJ library.
  */
 public class RegionFeatures {
-
-    private ResultsTable maxTable = null;
-    private ResultsTable minTable = null;
-    private ResultsTable meanTable = null;
-    private ResultsTable modeTable = null;
-    private ResultsTable medianTable = null;
-    private ResultsTable stdDevTable = null;
-    private ResultsTable kurtosisTable = null;
-    private ResultsTable skewnessTable = null;
-
-    public ResultsTable getMaxTable() {
-        return maxTable;
-    }
-
-    public ResultsTable getMinTable() {
-        return minTable;
-    }
-
-    public ResultsTable getMeanTable() {
-        return meanTable;
-    }
-
-    public ResultsTable getModeTable() {
-        return modeTable;
-    }
-
-    public ResultsTable getMedianTable() {
-        return medianTable;
-    }
-
-    public ResultsTable getStdDevTable() {
-        return stdDevTable;
-    }
-
-    public ResultsTable getKurtosisTable() {
-        return kurtosisTable;
-    }
-
-    public ResultsTable getSkewnessTable() {
-        return skewnessTable;
-    }
-
 
     /**
      * enum that lists the Features that can be obtained from the MorphoLibJ Intensity Measures
@@ -130,48 +93,54 @@ public class RegionFeatures {
 
     };
 
-    /**
-     * Calculate the features of every region
-     * @param inputImage ImagePlus with the features to be calculated
-     * @param labelImage ImagePlus with the regions
-     * @param selectedFeatures ArrayList with the features that are going to be calculated
-     */
-    public RegionFeatures(ImagePlus inputImage, ImagePlus labelImage, ArrayList<Feature> selectedFeatures){
 
+    public static ResultsTable calculateRegionFeatures(ImagePlus inputImage, ImagePlus labelImage, ArrayList<Feature> selectedFeatures){
         IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
-
-        /*
-        Calculate features for selected features
-         */
+        ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
         for (Feature selectedFeature : selectedFeatures) {
             switch (selectedFeature) {
                 case Max:
-                    maxTable = calculator.getMax();
+                    results.add( calculator.getMax() );
                     break;
                 case Min:
-                    minTable = calculator.getMin();
+                    results.add( calculator.getMin() );
                     break;
                 case Mean:
-                    meanTable = calculator.getMean();
+                    results.add( calculator.getMean() );
                     break;
                 case Mode:
-                    modeTable = calculator.getMode();
+                    results.add( calculator.getMode() );
                     break;
                 case Median:
-                    medianTable = calculator.getMedian();
+                    results.add( calculator.getMedian() );
                     break;
                 case StdDev:
-                    stdDevTable = calculator.getStdDev();
+                    results.add( calculator.getStdDev() );
                     break;
                 case Kurtosis:
-                    kurtosisTable = calculator.getKurtosis();
+                    results.add( calculator.getKurtosis() );
                     break;
                 case Skewness:
-                    skewnessTable = calculator.getSkewness();
+                    results.add( calculator.getSkewness() );
                     break;
             }
         }
 
+        ResultsTable mergedTable = new ResultsTable();
+        final int numLabels = results.get( 0 ).getCounter();
+        for(int i=0; i < numLabels; ++i)
+        {
+            mergedTable.incrementCounter();
+            String label = results.get( 0 ).getLabel( i );
+            mergedTable.addLabel(label);
+
+            for (ResultsTable result : results) {
+                String measure = result.getColumnHeading(0);
+                double value = result.getValue(measure, i);
+                mergedTable.addValue(measure, value);
+            }
+        }
+        return  mergedTable;
     }
 
 
