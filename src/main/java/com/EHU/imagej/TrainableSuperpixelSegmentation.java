@@ -28,9 +28,9 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Creates instance of TrainableSuperpixelSegmentation based on an image and it's corresponding label image and a list of selected features
-     * @param originalImage
-     * @param labels
-     * @param features
+     * @param originalImage ImagePlus image that will be analyzed
+     * @param labels ImagePlus labeled image of the originalImage
+     * @param features ArrayList of Features (from RegionFeatures.Feature) that represent the features that will be calculated
      */
     public TrainableSuperpixelSegmentation(ImagePlus originalImage, ImagePlus labels, ArrayList<RegionFeatures.Feature> features){
         selectedFeatures = features;
@@ -115,8 +115,8 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Trains classifiers based on previously created features and a list of classes with their corresponding regions
-     * @param classifier
-     * @param classRegions
+     * @param classifier AbstractClassifier that will be used to classify the instances
+     * @param classRegions ArrayList of int[] where each int[] represents the labels of superpixels that belong to the class indicated by their index in the ArrayList
      */
     public void trainClassifier(AbstractClassifier classifier, ArrayList<int[]> classRegions){
 
