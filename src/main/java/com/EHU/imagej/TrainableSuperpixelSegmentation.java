@@ -2,11 +2,8 @@ package com.EHU.imagej;
 
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
-import ij.process.ByteProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
-import inra.ijpb.label.LabelImages;
-import org.w3c.dom.Attr;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -14,7 +11,6 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * Main class of the library that will conduct the classification of the images.
