@@ -1,4 +1,4 @@
-package com.EHU.imagej;
+package eus.ehu.superpixel.learning.supervised;
 
 
 import ij.ImagePlus;

@@ -1,7 +1,7 @@
 package trainableSuperpixelSegmentation;
 
-import com.EHU.imagej.RegionFeatures;
-import com.EHU.imagej.TrainableSuperpixelSegmentation;
+import eus.ehu.superpixel.learning.supervised.RegionFeatures;
+import eus.ehu.superpixel.learning.supervised.TrainableSuperpixelSegmentation;
 import ij.IJ;
 import ij.ImagePlus;
 import weka.classifiers.lazy.IBk;
