@@ -8,7 +8,7 @@ import weka.classifiers.lazy.IBk;
 
 import java.util.ArrayList;
 
-public class testSuperpixelSegmentation{
+public class TestSuperpixelSegmentation{
     public static void main(final String[] args){
         ImagePlus inputImage = IJ.openImage("D:\\Proiektuak\\TFG\\Trainable_Superpixel_Segmentation\\src\\test\\resources\\grains.png");
         inputImage.show();
