@@ -10,9 +10,9 @@ import java.util.ArrayList;
 
 public class TestSuperpixelSegmentation{
     public static void main(final String[] args){
-        ImagePlus inputImage = IJ.openImage("D:\\Proiektuak\\TFG\\Trainable_Superpixel_Segmentation\\src\\test\\resources\\grains.png");
+        ImagePlus inputImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/grains.png" ).getFile() );
         inputImage.show();
-        ImagePlus labelImage = IJ.openImage("D:\\Proiektuak\\TFG\\Trainable_Superpixel_Segmentation\\src\\test\\resources\\grains-catchment-basins.png");
+        ImagePlus labelImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/grains-catchment-basins.png").getFile() );
         labelImage.show();
         ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<>();
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mean"));
