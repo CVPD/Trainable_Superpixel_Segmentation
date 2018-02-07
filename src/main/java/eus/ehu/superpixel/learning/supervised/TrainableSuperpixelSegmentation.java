@@ -1,4 +1,4 @@
-package com.EHU.imagej;
+package eus.ehu.superpixel.learning.supervised;
 
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
@@ -20,7 +20,6 @@ public class TrainableSuperpixelSegmentation {
     private ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<RegionFeatures.Feature>();
     private ImagePlus inputImage;
     private ImagePlus labelImage;
-    private ResultsTable mergedTable;
     private Instances unlabeled;
     private Instances labeled;
     private AbstractClassifier trainedClassifier;
@@ -43,30 +42,13 @@ public class TrainableSuperpixelSegmentation {
      * Calculates the selected features for each region and saves them on the private variable unlabeled
      */
     private void calculateRegionFeatures(){
-        mergedTable = RegionFeatures.calculateRegionFeatures(inputImage,labelImage,selectedFeatures);
-        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-        int numFeatures = mergedTable.getLastColumn(); //Take into account it starts in index 0
-        for(int i=0;i<numFeatures+1;++i){
-            attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
-        }
-        attributes.add(new Attribute("Class"));
-        unlabeled = new Instances("dataset",attributes,0);
-        for(int i=0;i<mergedTable.size();++i){
-            Instance inst = new DenseInstance(numFeatures+2);//numFeatures is the index, add 1 to get number of attributes needed plus class
-            for(int j=0;j<(numFeatures+1);++j){
-                inst.setValue(j,mergedTable.getValue(j,i));
-            }
-            inst.setValue(numFeatures+1,0);//set class as 0
-            unlabeled.add(inst);
-        }
-        unlabeled.setClassIndex(numFeatures+1);
+        unlabeled = RegionFeatures.calculateRegionFeatures(inputImage,labelImage,selectedFeatures);
     }
 
     /**
      * Outputs the features by region through a results table and through printing the created Instances
      */
     public void showFeaturesByRegion(){
-        mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
         System.out.println(unlabeled.toString());
     }
 
@@ -78,23 +60,23 @@ public class TrainableSuperpixelSegmentation {
     public void trainClassifier(AbstractClassifier classifier, ArrayList<int[]> classRegions){
 
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-        int numFeatures = mergedTable.getLastColumn(); //Take into account it starts in index 0
-        for(int i=0;i<numFeatures+1;++i){
-            attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
+        int numFeatures = unlabeled.numAttributes()-1;
+        for(int i=0;i<numFeatures;++i){
+            attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
         }
         attributes.add(new Attribute("Class"));
         Instances trainingData = new Instances("training data",attributes,0);
         for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
             for(int j=0;j<classRegions.get(i).length;++j){
-                Instance inst = new DenseInstance(numFeatures+2);//numFeatures is the index, add 2 to get number of attributes needed plus class
-                for(int k=0;k<(numFeatures+1);++k){
-                    inst.setValue(k,mergedTable.getValue(k,classRegions.get(i)[j]));
+                Instance inst = new DenseInstance(numFeatures+1);
+                for(int k=0;k<(numFeatures);++k){
+                    inst.setValue(k,unlabeled.get(classRegions.get(i)[j]).value(k));
                 }
-                inst.setValue(numFeatures+1,i);
+                inst.setValue(numFeatures,i);
                 trainingData.add(inst);
             }
         }
-        trainingData.setClassIndex(numFeatures+1);
+        trainingData.setClassIndex(numFeatures); //Index inside the attribute array for class is equal to number of features
         try {
             classifier.buildClassifier(trainingData);
         } catch (Exception e) {
@@ -114,7 +96,7 @@ public class TrainableSuperpixelSegmentation {
                 double classLabel = trainedClassifier.classifyInstance(unlabeled.instance(i));
                 labeled.instance(i).setClassValue(classLabel);
             }
-            System.out.println(labeled.toString());
+            //System.out.println(labeled.toString());
         } catch (Exception e) {
             System.out.println("Error when applying classifier");
             e.printStackTrace();

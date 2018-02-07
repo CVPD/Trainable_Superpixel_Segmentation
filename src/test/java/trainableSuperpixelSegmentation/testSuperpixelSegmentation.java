@@ -1,7 +1,7 @@
 package trainableSuperpixelSegmentation;
 
-import com.EHU.imagej.RegionFeatures;
-import com.EHU.imagej.TrainableSuperpixelSegmentation;
+import eus.ehu.superpixel.learning.supervised.RegionFeatures;
+import eus.ehu.superpixel.learning.supervised.TrainableSuperpixelSegmentation;
 import ij.IJ;
 import ij.ImagePlus;
 import weka.classifiers.lazy.IBk;
@@ -10,9 +10,9 @@ import java.util.ArrayList;
 
 public class testSuperpixelSegmentation{
     public static void main(final String[] args){
-        ImagePlus inputImage = IJ.openImage();
+        ImagePlus inputImage = IJ.openImage("D:\\Proiektuak\\TFG\\Trainable_Superpixel_Segmentation\\src\\test\\resources\\grains.png");
         inputImage.show();
-        ImagePlus labelImage = IJ.openImage();
+        ImagePlus labelImage = IJ.openImage("D:\\Proiektuak\\TFG\\Trainable_Superpixel_Segmentation\\src\\test\\resources\\grains-catchment-basins.png");
         labelImage.show();
         ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<>();
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mean"));

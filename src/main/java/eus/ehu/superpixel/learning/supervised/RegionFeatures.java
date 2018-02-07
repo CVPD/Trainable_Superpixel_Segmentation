@@ -1,4 +1,4 @@
-package com.EHU.imagej;
+package eus.ehu.superpixel.learning.supervised;
 
 
 import ij.ImagePlus;
@@ -101,7 +101,7 @@ public class RegionFeatures {
      * @param selectedFeatures ArrayList of Feature with the features that need to be calculated
      * @return ResultsTable with the features of each region from the labelImage
      */
-    public static ResultsTable calculateRegionFeatures(ImagePlus inputImage, ImagePlus labelImage, ArrayList<Feature> selectedFeatures){
+    public static Instances calculateRegionFeatures(ImagePlus inputImage, ImagePlus labelImage, ArrayList<Feature> selectedFeatures){
         IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
         ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
         for (Feature selectedFeature : selectedFeatures) {
@@ -147,7 +147,24 @@ public class RegionFeatures {
                 mergedTable.addValue(measure, value);
             }
         }
-        return  mergedTable;
+        mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        int numFeatures = mergedTable.getLastColumn(); //Take into account it starts in index 0
+        for(int i=0;i<numFeatures+1;++i){
+            attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
+        }
+        attributes.add(new Attribute("Class"));
+        Instances unlabeled = new Instances("dataset",attributes,0);
+        for(int i=0;i<mergedTable.size();++i){
+            Instance inst = new DenseInstance(numFeatures+2);//numFeatures is the index, add 1 to get number of attributes needed plus class
+            for(int j=0;j<(numFeatures+1);++j){
+                inst.setValue(j,mergedTable.getValue(j,i));
+            }
+            inst.setValue(numFeatures+1,0);//set class as 0
+            unlabeled.add(inst);
+        }
+        unlabeled.setClassIndex(numFeatures+1);
+        return unlabeled;
     }
 
 
