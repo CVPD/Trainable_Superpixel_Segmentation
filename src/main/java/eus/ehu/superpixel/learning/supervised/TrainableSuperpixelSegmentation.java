@@ -36,14 +36,17 @@ public class TrainableSuperpixelSegmentation {
         inputImage = originalImage;
         labelImage = labels;
         abstractClassifier  = classifier;
-        this.calculateRegionFeatures();
+        if(!this.calculateRegionFeatures()){
+            System.out.println("Error when calculating Region Features");
+        }
     }
 
     /**
      * Calculates the selected features for each region and saves them on the private variable unlabeled
      */
-    private void calculateRegionFeatures(){
+    private boolean calculateRegionFeatures(){
         unlabeled = RegionFeatures.calculateRegionFeatures(inputImage,labelImage,selectedFeatures);
+        return unlabeled != null;
     }
 
     /**
@@ -57,7 +60,7 @@ public class TrainableSuperpixelSegmentation {
      * Trains classifiers based on previously created features and a list of classes with their corresponding regions
      * @param classRegions ArrayList of int[] where each int[] represents the labels of superpixels that belong to the class indicated by their index in the ArrayList
      */
-    public void trainClassifier(ArrayList<int[]> classRegions){
+    public boolean trainClassifier(ArrayList<int[]> classRegions){
 
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         int numFeatures = unlabeled.numAttributes()-1;
@@ -79,23 +82,24 @@ public class TrainableSuperpixelSegmentation {
         trainingData.setClassIndex(numFeatures); //Index inside the attribute array for class is equal to number of features
         try {
             abstractClassifier.buildClassifier(trainingData);
+            return true;
         } catch (Exception e) {
             System.out.println("Error when building classifier");
             e.printStackTrace();
+            return false;
         }
     }
 
     /**
      * Applies classifier to unlabeled data and creates ne Instances in labeled private variables
      */
-    public void applyClassifier(){
+    public ImagePlus applyClassifier(){
         try {
             labeled = new Instances(unlabeled); //Copy of unlabeled to label
             for (int i = 0; i < unlabeled.numInstances(); ++i) {
                 double classLabel = abstractClassifier.classifyInstance(unlabeled.instance(i));
                 labeled.instance(i).setClassValue(classLabel);
             }
-            //System.out.println(labeled.toString());
         } catch (Exception e) {
             System.out.println("Error when applying classifier");
             e.printStackTrace();
@@ -117,7 +121,7 @@ public class TrainableSuperpixelSegmentation {
         }
         FloatProcessor processor = new FloatProcessor(width,height,tags);
         ImagePlus result = new ImagePlus("Labeled image",processor);
-        result.show();
+        return result;
     }
 
 

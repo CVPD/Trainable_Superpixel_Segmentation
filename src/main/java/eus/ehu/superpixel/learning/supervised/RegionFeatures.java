@@ -164,7 +164,11 @@ public class RegionFeatures {
             unlabeled.add(inst);
         }
         unlabeled.setClassIndex(numFeatures+1);
-        return unlabeled;
+        if(unlabeled.numInstances()!=(mergedTable.size())){ //The number or instances should be the same as the size of the table
+            return null;
+        }else{
+            return unlabeled;
+        }
     }
 
 

@@ -33,7 +33,9 @@ public class TestSuperpixelSegmentation{
         background[0] = 1;
         ArrayList<int[]> tags = new ArrayList<>();
         tags.add(background); tags.add(rice);
-        test.trainClassifier(tags);
-        test.applyClassifier();
+        if(test.trainClassifier(tags)){
+            ImagePlus result = test.applyClassifier();
+            result.show();
+        }
     }
 }
