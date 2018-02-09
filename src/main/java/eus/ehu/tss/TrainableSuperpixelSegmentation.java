@@ -1,4 +1,4 @@
-package eus.ehu.superpixel.learning.supervised;
+package eus.ehu.tss;
 
 import ij.ImagePlus;
 import ij.process.FloatProcessor;

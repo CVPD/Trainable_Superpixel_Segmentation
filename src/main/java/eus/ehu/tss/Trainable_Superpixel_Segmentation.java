@@ -8,7 +8,7 @@
 
 //Have just changed the name of the file
 
-package eus.ehu.superpixel.learning.supervised;
+package eus.ehu.tss;
 
 import ij.IJ;
 import ij.ImageJ;
