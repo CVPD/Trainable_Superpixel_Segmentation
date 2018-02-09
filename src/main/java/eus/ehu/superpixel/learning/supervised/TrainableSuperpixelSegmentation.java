@@ -1,7 +1,6 @@
 package eus.ehu.superpixel.learning.supervised;
 
 import ij.ImagePlus;
-import ij.measure.ResultsTable;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import weka.classifiers.AbstractClassifier;
@@ -22,19 +21,21 @@ public class TrainableSuperpixelSegmentation {
     private ImagePlus labelImage;
     private Instances unlabeled;
     private Instances labeled;
-    private AbstractClassifier trainedClassifier;
+    private AbstractClassifier abstractClassifier;
 
 
     /**
-     * Creates instance of TrainableSuperpixelSegmentation based on an image and it's corresponding label image and a list of selected features
+     * Creates instance of TrainableSuperpixelSegmentation based on an image and it's corresponding label image, a list of selected features and an AbstractClassifier
      * @param originalImage ImagePlus image that will be analyzed
      * @param labels ImagePlus labeled image of the originalImage
      * @param features ArrayList of Features (from RegionFeatures.Feature) that represent the features that will be calculated
+     * @param classifier AbstractClassifier that will be used to classify the images
      */
-    public TrainableSuperpixelSegmentation(ImagePlus originalImage, ImagePlus labels, ArrayList<RegionFeatures.Feature> features){
+    public TrainableSuperpixelSegmentation(ImagePlus originalImage, ImagePlus labels, ArrayList<RegionFeatures.Feature> features, AbstractClassifier classifier){
         selectedFeatures = features;
         inputImage = originalImage;
         labelImage = labels;
+        abstractClassifier  = classifier;
         this.calculateRegionFeatures();
     }
 
@@ -54,10 +55,9 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Trains classifiers based on previously created features and a list of classes with their corresponding regions
-     * @param classifier AbstractClassifier that will be used to classify the instances
      * @param classRegions ArrayList of int[] where each int[] represents the labels of superpixels that belong to the class indicated by their index in the ArrayList
      */
-    public void trainClassifier(AbstractClassifier classifier, ArrayList<int[]> classRegions){
+    public void trainClassifier(ArrayList<int[]> classRegions){
 
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         int numFeatures = unlabeled.numAttributes()-1;
@@ -78,12 +78,11 @@ public class TrainableSuperpixelSegmentation {
         }
         trainingData.setClassIndex(numFeatures); //Index inside the attribute array for class is equal to number of features
         try {
-            classifier.buildClassifier(trainingData);
+            abstractClassifier.buildClassifier(trainingData);
         } catch (Exception e) {
             System.out.println("Error when building classifier");
             e.printStackTrace();
         }
-        trainedClassifier = classifier;
     }
 
     /**
@@ -93,7 +92,7 @@ public class TrainableSuperpixelSegmentation {
         try {
             labeled = new Instances(unlabeled); //Copy of unlabeled to label
             for (int i = 0; i < unlabeled.numInstances(); ++i) {
-                double classLabel = trainedClassifier.classifyInstance(unlabeled.instance(i));
+                double classLabel = abstractClassifier.classifyInstance(unlabeled.instance(i));
                 labeled.instance(i).setClassValue(classLabel);
             }
             //System.out.println(labeled.toString());
