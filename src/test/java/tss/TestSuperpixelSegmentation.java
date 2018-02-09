@@ -1,4 +1,4 @@
-package trainableSuperpixelSegmentation;
+package tss;
 
 import eus.ehu.tss.RegionFeatures;
 import eus.ehu.tss.TrainableSuperpixelSegmentation;
