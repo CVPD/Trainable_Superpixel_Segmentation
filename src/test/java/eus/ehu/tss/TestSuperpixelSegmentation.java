@@ -1,7 +1,5 @@
-package tss;
+package eus.ehu.tss;
 
-import eus.ehu.tss.RegionFeatures;
-import eus.ehu.tss.TrainableSuperpixelSegmentation;
 import ij.IJ;
 import ij.ImagePlus;
 import weka.classifiers.lazy.IBk;
