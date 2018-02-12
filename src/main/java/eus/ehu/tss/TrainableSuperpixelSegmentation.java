@@ -49,11 +49,13 @@ public class TrainableSuperpixelSegmentation {
         return unlabeled != null;
     }
 
+
     /**
-     * Outputs the features by region through a results table and through printing the created Instances
+     * Returns a String with ARFF format of the features for each region
+     * @return String in ARFF format
      */
-    public void showFeaturesByRegion(){
-        System.out.println(unlabeled.toString());
+    public String getFeaturesByRegion(){
+        return unlabeled.toString();
     }
 
     /**
@@ -68,7 +70,6 @@ public class TrainableSuperpixelSegmentation {
             attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
         }
         attributes.add(new Attribute("class",classes));
-        System.out.println(attributes.get(numFeatures).toString());
         Instances trainingData = new Instances("training data",attributes,0);
         for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
             for(int j=0;j<classRegions.get(i).length;++j){

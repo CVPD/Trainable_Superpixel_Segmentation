@@ -24,7 +24,7 @@ public class TestSuperpixelSegmentation{
 
         IBk exampleClassifier = new IBk();
         TrainableSuperpixelSegmentation test = new TrainableSuperpixelSegmentation(inputImage,labelImage, selectedFeatures, exampleClassifier);
-        test.showFeaturesByRegion();
+        System.out.println(test.getFeaturesByRegion());
         int[] rice = new int[4];
         rice[0] = 30; rice[1]=43; rice[2]=96;rice[3]=99;
         int[] background = new int[1];
