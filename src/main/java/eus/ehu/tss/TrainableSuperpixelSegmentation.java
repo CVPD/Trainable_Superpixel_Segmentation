@@ -43,6 +43,7 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Calculates the selected features for each region and saves them on the private variable unlabeled
+     * @return boolean that checks if the region features have been created
      */
     private boolean calculateRegionFeatures(){
         unlabeled = RegionFeatures.calculateRegionFeatures(inputImage,labelImage,selectedFeatures);
@@ -61,6 +62,7 @@ public class TrainableSuperpixelSegmentation {
     /**
      * Trains classifiers based on previously created features and a list of classes with their corresponding regions
      * @param classRegions ArrayList of int[] where each int[] represents the labels of superpixels that belong to the class indicated by their index in the ArrayList
+     * @return boolean value false when training has had an error
      */
     public boolean trainClassifier(ArrayList<int[]> classRegions, ArrayList<String> classes){
 
@@ -94,6 +96,7 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Applies classifier to unlabeled data and creates ne Instances in labeled private variables
+     * @return ImagePlus with classified image
      */
     public ImagePlus applyClassifier(){
         try {
