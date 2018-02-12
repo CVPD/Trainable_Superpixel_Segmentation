@@ -95,7 +95,7 @@ public class TrainableSuperpixelSegmentation {
     }
 
     /**
-     * Applies classifier to unlabeled data and creates ne Instances in labeled private variables
+     * Applies classifier to unlabeled data and creates new Instances in labeled private variables
      * @return ImagePlus with classified image
      */
     public ImagePlus applyClassifier(){
@@ -129,5 +129,26 @@ public class TrainableSuperpixelSegmentation {
         return result;
     }
 
+    /**
+     * Applies already trained classifier to input image and label image
+     * @param inImage input image
+     * @param lbImage superpixel segmentated label image
+     * @return classified image
+     */
+    public ImagePlus applyClassifier(ImagePlus inImage, ImagePlus lbImage){
+        if(abstractClassifier==null){
+            System.out.println("Train a classifier first!");
+            return inImage;
+        }else{
+            inputImage = inImage;
+            labelImage = lbImage;
+            if(calculateRegionFeatures()){
+                return applyClassifier();
+            }else {
+                System.out.println("Error when calculating region features");
+                return inImage;
+            }
+        }
+    }
 
 }
