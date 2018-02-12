@@ -60,14 +60,15 @@ public class TrainableSuperpixelSegmentation {
      * Trains classifiers based on previously created features and a list of classes with their corresponding regions
      * @param classRegions ArrayList of int[] where each int[] represents the labels of superpixels that belong to the class indicated by their index in the ArrayList
      */
-    public boolean trainClassifier(ArrayList<int[]> classRegions){
+    public boolean trainClassifier(ArrayList<int[]> classRegions, ArrayList<String> classes){
 
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         int numFeatures = unlabeled.numAttributes()-1;
         for(int i=0;i<numFeatures;++i){
             attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
         }
-        attributes.add(new Attribute("Class"));
+        attributes.add(new Attribute("class",classes));
+        System.out.println(attributes.get(numFeatures).toString());
         Instances trainingData = new Instances("training data",attributes,0);
         for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
             for(int j=0;j<classRegions.get(i).length;++j){
