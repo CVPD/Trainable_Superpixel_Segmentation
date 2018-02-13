@@ -64,11 +64,7 @@ public class RegionFeatures {
          * @return int with number of features that are in this enum
          */
         public static int numFeatures(){
-            int n=0;
-            for(String item : getAllLabels()){
-                n++;
-            }
-            return n;
+            return getAllLabels().length;
         }
 
         /**
