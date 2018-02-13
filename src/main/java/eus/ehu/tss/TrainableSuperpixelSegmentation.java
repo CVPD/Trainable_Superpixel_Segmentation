@@ -22,6 +22,7 @@ public class TrainableSuperpixelSegmentation {
     private Instances unlabeled;
     private Instances labeled;
     private AbstractClassifier abstractClassifier;
+    ArrayList<String> classes = null;
 
 
     /**
@@ -31,11 +32,18 @@ public class TrainableSuperpixelSegmentation {
      * @param features ArrayList of Features (from RegionFeatures.Feature) that represent the features that will be calculated
      * @param classifier AbstractClassifier that will be used to classify the images
      */
-    public TrainableSuperpixelSegmentation(ImagePlus originalImage, ImagePlus labels, ArrayList<RegionFeatures.Feature> features, AbstractClassifier classifier){
+    public TrainableSuperpixelSegmentation(
+    		ImagePlus originalImage,
+    		ImagePlus labels,
+    		ArrayList<RegionFeatures.Feature> features,
+    		AbstractClassifier classifier,
+    		ArrayList<String> classes )
+    {
         selectedFeatures = features;
         inputImage = originalImage;
         labelImage = labels;
         abstractClassifier  = classifier;
+        this.classes = classes;
         if(!this.calculateRegionFeatures()){
             System.out.println("Error when calculating Region Features");
         }
@@ -46,7 +54,8 @@ public class TrainableSuperpixelSegmentation {
      * @return boolean that checks if the region features have been created
      */
     private boolean calculateRegionFeatures(){
-        unlabeled = RegionFeatures.calculateRegionFeatures(inputImage,labelImage,selectedFeatures);
+        unlabeled = RegionFeatures.calculateRegionFeatures(
+        		inputImage, labelImage, selectedFeatures, classes );
         return unlabeled != null;
     }
 
@@ -64,26 +73,29 @@ public class TrainableSuperpixelSegmentation {
      * @param classRegions ArrayList of int[] where each int[] represents the labels of superpixels that belong to the class indicated by their index in the ArrayList
      * @return boolean value false when training has had an error
      */
-    public boolean trainClassifier(ArrayList<int[]> classRegions, ArrayList<String> classes){
-
+    public boolean trainClassifier(ArrayList<int[]> classRegions){
+    	// read attributes from unlabeled data
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         int numFeatures = unlabeled.numAttributes()-1;
         for(int i=0;i<numFeatures;++i){
             attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
         }
-        attributes.add(new Attribute("class",classes));
+        attributes.add(new Attribute("Class",classes));
         Instances trainingData = new Instances("training data",attributes,0);
+        // Fill training dataset with the feature vectors of the corresponding
+        // regions given by classRegions
         for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
             for(int j=0;j<classRegions.get(i).length;++j){
                 Instance inst = new DenseInstance(numFeatures+1);
-                for(int k=0;k<(numFeatures);++k){
-                    inst.setValue(k,unlabeled.get(classRegions.get(i)[j]).value(k));
+                for(int k=0;k<numFeatures;++k){
+                    inst.setValue(k,unlabeled.get(classRegions.get(i)[j]-1).value(k));
                 }
-                inst.setValue(numFeatures,i);
+                inst.setValue(numFeatures,i); // set class value
                 trainingData.add(inst);
             }
         }
-        trainingData.setClassIndex(numFeatures); //Index inside the attribute array for class is equal to number of features
+        trainingData.setClassIndex(numFeatures); // set class index
+
         try {
             abstractClassifier.buildClassifier(trainingData);
             return true;
