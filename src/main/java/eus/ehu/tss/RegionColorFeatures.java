@@ -71,9 +71,8 @@ public class RegionColorFeatures {
             unlabeled.add(inst);
         }
         unlabeled.setClassIndex(numAttributes);
-        System.out.println(unlabeled.toString());
 
-        return null;
+        return unlabeled;
     }
 
 
