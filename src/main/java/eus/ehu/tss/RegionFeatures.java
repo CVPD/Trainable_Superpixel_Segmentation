@@ -155,9 +155,10 @@ public class RegionFeatures {
             attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
         }
         attributes.add(new Attribute("Class", classes));
-        Instances unlabeled = new Instances("dataset",attributes,0);
+        Instances unlabeled = new Instances("training data",attributes,0);
         for(int i=0;i<mergedTable.size();++i){
-            Instance inst = new DenseInstance(numFeatures+1);//numFeatures is the index, add 1 to get number of attributes needed plus class
+            //numFeatures is the index, add 1 to get number of attributes needed plus class
+            Instance inst = new DenseInstance(numFeatures+1);
             for(int j=0;j<numFeatures;++j){
                 inst.setValue(j,mergedTable.getValueAsDouble(j,i));
             }
@@ -165,7 +166,8 @@ public class RegionFeatures {
             unlabeled.add(inst);
         }
         unlabeled.setClassIndex( numFeatures );
-        if(unlabeled.numInstances()!=(mergedTable.size())){ //The number or instances should be the same as the size of the table
+        //The number or instances should be the same as the size of the table
+        if(unlabeled.numInstances()!=(mergedTable.size())){
             return null;
         }else{
             return unlabeled;

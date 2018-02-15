@@ -55,9 +55,17 @@ public class TrainableSuperpixelSegmentation {
      */
     private boolean calculateRegionFeatures(){
         if(inputImage.getType()==ImagePlus.COLOR_RGB){
-            unlabeled = RegionColorFeatures.calculateColorFeatures(inputImage,labelImage,selectedFeatures,classes);
+            unlabeled = RegionColorFeatures.calculateColorFeatures(
+                    inputImage,
+                    labelImage,
+                    selectedFeatures,
+                    classes);
         }else {
-            unlabeled = RegionFeatures.calculateRegionFeatures(inputImage, labelImage, selectedFeatures, classes);
+            unlabeled = RegionFeatures.calculateRegionFeatures(
+                    inputImage,
+                    labelImage,
+                    selectedFeatures,
+                    classes);
         }
         return unlabeled != null;
     }
@@ -140,8 +148,7 @@ public class TrainableSuperpixelSegmentation {
             }
         }
         FloatProcessor processor = new FloatProcessor(width,height,tags);
-        ImagePlus result = new ImagePlus("Labeled image",processor);
-        return result;
+        return new ImagePlus("Labeled image",processor);
     }
 
     /**
