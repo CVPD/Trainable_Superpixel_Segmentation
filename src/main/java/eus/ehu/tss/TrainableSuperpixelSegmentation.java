@@ -1,6 +1,7 @@
 package eus.ehu.tss;
 
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import weka.classifiers.AbstractClassifier;
@@ -135,20 +136,27 @@ public class TrainableSuperpixelSegmentation {
         int height = inputImage.getHeight();
         int width = inputImage.getWidth();
         float tags[] = new float[height*width];
-        ImageProcessor ip = labelImage.getProcessor();
-        for (int x=0;x<width;++x){
-            for(int y=0;y<height;++y){
-                int index = ip.getPixel(x,y);
-                if(index==0){ //edge pixel
-                    tags[x+y*width]= index;
-                }else {
-                    Instance instance = labeled.get(index - 1);
-                    tags[x+y*width]= (float) instance.classValue();
+        ImageStack result = new ImageStack(width,height);
+        ImageStack stackLabels = labelImage.getStack();
+        for(int slice = 1; slice <= inputImage.getNSlices(); ++slice) {
+            ImageProcessor ip = stackLabels.getProcessor(slice);
+            for (int x = 0; x < width; ++x) {
+                for (int y = 0; y < height; ++y) {
+                    int index = ip.getPixel(x, y);
+                    if (index == 0) { //edge pixel
+                        tags[x + y * width] = index;
+                    } else {
+                        Instance instance = labeled.get(index - 1);
+                        tags[x + y * width] = (float) instance.classValue();
+                    }
                 }
             }
+            FloatProcessor processor = new FloatProcessor(width, height, tags);
+            ImagePlus tmp = new ImagePlus("Slice "+slice,processor);
+            tmp.show();
+            result.addSlice("Slice "+slice,processor);
         }
-        FloatProcessor processor = new FloatProcessor(width,height,tags);
-        return new ImagePlus("Labeled image",processor);
+        return new ImagePlus("Result",result);
     }
 
     /**
