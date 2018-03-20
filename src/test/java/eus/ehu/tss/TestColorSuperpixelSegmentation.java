@@ -10,9 +10,9 @@ import java.util.ArrayList;
 
 public class TestColorSuperpixelSegmentation {
     public static void main(final String[] args){
-        ImagePlus inputImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/TMA.png" ).getFile() );
+        ImagePlus inputImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/TMA3d.tif" ).getFile() );
         inputImage.show();
-        ImagePlus labelImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/TMA-Segmentation-16-bit.zip").getFile() );
+        ImagePlus labelImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/TMA-Segmentation-16-bit3d.tif").getFile() );
         labelImage.show();
 
         // Use all features
