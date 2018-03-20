@@ -154,7 +154,7 @@ public class TrainableSuperpixelSegmentation {
             FloatProcessor processor = new FloatProcessor(width, height, tags);
             ImagePlus tmp = new ImagePlus("Slice "+slice,processor);
             tmp.show();
-            result.addSlice("Slice "+slice,processor);
+            result.addSlice("Slice "+slice,processor.duplicate());
         }
         return new ImagePlus("Result",result);
     }
