@@ -152,11 +152,9 @@ public class TrainableSuperpixelSegmentation {
                 }
             }
             FloatProcessor processor = new FloatProcessor(width, height, tags);
-            ImagePlus tmp = new ImagePlus("Slice "+slice,processor);
-            tmp.show();
-            result.addSlice("Slice "+slice,processor.duplicate());
+            result.addSlice(stackLabels.getSliceLabel(slice),processor.duplicate());
         }
-        return new ImagePlus("Result",result);
+        return new ImagePlus(inputImage.getShortTitle()+"-supseg",result);
     }
 
     /**
