@@ -19,6 +19,10 @@ import ij.plugin.PlugIn;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class Trainable_Superpixel_Segmentation implements PlugIn {
@@ -26,13 +30,20 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private CustomWindow win;
     private ImagePlus inputImage;
     private ImagePlus supImage;
-
+    private final ExecutorService exec = Executors.newFixedThreadPool(1);
 
     private class CustomWindow extends StackWindow
     {
         private Panel all = new Panel();
         private JPanel buttonsPanel = new JPanel();
         private JButton clusterizeButton = null;
+        private JButton trainClassButton = null;
+        private JButton loadClassButton = null;
+        private JButton applyClassButton = null;
+        private JButton settButton = null;
+
+
+
         CustomWindow(ImagePlus imp)
         {
             super(imp, new ImageCanvas(imp));
@@ -53,8 +64,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
             clusterizeButton = new JButton("Clusterize");
             buttonsPanel.add(clusterizeButton);
+            trainClassButton = new JButton("Train classifier");
+            buttonsPanel.add(trainClassButton);
+            loadClassButton = new JButton("Load classifier");
+            buttonsPanel.add(loadClassButton);
+            applyClassButton = new JButton("Apply classifier");
+            buttonsPanel.add(applyClassButton);
+            settButton = new JButton("Settings");
+            buttonsPanel.add(settButton);
             all.add(buttonsPanel,allConstraints);
-
 
             GridBagLayout wingb = new GridBagLayout();
             GridBagConstraints winc = new GridBagConstraints();
