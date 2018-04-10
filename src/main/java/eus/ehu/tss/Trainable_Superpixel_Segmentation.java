@@ -35,12 +35,18 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private class CustomWindow extends StackWindow
     {
         private Panel all = new Panel();
-        private JPanel buttonsPanel = new JPanel();
-        private JButton clusterizeButton = null;
+        private JPanel controlsPanel = new JPanel();
+        private JPanel classifierPanel = new JPanel();
+        private JPanel resultPanel = new JPanel();
+        private JPanel classPanel = new JPanel();
         private JButton trainClassButton = null;
         private JButton loadClassButton = null;
         private JButton applyClassButton = null;
         private JButton settButton = null;
+        private JButton plotButton = null;
+        private JButton probButton = null;
+        private JButton resButton = null;
+        private JButton overlayButton = null;
 
 
 
@@ -52,8 +58,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             GridBagConstraints allConstraints = new GridBagConstraints();
             all.setLayout(layout);
             allConstraints.anchor = GridBagConstraints.CENTER;
-            allConstraints.fill = GridBagConstraints.BOTH;
-            allConstraints.gridwidth = 2;
+            allConstraints.fill = GridBagConstraints.VERTICAL;
+            allConstraints.gridwidth = 1;
             allConstraints.gridheight = 1;
             allConstraints.gridx = 0;
             allConstraints.gridy = 0;
@@ -62,17 +68,73 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             all.add(canvas,allConstraints);
             allConstraints.gridy++;
 
-            clusterizeButton = new JButton("Clusterize");
-            buttonsPanel.add(clusterizeButton);
+            GridBagLayout controlLayout = new GridBagLayout();
+            controlsPanel.setLayout(controlLayout);
+            GridBagConstraints controlConstraints = new GridBagConstraints();
+            controlConstraints.anchor = GridBagConstraints.CENTER;
+            controlConstraints.fill = GridBagConstraints.HORIZONTAL;
+            controlConstraints.gridwidth = 1;
+            controlConstraints.gridheight = 1;
+            controlConstraints.gridx = 0;
+            controlConstraints.gridy = 0;
+            controlConstraints.weightx = 0;
+            controlConstraints.weighty = 0;
+
+            GridBagLayout classifierLayout = new GridBagLayout();
+            classifierPanel.setLayout(classifierLayout);
+            GridBagConstraints classifierConstraints = new GridBagConstraints();
+            classifierConstraints.anchor = GridBagConstraints.WEST;
+            classifierConstraints.fill = GridBagConstraints.VERTICAL;
+            classifierConstraints.gridwidth = 1;
+            classifierConstraints.gridheight = 1;
+            classifierConstraints.gridx = 0;
+            classifierConstraints.gridy = 0;
+            classifierConstraints.weightx = 0;
+            classifierConstraints.weighty = 0;
+
+            GridBagLayout resultLayout = new GridBagLayout();
+            resultPanel.setLayout(resultLayout);
+            GridBagConstraints resultConstraints = new GridBagConstraints();
+            resultConstraints.anchor = GridBagConstraints.WEST;
+            resultConstraints.fill = GridBagConstraints.VERTICAL;
+            resultConstraints.gridwidth = 1;
+            resultConstraints.gridheight = 1;
+            resultConstraints.gridx = 0;
+            resultConstraints.gridy = 0;
+            resultConstraints.weightx = 0;
+            resultConstraints.weighty = 0;
+
             trainClassButton = new JButton("Train classifier");
-            buttonsPanel.add(trainClassButton);
+            classifierPanel.add(trainClassButton,classifierConstraints);
+            classifierConstraints.gridy++;
             loadClassButton = new JButton("Load classifier");
-            buttonsPanel.add(loadClassButton);
+            classifierPanel.add(loadClassButton,classifierConstraints);
+            classifierConstraints.gridy++;
             applyClassButton = new JButton("Apply classifier");
-            buttonsPanel.add(applyClassButton);
+            classifierPanel.add(applyClassButton,classifierConstraints);
+            classifierConstraints.gridy++;
             settButton = new JButton("Settings");
-            buttonsPanel.add(settButton);
-            all.add(buttonsPanel,allConstraints);
+            classifierPanel.add(settButton,classifierConstraints);
+            classifierConstraints.gridy++;
+            controlsPanel.add(classifierPanel,controlConstraints);
+            controlConstraints.gridx++;
+
+            plotButton = new JButton("Plot data");
+            resultPanel.add(plotButton,resultConstraints);
+            resultConstraints.gridy++;
+            probButton = new JButton("Get probability");
+            resultPanel.add(probButton,resultConstraints);
+            resultConstraints.gridy++;
+            resButton = new JButton("Create result");
+            resultPanel.add(resButton,resultConstraints);
+            resultConstraints.gridy++;
+            overlayButton = new JButton("Toggle overlay");
+            resultPanel.add(overlayButton,resultConstraints);
+            resultConstraints.gridy++;
+            controlsPanel.add(resultPanel,controlConstraints);
+            controlConstraints.gridx++;
+
+            all.add(controlsPanel,allConstraints);
 
             GridBagLayout wingb = new GridBagLayout();
             GridBagConstraints winc = new GridBagConstraints();
