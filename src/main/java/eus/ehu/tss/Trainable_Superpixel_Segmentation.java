@@ -68,6 +68,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             all.add(canvas,allConstraints);
             allConstraints.gridy++;
 
+            //Control panel layout and constraints
             GridBagLayout controlLayout = new GridBagLayout();
             controlsPanel.setLayout(controlLayout);
             GridBagConstraints controlConstraints = new GridBagConstraints();
@@ -80,6 +81,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             controlConstraints.weightx = 0;
             controlConstraints.weighty = 0;
 
+            //Classifier panel layout and constraints
             GridBagLayout classifierLayout = new GridBagLayout();
             classifierPanel.setLayout(classifierLayout);
             GridBagConstraints classifierConstraints = new GridBagConstraints();
@@ -92,6 +94,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             classifierConstraints.weightx = 0;
             classifierConstraints.weighty = 0;
 
+            //Result panel layout and constraints
             GridBagLayout resultLayout = new GridBagLayout();
             resultPanel.setLayout(resultLayout);
             GridBagConstraints resultConstraints = new GridBagConstraints();
@@ -104,6 +107,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             resultConstraints.weightx = 0;
             resultConstraints.weighty = 0;
 
+            //Classifier panel buttons
             trainClassButton = new JButton("Train classifier");
             classifierPanel.add(trainClassButton,classifierConstraints);
             classifierConstraints.gridy++;
@@ -119,6 +123,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             controlsPanel.add(classifierPanel,controlConstraints);
             controlConstraints.gridx++;
 
+            //Result panel buttons
             plotButton = new JButton("Plot data");
             resultPanel.add(plotButton,resultConstraints);
             resultConstraints.gridy++;
