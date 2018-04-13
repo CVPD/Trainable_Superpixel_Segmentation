@@ -1,7 +1,6 @@
 package eus.ehu.tss;
 
 
-import ij.IJ;
 import ij.ImageJ;
 
 public class TestGUI {
