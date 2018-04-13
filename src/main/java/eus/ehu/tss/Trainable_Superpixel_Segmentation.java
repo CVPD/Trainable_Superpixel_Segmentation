@@ -15,6 +15,7 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.StackWindow;
+import ij.gui.Toolbar;
 import ij.plugin.PlugIn;
 
 import javax.swing.*;
@@ -162,6 +163,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             IJ.error("Error when opening image");
         }else {
             win = new CustomWindow(inputImage);
+            Toolbar.getInstance().setTool( Toolbar.POINT );
+
         }
 
     }
