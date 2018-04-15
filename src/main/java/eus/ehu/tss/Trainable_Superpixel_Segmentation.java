@@ -17,6 +17,8 @@ import ij.WindowManager;
 import ij.gui.*;
 import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
+import weka.classifiers.AbstractClassifier;
+import weka.classifiers.lazy.IBk;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,10 +37,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private CustomWindow win;
     private ImagePlus inputImage;
     private ImagePlus supImage;
+    private ImagePlus resultImage;
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
     private  java.awt.List[] exampleList = new java.awt.List[numClasses];
     private ArrayList<int[]> tags = new ArrayList<>();
+    private ArrayList<RegionFeatures.Feature> features;
+    private AbstractClassifier classifier;
+    private ArrayList<String> classes;
+    private TrainableSuperpixelSegmentation trainableSuperpixelSegmentation;
 
     private class CustomWindow extends StackWindow
     {
@@ -279,7 +286,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
 
     void runStopTraining(final String command){
-        System.out.println("To be implemented: Train classifier");
+        if(trainableSuperpixelSegmentation.trainClassifier(tags)){
+            resultImage = trainableSuperpixelSegmentation.applyClassifier();
+            resultImage.show();
+        }
     }
 
     void applyClassifier(){
@@ -421,14 +431,30 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
         inputImage =IJ.openImage();
         supImage = IJ.openImage();
-        for(int i=0; i<numClasses; ++i){
-            exampleList[i] = new java.awt.List(5);
-            exampleList[i].setForeground(Color.blue);
-            tags.add(new int[0]);
-        }
-        if(inputImage == null ||supImage == null){
+        if(inputImage == null || supImage == null){
             IJ.error("Error when opening image");
         }else {
+            for(int i=0; i<numClasses; ++i){
+                exampleList[i] = new java.awt.List(5);
+                exampleList[i].setForeground(Color.blue);
+                tags.add(new int[0]);
+            }
+            ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<>();
+            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mean"));
+            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Median"));
+            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mode"));
+            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Skewness"));
+            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Kurtosis"));
+            selectedFeatures.add(RegionFeatures.Feature.fromLabel("StdDev"));
+            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Max"));
+            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Min"));
+            final ArrayList<String> classes = new ArrayList<String>();
+            classes.add( "class 0");
+            classes.add( "class 1");
+            // Define classifier
+            IBk exampleClassifier = new IBk();
+            trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,selectedFeatures,exampleClassifier,classes);
+            System.out.println(trainableSuperpixelSegmentation.getFeaturesByRegion());
             win = new CustomWindow(inputImage);
             Toolbar.getInstance().setTool( Toolbar.POINT );
         }
