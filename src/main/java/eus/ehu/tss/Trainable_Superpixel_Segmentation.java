@@ -286,14 +286,16 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
 
     void runStopTraining(final String command){
-        if(trainableSuperpixelSegmentation.trainClassifier(tags)){
-            resultImage = trainableSuperpixelSegmentation.applyClassifier();
-            resultImage.show();
+        if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
+            IJ.error("Error when training classifier");
         }
     }
 
     void applyClassifier(){
-        System.out.println("To be implemented: Apply classifier");
+
+        resultImage = trainableSuperpixelSegmentation.applyClassifier();
+        resultImage.show();
+
     }
 
     void loadClassifier(){
