@@ -12,11 +12,11 @@ package eus.ehu.tss;
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.WindowManager;
-import ij.gui.ImageCanvas;
-import ij.gui.StackWindow;
-import ij.gui.Toolbar;
+import ij.gui.*;
 import ij.plugin.PlugIn;
+import ij.process.ImageProcessor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,6 +24,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,6 +38,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
     private  java.awt.List[] exampleList = new java.awt.List[numClasses];
+    private ArrayList<int[]> tags = new ArrayList<>();
 
     private class CustomWindow extends StackWindow
     {
@@ -311,13 +314,101 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         System.out.println("To be implemented: Delete selected "+e.toString());
     }
 
+    /**
+     * Adds tags based on the ROIs selected by the user
+     * @param i identifier of class to add tags
+     */
     void addExamples(int i){
-        System.out.println("To be implemented: Add examples "+i);
+
+        final Roi r = inputImage.getRoi();
+        if(null == r){
+            System.out.println("ROI null");
+            return;
+        }
+        ArrayList<Float> selectedLabel = getSelectedLabels(supImage,r);
+        for(Float label: selectedLabel){
+            inputImage.killRoi();
+            int[] a = tags.get(i);
+            a = Arrays.copyOf(a, a.length+1);
+            a[a.length-1] = label.intValue();
+            tags.set(i,a);
+        }
     }
 
     void listSelected(final ItemEvent e, final int i)
     {
        System.out.println("To be implemented: List selected: e: "+e.toString()+" i: "+i);
+    }
+
+    /**
+     * Taken from MorphoLibJ, LabelImages class
+     *
+     * Get list of selected labels in label image. Labels are selected by
+     * either a freehand ROI or point ROIs. Zero-value label is skipped.
+     *
+     * @param labelImage  label image
+     * @param roi  FreehandRoi or PointRoi with selected labels
+     * @return list of selected labels
+     */
+    public static ArrayList<Float> getSelectedLabels(
+            final ImagePlus labelImage,
+            final Roi roi )
+    {
+        final ArrayList<Float> list = new ArrayList<Float>();
+
+        // if the user makes point selections
+        if( roi instanceof PointRoi)
+        {
+            int[] xpoints = roi.getPolygon().xpoints;
+            int[] ypoints = roi.getPolygon().ypoints;
+
+            // read label values at those positions
+            if( labelImage.getImageStackSize() > 1 )
+            {
+                final ImageStack labelStack = labelImage.getImageStack();
+                for ( int i = 0; i<xpoints.length; i ++ )
+                {
+                    float value = (float) labelStack.getVoxel(
+                            xpoints[ i ],
+                            ypoints[ i ],
+                            ((PointRoi) roi).getPointPosition( i )-1 );
+                    if( Float.compare( 0f, value ) != 0 &&
+                            list.contains( value ) == false )
+                        list.add( (float) value );
+                }
+            }
+            else
+            {
+                final ImageProcessor ip = labelImage.getProcessor();
+                for ( int i = 0; i<xpoints.length; i ++ )
+                {
+                    float value = ip.getf( xpoints[ i ], ypoints[ i ]);
+                    if( Float.compare( 0f, value ) != 0 &&
+                            list.contains( value ) == false )
+                        list.add( (float) value );
+                }
+            }
+        }
+        else if( roi instanceof FreehandRoi )
+        {
+            // read values from ROI using a profile plot
+            // save interpolation option
+            boolean interpolateOption = PlotWindow.interpolate;
+            // do not interpolate pixel values
+            PlotWindow.interpolate = false;
+            // get label values from line roi (different from 0)
+            float[] values = ( new ProfilePlot( labelImage ) )
+                    .getPlot().getYValues();
+            PlotWindow.interpolate = interpolateOption;
+
+            for( int i=0; i<values.length; i++ )
+            {
+                if( Float.compare( 0f, values[ i ] ) != 0 &&
+                        list.contains( values[ i ]) == false )
+                    list.add( values[ i ]);
+            }
+        }
+        return list;
     }
 
 
@@ -332,6 +423,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         for(int i=0; i<numClasses; ++i){
             exampleList[i] = new java.awt.List(5);
             exampleList[i].setForeground(Color.blue);
+            tags.add(new int[0]);
         }
         if(inputImage == null ||supImage == null){
             IJ.error("Error when opening image");
