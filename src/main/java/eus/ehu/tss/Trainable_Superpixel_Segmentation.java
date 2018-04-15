@@ -286,16 +286,17 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
 
     void runStopTraining(final String command){
+        IJ.log("Training classifier");
         if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
             IJ.error("Error when training classifier");
         }
+        IJ.log("Classifier trained");
     }
 
     void applyClassifier(){
-
+        IJ.log("Applying classifier");
         resultImage = trainableSuperpixelSegmentation.applyClassifier();
         resultImage.show();
-
     }
 
     void loadClassifier(){
@@ -456,7 +457,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             // Define classifier
             IBk exampleClassifier = new IBk();
             trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,selectedFeatures,exampleClassifier,classes);
-            System.out.println(trainableSuperpixelSegmentation.getFeaturesByRegion());
             win = new CustomWindow(inputImage);
             Toolbar.getInstance().setTool( Toolbar.POINT );
         }
