@@ -296,7 +296,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     void applyClassifier(){
         IJ.log("Applying classifier");
         resultImage = trainableSuperpixelSegmentation.applyClassifier();
-        resultImage.show();
+        IJ.log("Classifier applied");
     }
 
     void loadClassifier(){
@@ -316,7 +316,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     void createResult(){
-        System.out.println("To be implemented: Create result");
+        resultImage.show();
     }
 
     void toggleOverlay(){
