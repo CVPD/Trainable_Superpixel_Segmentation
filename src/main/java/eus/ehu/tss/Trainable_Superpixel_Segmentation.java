@@ -332,6 +332,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             a = Arrays.copyOf(a, a.length+1);
             a[a.length-1] = label.intValue();
             tags.set(i,a);
+            exampleList[i].add(label.toString());
         }
     }
 
