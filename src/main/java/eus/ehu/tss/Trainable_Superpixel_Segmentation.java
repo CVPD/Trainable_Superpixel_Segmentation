@@ -40,7 +40,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private ImagePlus resultImage;
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
-    private  java.awt.List[] exampleList = new java.awt.List[numClasses];
+    private  java.awt.List[] exampleList = new java.awt.List[500];
     private ArrayList<int[]> tags = new ArrayList<>();
     private ArrayList<RegionFeatures.Feature> features;
     private AbstractClassifier classifier;
@@ -54,6 +54,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JPanel classifierPanel = new JPanel();
         private JPanel resultPanel = new JPanel();
         private JPanel annotationsPanel = new JPanel();
+        private GridBagConstraints annotationsConstraints;
+        private GridBagLayout boxAnnotation;
         private JButton trainClassButton = null;
         private JButton loadClassButton = null;
         private JButton applyClassButton = null;
@@ -62,7 +64,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton probButton = null;
         private JButton resButton = null;
         private JButton overlayButton = null;
-        private JButton [] addExampleButton = new JButton[numClasses];
+        private JButton [] addExampleButton = new JButton[500];
+        private JButton addClassButton = null;
 
 
         private ActionListener listener = new ActionListener() {
@@ -97,6 +100,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         }
                         else if(e.getSource() == settButton){
                             showSettingsDialog();
+                        }
+                        else if(e.getSource()==addClassButton){
+                            addNewClass();
                         }
                         else{
                             for(int i = 0; i < numClasses; i++)
@@ -193,10 +199,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
 
             // Annotations panel
-            GridBagLayout boxAnnotation = new GridBagLayout();
+            boxAnnotation = new GridBagLayout();
             annotationsPanel.setBorder(BorderFactory.createTitledBorder("Labels"));
             annotationsPanel.setLayout(boxAnnotation);
-            GridBagConstraints annotationsConstraints = new GridBagConstraints();
+            annotationsConstraints = new GridBagConstraints();
             annotationsConstraints.anchor = GridBagConstraints.NORTHWEST;
             annotationsConstraints.fill = GridBagConstraints.HORIZONTAL;
             annotationsConstraints.gridwidth = 1;
@@ -237,6 +243,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             controlConstraints.gridx++;
 
             //Annotations panel
+            addClassButton = new JButton("Create new class");
+            annotationsPanel.add(addClassButton,annotationsConstraints);
+            annotationsConstraints.gridy++;
             for(int i=0; i<numClasses;++i){
                 exampleList[i].addActionListener(listener);
                 exampleList[i].addItemListener(itemListener);
@@ -255,6 +264,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
             addExampleButton[0].setSelected(true);
 
+
+
             //Add listeners
             for(int i = 0; i< numClasses; ++i){
                 addExampleButton[i].addActionListener(listener);
@@ -267,6 +278,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             probButton.addActionListener(listener);
             resButton.addActionListener(listener);
             overlayButton.addActionListener(listener);
+            addClassButton.addActionListener(listener);
 
             all.add(controlsPanel,allConstraints);
             allConstraints.gridx++;
@@ -282,6 +294,76 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             add( all, winc );
             pack();
         }
+        public void addClass(){
+            int classNum = numClasses;
+
+            exampleList[classNum] = new java.awt.List(5);
+            exampleList[classNum].setForeground(Color.blue);
+
+            exampleList[classNum].addActionListener(listener);
+            exampleList[classNum].addItemListener(itemListener);
+            addExampleButton[classNum] = new JButton("Add to " + classes.get(classNum));
+
+            annotationsConstraints.fill = GridBagConstraints.VERTICAL;
+            annotationsConstraints.insets = new Insets(5, 5, 6, 6);
+
+            boxAnnotation.setConstraints(addExampleButton[classNum], annotationsConstraints);
+            annotationsPanel.add(addExampleButton[classNum]);
+            annotationsConstraints.gridy++;
+
+            annotationsConstraints.insets = new Insets(0,0,0,0);
+
+            boxAnnotation.setConstraints(exampleList[classNum], annotationsConstraints);
+            annotationsPanel.add(exampleList[classNum]);
+            annotationsConstraints.gridy++;
+
+            // Add listener to the new button
+            addExampleButton[classNum].addActionListener(listener);
+
+            numClasses++;
+            tags.add(new int[0]);
+
+            /* recalculate minimum size of scroll panel
+            scrollPanel.setMinimumSize( labelsJPanel.getPreferredSize() );*/
+
+            repaintAll();
+
+        }
+
+        public void repaintAll(){
+            this.annotationsPanel.repaint();
+            getCanvas().repaint();
+            this.all.repaint();
+        }
+    }
+
+    void addNewClass(){
+        String inputName = JOptionPane.showInputDialog("Please input a new label name");
+        if(null == inputName){
+            IJ.error("Invalid name");
+            return;
+        }
+        inputName.trim();
+        classes.add(inputName);
+        win.addClass();
+        repaintWindow();
+
+    }
+
+    /**
+     * Repaint whole window
+     */
+    private void repaintWindow()
+    {
+        // Repaint window
+        SwingUtilities.invokeLater(
+                new Runnable() {
+                    public void run() {
+                        win.invalidate();
+                        win.validate();
+                        win.repaint();
+                    }
+                });
     }
 
 
@@ -335,7 +417,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
         final Roi r = inputImage.getRoi();
         if(null == r){
-            System.out.println("ROI null");
+            IJ.error("ROI null");
             return;
         }
         ArrayList<Float> selectedLabel = getSelectedLabels(supImage,r);
@@ -451,7 +533,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             selectedFeatures.add(RegionFeatures.Feature.fromLabel("StdDev"));
             selectedFeatures.add(RegionFeatures.Feature.fromLabel("Max"));
             selectedFeatures.add(RegionFeatures.Feature.fromLabel("Min"));
-            final ArrayList<String> classes = new ArrayList<String>();
+            classes = new ArrayList<String>();
             classes.add( "class 0");
             classes.add( "class 1");
             // Define classifier
