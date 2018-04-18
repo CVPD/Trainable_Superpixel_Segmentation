@@ -305,9 +305,16 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             imagePanel.add(controlsPanel,imageConstraints);
             imageConstraints.gridy++;
 
+            allConstraints.weightx = 1;
+			allConstraints.weighty = 1;
+			allConstraints.gridheight = 1;
             all.add(imagePanel,allConstraints);
             allConstraints.gridx++;
 
+            allConstraints.anchor = GridBagConstraints.NORTHEAST;
+			allConstraints.weightx = 0;
+			allConstraints.weighty = 0;
+			allConstraints.gridheight = 1;
             all.add(scrollPanel,allConstraints);
             allConstraints.gridx++;
 
