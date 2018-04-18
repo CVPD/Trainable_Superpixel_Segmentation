@@ -413,6 +413,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             IJ.error("Error when training classifier");
         }
         IJ.log("Classifier trained");
+        applyClassifier();
+        createResult();
     }
 
     void applyClassifier(){
@@ -494,6 +496,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     }
 
+    void createResult(){
+        resultImage.show();
+    }
+
+
     void showSettingsDialog(){
         System.out.println("To be implemented: Show settings dialog");
     }
@@ -504,10 +511,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     void showProbability(){
         System.out.println("To be implemented: Show probability");
-    }
-
-    void createResult(){
-        resultImage.show();
     }
 
     void toggleOverlay(){
