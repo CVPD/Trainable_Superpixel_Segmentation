@@ -1,31 +1,28 @@
-/*
- * To the extent possible under law, the ImageJ developers have waived
- * all copyright and related or neighboring rights to this tutorial code.
- *
- * See the CC0 1.0 Universal license for details:
- *     http://creativecommons.org/publicdomain/zero/1.0/
- */
-
-//Have just changed the name of the file
-
 package eus.ehu.tss;
 
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.*;
+import ij.io.OpenDialog;
+import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.lazy.IBk;
+import weka.core.Instances;
+import weka.core.SerializationHelper;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 
 public class Trainable_Superpixel_Segmentation implements PlugIn {
@@ -324,6 +321,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             resButton.addActionListener(listener);
             overlayButton.addActionListener(listener);
             addClassButton.addActionListener(listener);
+            saveClassButton.addActionListener(listener);
 
             GridBagLayout wingb = new GridBagLayout();
             GridBagConstraints winc = new GridBagConstraints();
@@ -423,8 +421,77 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         IJ.log("Classifier applied");
     }
 
+    /**
+     * Save classifier to file
+     */
+    void saveClassifier(){
+
+        SaveDialog sd = new SaveDialog("Save model as...","classifier",".model");
+        if(sd.getFileName()==null){
+            return;
+        }
+        String filename = sd.getDirectory() + sd.getFileName();
+        File sFile = null;
+        boolean saveOK = true;
+
+        IJ.log("Saving model to file...");
+        try {
+            sFile = new File(filename);
+            OutputStream os = new FileOutputStream(sFile);
+            if (sFile.getName().endsWith(".gz"))
+            {
+                os = new GZIPOutputStream(os);
+            }
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
+            objectOutputStream.writeObject(trainableSuperpixelSegmentation.getClassifier());
+            Instances trainHeader = new Instances(trainableSuperpixelSegmentation.getInstances(),0);
+            objectOutputStream.writeObject(trainHeader);
+            objectOutputStream.flush();
+            objectOutputStream.close();
+        }
+        catch (Exception e)
+        {
+            IJ.error("Save Failed", "Error when saving classifier into a file");
+            saveOK = false;
+        }
+        if (saveOK)
+            IJ.log("Saved model into " + filename );
+
+
+    }
+
+    /**
+     * Load classifier from file
+     */
     void loadClassifier(){
-        System.out.println("To be implemented: Load classifier");
+        OpenDialog od = new OpenDialog( "Choose Weka classifier file", "" );
+        if (od.getFileName()==null)
+            return;
+        IJ.log("Loading Weka classifier from " + od.getDirectory() + od.getFileName() + "...");
+        String path = od.getDirectory() + od.getFileName();
+
+        File selected = new File(path);
+        AbstractClassifier loadedClassifier = null;
+        try{
+            InputStream is = new FileInputStream(selected);
+            if(selected.getName().endsWith(".gz")){
+                is = new GZIPInputStream(is);
+            }
+            ObjectInputStream objectInputStream = SerializationHelper.getObjectInputStream(is);
+            loadedClassifier = (AbstractClassifier) objectInputStream.readObject();
+            try{
+                Instances loadedInstances = (Instances) objectInputStream.readObject();
+            }catch (Exception e){
+            }
+            objectInputStream.close();
+        }catch (Exception e){
+            IJ.log("Loading file failed: "+e.getMessage());
+            return;
+        }
+        trainableSuperpixelSegmentation.setClassifier(loadedClassifier);
+        IJ.log(loadedClassifier.toString());
+
+
     }
 
     void showSettingsDialog(){
@@ -447,7 +514,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         System.out.println("To be implemented: Toggle overlay");
     }
 
-    void saveClassifier(){ System.out.println("To be implemented: Save classifier");}
+
 
     void deleteSelected(final ActionEvent e){
         System.out.println("To be implemented: Delete selected "+e.toString());

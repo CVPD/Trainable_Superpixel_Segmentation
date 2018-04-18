@@ -200,4 +200,7 @@ public class TrainableSuperpixelSegmentation {
         return abstractClassifier;
     }
 
+    public Instances getInstances() {
+        return labeled;
+    }
 }
