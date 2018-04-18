@@ -14,7 +14,6 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.*;
-import ij.WindowManager;
 import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
 import weka.classifiers.AbstractClassifier;
@@ -48,10 +47,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     {
         private Panel all = new Panel();
         private JPanel controlsPanel = new JPanel();
-        private JPanel classifierPanel = new JPanel();
-        private JPanel resultPanel = new JPanel();
+        private JPanel optionsPanel = new JPanel();
+        private JPanel trainingPanel = new JPanel();
         private JPanel annotationsPanel = new JPanel();
-        private JPanel imagePanel = new JPanel();
         private JPanel labelsJPanel = new JPanel();
         private JScrollPane scrollPanel = null;
         private GridBagConstraints annotationsConstraints;
@@ -66,6 +64,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton overlayButton = null;
         private JButton [] addExampleButton = new JButton[500];
         private JButton addClassButton = null;
+        private JButton saveClassButton = null;
+
 
 
         private ActionListener listener = new ActionListener() {
@@ -103,6 +103,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         }
                         else if(e.getSource()==addClassButton){
                             addNewClass();
+                        }
+                        else if(e.getSource()==saveClassButton){
+                            saveClassifier();
                         }
                         else{
                             for(int i = 0; i < numClasses; i++)
@@ -145,31 +148,35 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             super(imp, new ImageCanvas(imp));
             final ImageCanvas canvas = (ImageCanvas) getCanvas();
 
-            //Result panel layout and constraints
-            GridBagLayout resultLayout = new GridBagLayout();
-            resultPanel.setLayout(resultLayout);
-            GridBagConstraints resultConstraints = new GridBagConstraints();
-            resultConstraints.anchor = GridBagConstraints.NORTHWEST;
-            resultConstraints.fill = GridBagConstraints.HORIZONTAL;
-            resultConstraints.gridwidth = 1;
-            resultConstraints.gridheight = 1;
-            resultConstraints.gridx = 0;
-            resultConstraints.gridy = 0;
-            resultConstraints.weightx = 0;
-            resultConstraints.weighty = 0;
+            //Training panel layout and constraints
+            GridBagLayout trainingLayout = new GridBagLayout();
+            trainingPanel.setLayout(trainingLayout);
+            trainingPanel.setBorder(BorderFactory.createTitledBorder("Training"));
+            GridBagConstraints trainingConstraints = new GridBagConstraints();
+            trainingConstraints.anchor = GridBagConstraints.NORTHWEST;
+            trainingConstraints.fill = GridBagConstraints.VERTICAL;
+            trainingConstraints.gridwidth = 1;
+            trainingConstraints.gridheight = 1;
+            trainingConstraints.gridx = 0;
+            trainingConstraints.gridy = 0;
+            trainingConstraints.weightx = 0;
+            trainingConstraints.weighty = 0;
+            trainingConstraints.insets = new Insets(5, 5, 6, 6);
 
-            //Classifier panel layout and constraints
-            GridBagLayout classifierLayout = new GridBagLayout();
-            classifierPanel.setLayout(classifierLayout);
-            GridBagConstraints classifierConstraints = new GridBagConstraints();
-            classifierConstraints.anchor = GridBagConstraints.NORTHWEST;
-            classifierConstraints.fill = GridBagConstraints.HORIZONTAL;
-            classifierConstraints.gridwidth = 1;
-            classifierConstraints.gridheight = 1;
-            classifierConstraints.gridx = 0;
-            classifierConstraints.gridy = 0;
-            classifierConstraints.weightx = 0;
-            classifierConstraints.weighty = 0;
+            //Options panel layout and constraints
+            GridBagLayout optionsLayout = new GridBagLayout();
+            optionsPanel.setLayout(optionsLayout);
+            optionsPanel.setBorder(BorderFactory.createTitledBorder("Options"));
+            GridBagConstraints optionsConstraints = new GridBagConstraints();
+            optionsConstraints.anchor = GridBagConstraints.NORTHWEST;
+            optionsConstraints.fill = GridBagConstraints.VERTICAL;
+            optionsConstraints.gridwidth = 1;
+            optionsConstraints.gridheight = 1;
+            optionsConstraints.gridx = 0;
+            optionsConstraints.gridy = 0;
+            optionsConstraints.weightx = 0;
+            optionsConstraints.weighty = 0;
+            optionsConstraints.insets = new Insets(5, 5, 6, 6);
 
             //Control panel layout and constraints
             GridBagLayout controlLayout = new GridBagLayout();
@@ -184,19 +191,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             controlConstraints.gridy = 0;
             controlConstraints.weightx = 0;
             controlConstraints.weighty = 0;
+            controlConstraints.insets = new Insets(5, 5, 6, 6);
 
-            //Image panel layout and constraints
-            GridBagLayout imageLayout = new GridBagLayout();
-            imagePanel.setLayout(imageLayout);
-            GridBagConstraints imageConstraints = new GridBagConstraints();
-            imageConstraints.anchor = GridBagConstraints.CENTER;
-            imageConstraints.fill = GridBagConstraints.VERTICAL;
-            imageConstraints.gridwidth = 1;
-            imageConstraints.gridheight = 1;
-            imageConstraints.gridx = 0;
-            imageConstraints.gridy = 0;
-            imageConstraints.weightx = 0;
-            imageConstraints.weighty = 0;
 
             // Annotations panel
             boxAnnotation = new GridBagLayout();
@@ -239,42 +235,45 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             allConstraints.gridy = 0;
             allConstraints.weightx = 0;
             allConstraints.weighty = 0;
+            allConstraints.insets = new Insets(5, 5, 6, 6);
 
-
-            //Classifier panel buttons
+            //Training panel buttons
             trainClassButton = new JButton("Train classifier");
-            classifierPanel.add(trainClassButton,classifierConstraints);
-            classifierConstraints.gridx++;
-            loadClassButton = new JButton("Load classifier");
-            classifierPanel.add(loadClassButton,classifierConstraints);
-            classifierConstraints.gridx++;
-            applyClassButton = new JButton("Apply classifier");
-            classifierPanel.add(applyClassButton,classifierConstraints);
-            classifierConstraints.gridx++;
-            settButton = new JButton("Settings");
-            classifierPanel.add(settButton,classifierConstraints);
-            classifierConstraints.gridx++;
-
-
-            //Result panel buttons
-            plotButton = new JButton("Plot data");
-            resultPanel.add(plotButton,resultConstraints);
-            resultConstraints.gridx++;
-            probButton = new JButton("Get probability");
-            resultPanel.add(probButton,resultConstraints);
-            resultConstraints.gridx++;
-            resButton = new JButton("Create result");
-            resultPanel.add(resButton,resultConstraints);
-            resultConstraints.gridx++;
+            trainingPanel.add(trainClassButton,trainingConstraints);
+            trainingConstraints.gridy++;
             overlayButton = new JButton("Toggle overlay");
-            resultPanel.add(overlayButton,resultConstraints);
-            resultConstraints.gridx++;
+            trainingPanel.add(overlayButton,trainingConstraints);
+            trainingConstraints.gridy++;
+            resButton = new JButton("Create result");
+            trainingPanel.add(resButton,trainingConstraints);
+            trainingConstraints.gridy++;
+            probButton = new JButton("Get probability");
+            trainingPanel.add(probButton,trainingConstraints);
+            trainingConstraints.gridy++;
+            plotButton = new JButton("Plot result");
+            trainingPanel.add(plotButton,trainingConstraints);
+            trainingConstraints.gridy++;
+
+
+            //Options panel buttons
+            applyClassButton = new JButton("Apply classifier");
+            optionsPanel.add(applyClassButton,optionsConstraints);
+            optionsConstraints.gridy++;
+            loadClassButton = new JButton("Load classifier");
+            optionsPanel.add(loadClassButton,optionsConstraints);
+            optionsConstraints.gridy++;
+            saveClassButton = new JButton("Save classifier");
+            optionsPanel.add(saveClassButton,optionsConstraints);
+            optionsConstraints.gridy++;
+            addClassButton = new JButton("Create new class");
+            optionsPanel.add(addClassButton,optionsConstraints);
+            optionsConstraints.gridy++;
+            settButton = new JButton("Settings");
+            optionsPanel.add(settButton,optionsConstraints);
+            optionsConstraints.gridy++;
 
 
             //Annotations panel
-            addClassButton = new JButton("Create new class");
-            annotationsPanel.add(addClassButton,annotationsConstraints);
-            annotationsConstraints.gridy++;
             for(int i=0; i<numClasses;++i){
                 exampleList[i].addActionListener(listener);
                 exampleList[i].addItemListener(itemListener);
@@ -293,22 +292,16 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
             addExampleButton[0].setSelected(true);
 
-            controlsPanel.add(resultPanel,controlConstraints);
+            controlsPanel.add(trainingPanel,controlConstraints);
             controlConstraints.gridy++;
 
-            controlsPanel.add(classifierPanel,controlConstraints);
+            controlsPanel.add(optionsPanel,controlConstraints);
             controlConstraints.gridy++;
 
-            imagePanel.add(canvas,imageConstraints);
-            imageConstraints.gridy++;
+            all.add(controlsPanel,allConstraints);
+            allConstraints.gridx++;
 
-            imagePanel.add(controlsPanel,imageConstraints);
-            imageConstraints.gridy++;
-
-            allConstraints.weightx = 1;
-			allConstraints.weighty = 1;
-			allConstraints.gridheight = 1;
-            all.add(imagePanel,allConstraints);
+            all.add(canvas,allConstraints);
             allConstraints.gridx++;
 
             allConstraints.anchor = GridBagConstraints.NORTHEAST;
@@ -453,6 +446,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     void toggleOverlay(){
         System.out.println("To be implemented: Toggle overlay");
     }
+
+    void saveClassifier(){ System.out.println("To be implemented: Save classifier");}
 
     void deleteSelected(final ActionEvent e){
         System.out.println("To be implemented: Delete selected "+e.toString());
