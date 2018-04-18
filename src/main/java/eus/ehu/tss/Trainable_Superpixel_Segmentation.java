@@ -564,7 +564,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     public void run(String s) {
 
         classes = new ArrayList<String>();
+        IJ.log("Open input image");
         inputImage =IJ.openImage();
+        IJ.log("Open superpixel image");
         supImage = IJ.openImage();
         if(inputImage == null || supImage == null){
             IJ.error("Error when opening image");
