@@ -179,4 +179,25 @@ public class TrainableSuperpixelSegmentation {
         }
     }
 
+    /**
+     * Set a classifier
+     * @param classifier input classifier
+     * @return true on success and false on failure
+     */
+    public boolean setClassifier(AbstractClassifier classifier){
+        if(classifier!=null){
+            abstractClassifier = classifier;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns classifier
+     * @return classifier
+     */
+    public AbstractClassifier getClassifier(){
+        return abstractClassifier;
+    }
+
 }
