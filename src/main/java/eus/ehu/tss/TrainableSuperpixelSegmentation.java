@@ -20,6 +20,7 @@ public class TrainableSuperpixelSegmentation {
     private ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<RegionFeatures.Feature>();
     private ImagePlus inputImage;
     private ImagePlus labelImage;
+    private ImagePlus resultImage;
     private Instances unlabeled;
     private Instances labeled;
     private AbstractClassifier abstractClassifier;
@@ -154,7 +155,8 @@ public class TrainableSuperpixelSegmentation {
             FloatProcessor processor = new FloatProcessor(width, height, tags);
             result.addSlice(stackLabels.getSliceLabel(slice),processor.duplicate());
         }
-        return new ImagePlus(inputImage.getShortTitle()+"-supseg",result);
+        resultImage = new ImagePlus(inputImage.getShortTitle()+"-supseg",result);
+        return resultImage;
     }
 
     /**
@@ -202,5 +204,13 @@ public class TrainableSuperpixelSegmentation {
 
     public Instances getInstances() {
         return labeled;
+    }
+
+    /**
+     * Return result image
+     * @return result image
+     */
+    public ImagePlus getResultImage() {
+        return resultImage;
     }
 }
