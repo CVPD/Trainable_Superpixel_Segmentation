@@ -7,7 +7,10 @@ import ij.gui.*;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
+import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
+import ij.process.LUT;
+import ij.process.StackConverter;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
@@ -39,6 +42,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private AbstractClassifier classifier;
     private ArrayList<String> classes;
     private TrainableSuperpixelSegmentation trainableSuperpixelSegmentation;
+    private Color[] colors = new Color[]{Color.red, Color.green, Color.blue, Color.cyan, Color.magenta};
 
     private class CustomWindow extends StackWindow
     {
@@ -500,7 +504,32 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     void createResult(){
-        resultImage.show();
+
+        if(resultImage==null){
+            runStopTraining("Run");
+        }
+        ImagePlus resultImg = resultImage.duplicate();
+
+
+        resultImg.setTitle( "Classified image" );
+
+        convertTo8bitNoScaling( resultImg );
+
+        byte[] red = new byte[ 256 ];
+        byte[] green = new byte[ 256 ];
+        byte[] blue = new byte[ 256 ];
+        for(int i = 0 ; i < numClasses; i++)
+        {
+            //IJ.log("i = " + i + " color index = " + colorIndex);
+            red[i] = (byte) colors[ i ].getRed();
+            green[i] = (byte) colors[ i ].getGreen();
+            blue[i] = (byte) colors[ i ].getBlue();
+        }
+        LUT overlayLUT = new LUT(red, green, blue);
+        resultImg.getProcessor().setColorModel( overlayLUT );
+        resultImg.getImageStack().setColorModel( overlayLUT );
+        resultImg.updateAndDraw();
+        resultImg.show();
     }
 
 
@@ -625,7 +654,26 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
 
+    /**
+     * Taken from Weka_Segmentation
+     *
+     * Convert image to 8 bit in place without scaling it
+     *
+     * @param image input image
+     */
+    static void convertTo8bitNoScaling( ImagePlus image )
+    {
+        boolean aux = ImageConverter.getDoScaling();
 
+        ImageConverter.setDoScaling( false );
+
+        if( image.getImageStackSize() > 1)
+            (new StackConverter( image )).convertToGray8();
+        else
+            (new ImageConverter( image )).convertToGray8();
+
+        ImageConverter.setDoScaling( aux );
+    }
 
 
     @Override
