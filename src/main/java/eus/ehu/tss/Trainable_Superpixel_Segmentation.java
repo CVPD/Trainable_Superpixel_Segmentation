@@ -382,7 +382,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     void addNewClass(){
         String inputName = JOptionPane.showInputDialog("Please input a new label name");
-        if(null == inputName){
+        if(null == inputName || 0 == inputName.length()){
             IJ.error("Invalid name");
             return;
         }
