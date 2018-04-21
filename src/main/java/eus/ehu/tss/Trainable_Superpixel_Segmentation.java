@@ -640,13 +640,20 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
         final Roi r = inputImage.getRoi();
         if(null == r){
-            IJ.error("ROI null");
+            IJ.log("Select a ROI before adding");
             return;
         }
+        inputImage.killRoi();
         ArrayList<Float> selectedLabel = getSelectedLabels(supImage,r);
         for(Float label: selectedLabel){
-            inputImage.killRoi();
             int[] a = tags.get(i);
+            //Check if tag already exists on list
+            for(int x = 0;x<a.length;++x){
+                if(a[x]==label.intValue()){
+                    IJ.log("Tag already on list");
+                    return;
+                }
+            }
             a = Arrays.copyOf(a, a.length+1);
             a[a.length-1] = label.intValue();
             tags.set(i,a);
@@ -691,9 +698,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             xpoints[ i ],
                             ypoints[ i ],
                             ((PointRoi) roi).getPointPosition( i )-1 );
-                    if( Float.compare( 0f, value ) != 0 &&
-                            list.contains( value ) == false )
-                        list.add( (float) value );
+                    if(Float.compare( 0f, value ) == 0){
+                        IJ.log("Tag with value 0 not added");
+                    }
+                    if( Float.compare( 0f, value ) != 0 && list.contains( value ) == false ) {
+                        list.add((float) value);
+                    }
                 }
             }
             else
@@ -702,6 +712,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 for ( int i = 0; i<xpoints.length; i ++ )
                 {
                     float value = ip.getf( xpoints[ i ], ypoints[ i ]);
+                    if(Float.compare( 0f, value ) == 0){
+                        IJ.log("Tag with value 0 not added");
+                    }
                     if( Float.compare( 0f, value ) != 0 &&
                             list.contains( value ) == false )
                         list.add( (float) value );
@@ -722,6 +735,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
             for( int i=0; i<values.length; i++ )
             {
+                if(Float.compare( 0f, values[i] ) == 0){
+                    IJ.log("Tags with value 0 not added");
+                }
                 if( Float.compare( 0f, values[ i ] ) != 0 &&
                         list.contains( values[ i ]) == false )
                     list.add( values[ i ]);
