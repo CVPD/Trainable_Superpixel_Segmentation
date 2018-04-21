@@ -7,10 +7,7 @@ import ij.gui.*;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
-import ij.process.ImageConverter;
-import ij.process.ImageProcessor;
-import ij.process.LUT;
-import ij.process.StackConverter;
+import ij.process.*;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
@@ -113,7 +110,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             {
                                 if(e.getSource() == exampleList[i])
                                 {
-                                    deleteSelected(e);
+                                    deleteSelected(e,i);
                                     break;
                                 }
                                 if(e.getSource() == addExampleButton[i])
@@ -550,9 +547,23 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
 
-
-    void deleteSelected(final ActionEvent e){
-        System.out.println("To be implemented: Delete selected "+e.toString());
+    /**
+     * Delete selected tag
+     * @param e action command with information about item to be deleted
+     * @param i identifier of class to add tags
+     */
+    void deleteSelected(final ActionEvent e, final int i){
+        Float f = Float.parseFloat(e.getActionCommand());
+        int item = f.intValue();
+        int[] a = tags.get(i);
+        int[] b = new int[a.length];
+        for(int x=0;x<a.length;++x){
+            if(a[x]!=item){
+                b[x]=a[x];
+            }
+        }
+        tags.set(i,b);
+        exampleList[i].remove(f.toString());
     }
 
     /**
