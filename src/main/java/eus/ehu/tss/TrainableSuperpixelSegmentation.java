@@ -23,6 +23,7 @@ public class TrainableSuperpixelSegmentation {
     private ImagePlus resultImage;
     private Instances unlabeled;
     private Instances labeled;
+    private Instances trainingData;
     private AbstractClassifier abstractClassifier;
     ArrayList<String> classes = null;
 
@@ -94,7 +95,7 @@ public class TrainableSuperpixelSegmentation {
             attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
         }
         attributes.add(new Attribute("Class",classes));
-        Instances trainingData = new Instances("training data",attributes,0);
+        trainingData = new Instances("training data",attributes,0);
         // Fill training dataset with the feature vectors of the corresponding
         // regions given by classRegions
         for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
@@ -213,4 +214,9 @@ public class TrainableSuperpixelSegmentation {
     public ImagePlus getResultImage() {
         return resultImage;
     }
+
+    public Instances getTrainingData() {
+        return trainingData;
+    }
+
 }

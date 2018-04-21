@@ -9,9 +9,14 @@ import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
 import ij.process.*;
 import weka.classifiers.AbstractClassifier;
+import weka.classifiers.evaluation.EvaluationUtils;
+import weka.classifiers.evaluation.Prediction;
+import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
+import weka.gui.visualize.PlotData2D;
+import weka.gui.visualize.ThresholdVisualizePanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -534,8 +539,69 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         System.out.println("To be implemented: Show settings dialog");
     }
 
+    /**
+     * Taken from Weka_Segmentation
+     * Plot the current result
+     */
     void showPlot(){
-        System.out.println("To be implemented: Show Plot");
+        IJ.showStatus("Evaluating current data...");
+        IJ.log("Evaluating current data...");
+        final Instances data;
+        if(trainableSuperpixelSegmentation.getTrainingData()!=null){
+            data = trainableSuperpixelSegmentation.getTrainingData();
+        }else {
+            data = null;
+        }
+        if(null == data)
+        {
+            IJ.error( "Train classifier");
+            return;
+        }
+        displayGraphs(data,trainableSuperpixelSegmentation.getClassifier());
+        IJ.showStatus("Done.");
+        IJ.log("Done");
+    }
+
+    /**
+     * Taken from Weka_Segmentation
+     * Display the threshold curve window (for precision/recall, ROC, etc.).
+     *
+     * @param data input instances
+     * @param classifier classifier to evaluate
+     */
+    public static void displayGraphs(Instances data, AbstractClassifier classifier)
+    {
+        ThresholdCurve tc = new ThresholdCurve();
+
+        ArrayList<Prediction> predictions = null;
+        try {
+            final EvaluationUtils eu = new EvaluationUtils();
+            predictions = eu.getTestPredictions(classifier, data);
+        } catch (Exception e) {
+            IJ.log("Error while evaluating data!");
+            e.printStackTrace();
+            return;
+        }
+
+        Instances result = tc.getCurve(predictions);
+        ThresholdVisualizePanel vmc = new ThresholdVisualizePanel();
+        vmc.setName(result.relationName() + " (display only)");
+        PlotData2D tempd = new PlotData2D(result);
+        tempd.setPlotName(result.relationName());
+        tempd.addInstanceNumberAttribute();
+        try {
+            vmc.addPlot(tempd);
+        } catch (Exception e) {
+            IJ.log("Error while adding plot to visualization panel!");
+            e.printStackTrace();
+            return;
+        }
+        String plotName = vmc.getName();
+        JFrame jf = new JFrame("Weka Classifier Visualize: "+plotName);
+        jf.setSize(500,400);
+        jf.getContentPane().setLayout(new BorderLayout());
+        jf.getContentPane().add(vmc, BorderLayout.CENTER);
+        jf.setVisible(true);
     }
 
     void showProbability(){
