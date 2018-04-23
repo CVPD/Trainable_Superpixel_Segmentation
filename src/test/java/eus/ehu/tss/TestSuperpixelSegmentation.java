@@ -2,6 +2,7 @@ package eus.ehu.tss;
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.process.ImageProcessor;
 import weka.classifiers.lazy.IBk;
 
 import java.util.ArrayList;
@@ -50,5 +51,7 @@ public class TestSuperpixelSegmentation{
             ImagePlus result = test.applyClassifier();
             result.show();
         }
+        ImagePlus probs = test.getProbabilityMap();
+        probs.show();
     }
 }

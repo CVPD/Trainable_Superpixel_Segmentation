@@ -605,7 +605,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     void showProbability(){
-        System.out.println("To be implemented: Show probability");
+        ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
+        probabilityImage.show();
     }
 
     void toggleOverlay(){

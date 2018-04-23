@@ -54,5 +54,7 @@ public class TestColorSuperpixelSegmentation {
             ImagePlus result = test.applyClassifier();
             result.show();
         }
+        ImagePlus probs = test.getProbabilityMap();
+        probs.show();
     }
 }
