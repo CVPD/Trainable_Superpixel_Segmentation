@@ -184,14 +184,12 @@ public class TrainableSuperpixelSegmentation {
     }
 
     public ImagePlus getProbabilityMap(){
-        IJ.log("1");
         final int numInstances = unlabeled.numInstances();
         final int numClasses = classes.size();
         final int width = labelImage.getWidth();
         final int height = labelImage.getHeight();
         final double[][] classificationResult = new double[numClasses][numInstances];
         ImageStack classificationResultImage = new ImageStack(width,height);
-        IJ.log("2");
         for(int i=0;i<numInstances;++i){
             try{
                 double[] prob = abstractClassifier.distributionForInstance(unlabeled.get(i));
@@ -204,11 +202,9 @@ public class TrainableSuperpixelSegmentation {
                 return null;
             }
         }
-        IJ.log("3");
         ImageStack stackLabels = labelImage.getStack();
         double tags[] = new double[height*width];
         for(int k = 0;k<numClasses;++k) {
-            IJ.log("4."+k);
             for (int slice = 1; slice <= inputImage.getNSlices(); ++slice) {
                 ImageProcessor ip = stackLabels.getProcessor(slice);
                 for (int x = 0; x < width; ++x) {
@@ -225,9 +221,7 @@ public class TrainableSuperpixelSegmentation {
                 classificationResultImage.addSlice(classes.get(k),processor.duplicate());
             }
         }
-        IJ.log("5");
         ImagePlus result = new ImagePlus(inputImage.getShortTitle()+"-probMap",classificationResultImage);
-        IJ.log("6");
         return result;
 
     }
