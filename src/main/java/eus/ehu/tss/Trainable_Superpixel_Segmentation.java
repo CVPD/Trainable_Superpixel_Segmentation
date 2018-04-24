@@ -13,6 +13,7 @@ import weka.classifiers.evaluation.EvaluationUtils;
 import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.lazy.IBk;
+import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.gui.visualize.PlotData2D;
@@ -418,6 +419,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     void runStopTraining(final String command){
         IJ.log("Training classifier");
+        trainableSuperpixelSegmentation.setClasses(classes);
+        trainableSuperpixelSegmentation.calculateRegionFeatures();
         if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
             IJ.error("Error when training classifier");
         }
@@ -797,7 +800,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             selectedFeatures.add(RegionFeatures.Feature.fromLabel("Max"));
             selectedFeatures.add(RegionFeatures.Feature.fromLabel("Min"));
             // Define classifier
-            IBk exampleClassifier = new IBk();
+            RandomForest exampleClassifier = new RandomForest();
             trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,selectedFeatures,exampleClassifier,classes);
             win = new CustomWindow(inputImage);
             Toolbar.getInstance().setTool( Toolbar.POINT );

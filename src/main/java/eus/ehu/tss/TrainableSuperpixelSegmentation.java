@@ -57,7 +57,7 @@ public class TrainableSuperpixelSegmentation {
      * Calculates the selected features for each region and saves them on the private variable unlabeled
      * @return boolean that checks if the region features have been created
      */
-    private boolean calculateRegionFeatures(){
+    public boolean calculateRegionFeatures(){
         if(inputImage.getType()==ImagePlus.COLOR_RGB){
             unlabeled = RegionColorFeatures.calculateColorFeatures(
                     inputImage,
@@ -268,5 +268,15 @@ public class TrainableSuperpixelSegmentation {
     public Instances getTrainingData() {
         return trainingData;
     }
+
+
+    public ArrayList<String> getClasses() {
+        return classes;
+    }
+
+    public void setClasses(ArrayList<String> classes) {
+        this.classes = classes;
+    }
+
 
 }
