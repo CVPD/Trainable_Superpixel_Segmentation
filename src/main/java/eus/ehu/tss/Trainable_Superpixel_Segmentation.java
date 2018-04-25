@@ -623,8 +623,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param i identifier of class to add tags
      */
     void deleteSelected(final ActionEvent e, final int i){
-        Float f = Float.parseFloat(e.getActionCommand());
-        int item = f.intValue();
+        int f = Integer.parseInt(e.getActionCommand());
+        int item = f;
         int[] a = tags.get(i);
         int[] b = new int[a.length];
         for(int x=0;x<a.length;++x){
@@ -633,7 +633,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
         }
         tags.set(i,b);
-        exampleList[i].remove(f.toString());
+        exampleList[i].remove(f);
     }
 
     /**
@@ -648,18 +648,18 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             return;
         }
         inputImage.killRoi();
-        ArrayList<Float> selectedLabel = getSelectedLabels(supImage,r);
-        for(Float label: selectedLabel){
+        ArrayList<Integer> selectedLabel = getSelectedLabels(supImage,r);
+        for(Integer label: selectedLabel){
             int[] a = tags.get(i);
             //Check if tag already exists on list
             for(int x = 0;x<a.length;++x){
-                if(a[x]==label.intValue()){
+                if(a[x]==label){
                     IJ.log("Tag already on list");
                     return;
                 }
             }
             a = Arrays.copyOf(a, a.length+1);
-            a[a.length-1] = label.intValue();
+            a[a.length-1] = label;
             tags.set(i,a);
             exampleList[i].add(label.toString());
         }
@@ -680,11 +680,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param roi  FreehandRoi or PointRoi with selected labels
      * @return list of selected labels
      */
-    public static ArrayList<Float> getSelectedLabels(
+    public static ArrayList<Integer> getSelectedLabels(
             final ImagePlus labelImage,
             final Roi roi )
     {
-        final ArrayList<Float> list = new ArrayList<Float>();
+        final ArrayList<Integer> list = new ArrayList<Integer>();
 
         // if the user makes point selections
         if( roi instanceof PointRoi)
@@ -706,7 +706,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         IJ.log("Tag with value 0 not added");
                     }
                     if( Float.compare( 0f, value ) != 0 && list.contains( value ) == false ) {
-                        list.add((float) value);
+                        list.add((int) value);
                     }
                 }
             }
@@ -721,7 +721,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     }
                     if( Float.compare( 0f, value ) != 0 &&
                             list.contains( value ) == false )
-                        list.add( (float) value );
+                        list.add( (int) value );
                 }
             }
         }
@@ -733,8 +733,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             // do not interpolate pixel values
             PlotWindow.interpolate = false;
             // get label values from line roi (different from 0)
-            float[] values = ( new ProfilePlot( labelImage ) )
-                    .getPlot().getYValues();
+            float[] f = ( new ProfilePlot( labelImage ) ).getPlot().getYValues();
+            int[] values = new int[f.length];
+            for(int i=0;i<f.length;++i){
+                values[i]= (int) f[i];
+            }
             PlotWindow.interpolate = interpolateOption;
 
             for( int i=0; i<values.length; i++ )
