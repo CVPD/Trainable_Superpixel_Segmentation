@@ -45,6 +45,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private AbstractClassifier classifier;
     private ArrayList<String> classes;
     private TrainableSuperpixelSegmentation trainableSuperpixelSegmentation;
+    private boolean overlay = false;
     private Color[] colors = new Color[]{Color.red, Color.green, Color.blue, Color.cyan, Color.magenta};
 
     private class CustomWindow extends StackWindow
@@ -613,7 +614,22 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     void toggleOverlay(){
-        System.out.println("To be implemented: Toggle overlay");
+        if(!overlay) {
+            int slice = inputImage.getCurrentSlice();
+            ImageRoi roi = null;
+            if (null != resultImage) {
+                roi = new ImageRoi(0, 0, resultImage.getImageStack().getProcessor(slice));
+                roi.setOpacity(0.25);
+            } else {
+                roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
+                roi.setOpacity(0.25);
+            }
+            inputImage.setOverlay(new Overlay(roi));
+            overlay=true;
+        }else {
+            inputImage.setOverlay(null);
+            overlay=false;
+        }
     }
 
 
