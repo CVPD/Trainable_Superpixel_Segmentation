@@ -45,7 +45,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private AbstractClassifier classifier;
     private ArrayList<String> classes;
     private TrainableSuperpixelSegmentation trainableSuperpixelSegmentation;
-    private boolean overlay = false;
+    private int overlay = 0;
     private Color[] colors = new Color[]{Color.red, Color.green, Color.blue, Color.cyan, Color.magenta};
 
     private class CustomWindow extends StackWindow
@@ -89,7 +89,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             toggleOverlay();
                         }
                         else if(e.getSource() == resButton){
-                           createResult();
+                            createResult();
                         }
                         else if(e.getSource() == probButton){
                             showProbability();
@@ -313,9 +313,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             allConstraints.gridx++;
 
             allConstraints.anchor = GridBagConstraints.NORTHEAST;
-			allConstraints.weightx = 0;
-			allConstraints.weighty = 0;
-			allConstraints.gridheight = 1;
+            allConstraints.weightx = 0;
+            allConstraints.weighty = 0;
+            allConstraints.gridheight = 1;
             all.add(scrollPanel,allConstraints);
             allConstraints.gridx++;
 
@@ -385,6 +385,28 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             getCanvas().repaint();
             this.controlsPanel.repaint();
             this.all.repaint();
+        }
+
+        public void rotateOverlayButton() {
+            if(overlay==0){
+                overlay++;
+                if(resultImage!=null){
+                    overlayButton.setText("Toggle result overlay");
+                }else {
+                    overlayButton.setText("Hide overlay");
+                }
+            }else if(overlay==1){
+                if(resultImage!=null){
+                    overlay++;
+                    overlayButton.setText("Hide overlay");
+                }else {
+                    overlay=0;
+                    overlayButton.setText("Toggle overlay");
+                }
+            }else {
+                overlay=0;
+                overlayButton.setText("Toggle overlay");
+            }
         }
     }
 
@@ -614,21 +636,19 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     void toggleOverlay(){
-        if(!overlay) {
-            int slice = inputImage.getCurrentSlice();
-            ImageRoi roi = null;
-            if (null != resultImage) {
-                roi = new ImageRoi(0, 0, resultImage.getImageStack().getProcessor(slice));
-                roi.setOpacity(0.25);
-            } else {
-                roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
-                roi.setOpacity(0.25);
-            }
-            inputImage.setOverlay(new Overlay(roi));
-            overlay=true;
-        }else {
+        win.rotateOverlayButton();
+        int slice = inputImage.getCurrentSlice();
+        ImageRoi roi = null;
+        if(overlay==0){
             inputImage.setOverlay(null);
-            overlay=false;
+        }else if(overlay==1){
+            roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
+            roi.setOpacity(0.25);
+            inputImage.setOverlay(new Overlay(roi));
+        }else {
+            roi = new ImageRoi(0, 0, resultImage.getImageStack().getProcessor(slice));
+            roi.setOpacity(0.25);
+            inputImage.setOverlay(new Overlay(roi));
         }
     }
 
@@ -683,7 +703,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     void listSelected(final ItemEvent e, final int i)
     {
-       System.out.println("To be implemented: List selected: e: "+e.toString()+" i: "+i);
+        System.out.println("To be implemented: List selected: e: "+e.toString()+" i: "+i);
     }
 
     /**
