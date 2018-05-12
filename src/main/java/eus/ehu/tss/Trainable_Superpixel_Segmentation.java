@@ -662,14 +662,26 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         int f = Integer.parseInt(e.getActionCommand());
         int item = f;
         int[] a = tags.get(i);
-        int[] b = new int[a.length];
+        int[] b = new int[a.length-1];
+        boolean post=false;
         for(int x=0;x<a.length;++x){
             if(a[x]!=item){
-                b[x]=a[x];
+                if(post){
+                    b[x-1]=a[x];
+                }else {
+                    b[x]=a[x];
+                }
+            }else {
+                post=true;
             }
         }
         tags.set(i,b);
-        exampleList[i].remove(f);
+        try {
+            exampleList[i].remove(Integer.toString(f));
+        }catch (Exception e1){
+            e1.printStackTrace();
+        }
+        System.out.println("Deleted");
     }
 
     /**
