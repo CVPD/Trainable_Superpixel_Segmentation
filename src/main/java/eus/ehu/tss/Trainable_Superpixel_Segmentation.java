@@ -14,6 +14,7 @@ import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.RandomForest;
+import weka.core.Attribute;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.gui.visualize.PlotData2D;
@@ -25,6 +26,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.GZIPInputStream;
@@ -447,6 +449,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
             IJ.error("Error when training classifier");
         }
+        classifier = trainableSuperpixelSegmentation.getClassifier();
         IJ.log("Classifier trained");
         applyClassifier();
         createResult();
@@ -454,6 +457,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     void applyClassifier(){
         IJ.log("Applying classifier");
+        if(!trainableSuperpixelSegmentation.setClassifier(classifier)){
+            IJ.error("Error when setting classifier");
+            return;
+        }
         resultImage = trainableSuperpixelSegmentation.applyClassifier();
         IJ.log("Classifier applied");
     }
@@ -518,6 +525,21 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             loadedClassifier = (AbstractClassifier) objectInputStream.readObject();
             try{
                 Instances loadedInstances = (Instances) objectInputStream.readObject();
+                Attribute classAttribute = loadedInstances.classAttribute();
+                Enumeration<Object> classValues = classAttribute.enumerateValues();
+                int j=classAttribute.numValues();
+                if(j!=numClasses){
+                    int t = numClasses;
+                    for(int i=0;i<t;++i){
+                        classValues.nextElement();
+                    }
+                    for(int i=t;i<j;++i){
+                        final String className = ((String)classValues.nextElement()).trim();
+                        classes.add(className);
+                        win.addClass();
+                        repaintWindow();
+                    }
+                }
             }catch (Exception e){
             }
             objectInputStream.close();
@@ -525,17 +547,23 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             IJ.log("Loading file failed: "+e.getMessage());
             return;
         }
-        trainableSuperpixelSegmentation.setClassifier(loadedClassifier);
+        classifier = loadedClassifier;
+        trainableSuperpixelSegmentation.setClasses(classes);
+        trainableSuperpixelSegmentation.calculateRegionFeatures();
         IJ.log(loadedClassifier.toString());
-
 
     }
 
     void createResult(){
 
         if(resultImage==null){
-            runStopTraining("Run");
+            if(classifier==null) {
+                runStopTraining("Run");
+            }else {
+                applyClassifier();
+            }
         }
+
         ImagePlus resultImg = resultImage.duplicate();
 
 
