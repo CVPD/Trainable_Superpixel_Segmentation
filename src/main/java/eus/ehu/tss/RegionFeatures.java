@@ -18,6 +18,10 @@ import java.util.ArrayList;
  */
 public class RegionFeatures {
 
+    public static int totalFeatures() {
+        return Feature.numFeatures();
+    }
+
     /**
      * enum that lists the Features that can be obtained from the MorphoLibJ Intensity Measures
      */

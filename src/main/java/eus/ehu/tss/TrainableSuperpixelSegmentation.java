@@ -273,4 +273,7 @@ public class TrainableSuperpixelSegmentation {
     }
 
 
+    public void setSelectedFeatures(ArrayList<RegionFeatures.Feature> selectedFeatures) {
+        this.selectedFeatures = selectedFeatures;
+    }
 }

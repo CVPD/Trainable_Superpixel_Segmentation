@@ -8,21 +8,24 @@ import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
 import ij.process.*;
+import weka.classifiers.*;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
 import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.RandomForest;
-import weka.core.Attribute;
-import weka.core.Instances;
-import weka.core.SerializationHelper;
+import weka.core.*;
+import weka.gui.GenericObjectEditor;
+import weka.gui.PropertyPanel;
 import weka.gui.visualize.PlotData2D;
 import weka.gui.visualize.ThresholdVisualizePanel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +75,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton [] addExampleButton = new JButton[500];
         private JButton addClassButton = null;
         private JButton saveClassButton = null;
+        private double overlayOpacity = 0.33;
 
 
 
@@ -590,7 +594,99 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
 
     void showSettingsDialog(){
-        System.out.println("To be implemented: Show settings dialog");
+
+        GenericDialog gd = new GenericDialog("Superpixel Segmentation settings");
+        gd.addMessage("Training features:");
+        final int rows = RegionFeatures.totalFeatures()/2;
+        final String[] avFeatures = RegionFeatures.Feature.getAllLabels();
+        boolean[] enabledFeatures = new boolean[RegionFeatures.totalFeatures()];
+        for(int i=0;i<RegionFeatures.totalFeatures();++i){
+            if(features.contains(RegionFeatures.Feature.fromLabel(avFeatures[i]))){
+                enabledFeatures[i]=true;
+            }else {
+                enabledFeatures[i]=false;
+            }
+        }
+        gd.addCheckboxGroup(rows,2,avFeatures,enabledFeatures);
+
+        gd.addSlider("Overlay opacity:",0,1,win.overlayOpacity);
+
+        gd.addMessage("Classifier options:");
+        GenericObjectEditor classifierEditor = new GenericObjectEditor();
+        PropertyPanel classifierEditorPanel = new PropertyPanel(classifierEditor);
+        classifierEditor.setClassType(Classifier.class);
+        classifierEditor.setValue(classifier);
+        gd.add(classifierEditorPanel);
+
+        Object c = (Object) classifierEditor.getValue();
+        String originalOptions = "";
+        String originalClassifierName = c.getClass().getName();
+        if (c instanceof OptionHandler)
+        {
+            originalOptions = Utils.joinOptions(((OptionHandler)c).getOptions());
+        }
+
+
+        gd.showDialog();
+
+        if(gd.wasCanceled()){
+            return;
+        }
+        ArrayList<RegionFeatures.Feature> newFeatures = new ArrayList<RegionFeatures.Feature>();
+        for(int i=0;i<RegionFeatures.totalFeatures();++i){
+            enabledFeatures[i] = gd.getNextBoolean();
+            if(enabledFeatures[i]){
+                newFeatures.add(RegionFeatures.Feature.fromLabel(avFeatures[i]));
+            }
+        }
+        features = newFeatures;
+        trainableSuperpixelSegmentation.setSelectedFeatures(features);
+
+        c = (Object)classifierEditor.getValue();
+        String options = "";
+        final String[] optionsArray = ((OptionHandler)c).getOptions();
+        if (c instanceof OptionHandler)
+        {
+            options = Utils.joinOptions( optionsArray );
+        }
+        if( !originalClassifierName.equals( c.getClass().getName() )
+                || !originalOptions.equals( options ) )
+        {
+            AbstractClassifier cls;
+            try{
+                cls = (AbstractClassifier) (c.getClass().newInstance());
+                cls.setOptions( optionsArray );
+            }
+            catch(Exception ex)
+            {
+                ex.printStackTrace();
+                return;
+            }
+            classifier = cls;
+            trainableSuperpixelSegmentation.setClassifier(classifier);
+            IJ.log("Current classifier: " + c.getClass().getName() + " " + options);
+        }
+
+        final double newOpacity = (double) gd.getNextNumber();
+        if( newOpacity != win.overlayOpacity )
+        {
+            ImageRoi roi = null;
+            int slice = inputImage.getCurrentSlice();
+            win.overlayOpacity = newOpacity;
+            if(overlay==0){
+                inputImage.setOverlay(null);
+            }else if(overlay==1){
+                roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
+                roi.setOpacity(newOpacity);
+                inputImage.setOverlay(new Overlay(roi));
+            }else {
+                roi = new ImageRoi(0, 0, resultImage.getImageStack().getProcessor(slice));
+                roi.setOpacity(newOpacity);
+                inputImage.setOverlay(new Overlay(roi));
+            }
+        }
+
+
     }
 
     /**
@@ -671,11 +767,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             inputImage.setOverlay(null);
         }else if(overlay==1){
             roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
-            roi.setOpacity(0.25);
+            roi.setOpacity(win.overlayOpacity);
             inputImage.setOverlay(new Overlay(roi));
         }else {
             roi = new ImageRoi(0, 0, resultImage.getImageStack().getProcessor(slice));
-            roi.setOpacity(0.25);
+            roi.setOpacity(win.overlayOpacity);
             inputImage.setOverlay(new Overlay(roi));
         }
     }
@@ -869,18 +965,18 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 exampleList[i].setForeground(Color.blue);
                 tags.add(new int[0]);
             }
-            ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<>();
-            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mean"));
-            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Median"));
-            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mode"));
-            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Skewness"));
-            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Kurtosis"));
-            selectedFeatures.add(RegionFeatures.Feature.fromLabel("StdDev"));
-            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Max"));
-            selectedFeatures.add(RegionFeatures.Feature.fromLabel("Min"));
+            features = new ArrayList<>();
+            features.add(RegionFeatures.Feature.fromLabel("Mean"));
+            features.add(RegionFeatures.Feature.fromLabel("Median"));
+            features.add(RegionFeatures.Feature.fromLabel("Mode"));
+            features.add(RegionFeatures.Feature.fromLabel("Skewness"));
+            features.add(RegionFeatures.Feature.fromLabel("Kurtosis"));
+            features.add(RegionFeatures.Feature.fromLabel("StdDev"));
+            features.add(RegionFeatures.Feature.fromLabel("Max"));
+            features.add(RegionFeatures.Feature.fromLabel("Min"));
             // Define classifier
-            RandomForest exampleClassifier = new RandomForest();
-            trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,selectedFeatures,exampleClassifier,classes);
+            classifier = new RandomForest();
+            trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,features,classifier,classes);
             win = new CustomWindow(inputImage);
             Toolbar.getInstance().setTool( Toolbar.POINT );
         }
