@@ -50,7 +50,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private AbstractClassifier classifier;
     private ArrayList<String> classes;
     private TrainableSuperpixelSegmentation trainableSuperpixelSegmentation;
-    private int overlay = 0;
+    private int overlay = 1;
     private Color[] colors = new Color[]{Color.red, Color.green, Color.blue, Color.cyan, Color.magenta};
     private boolean calculateFeatures = true;
 
@@ -393,28 +393,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             this.controlsPanel.repaint();
             this.all.repaint();
         }
-
-        public void rotateOverlayButton() {
-            if(overlay==0){
-                overlay++;
-                if(resultImage!=null){
-                    overlayButton.setText("Toggle result overlay");
-                }else {
-                    overlayButton.setText("Hide overlay");
-                }
-            }else if(overlay==1){
-                if(resultImage!=null){
-                    overlay++;
-                    overlayButton.setText("Hide overlay");
-                }else {
-                    overlay=0;
-                    overlayButton.setText("Toggle overlay");
-                }
-            }else {
-                overlay=0;
-                overlayButton.setText("Toggle overlay");
-            }
-        }
     }
 
     void addNewClass(){
@@ -597,7 +575,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         byte[] blue = new byte[ 256 ];
         for(int i = 0 ; i < numClasses; i++)
         {
-            //IJ.log("i = " + i + " color index = " + colorIndex);
             red[i] = (byte) colors[ i ].getRed();
             green[i] = (byte) colors[ i ].getGreen();
             blue[i] = (byte) colors[ i ].getBlue();
@@ -791,16 +768,22 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     void toggleOverlay(){
-        win.rotateOverlayButton();
         int slice = inputImage.getCurrentSlice();
         ImageRoi roi = null;
         if(overlay==0){
+            overlay++;
             inputImage.setOverlay(null);
         }else if(overlay==1){
+            if(resultImage!=null) {
+                overlay++;
+            }else {
+                overlay=0;
+            }
             roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
             roi.setOpacity(win.overlayOpacity);
             inputImage.setOverlay(new Overlay(roi));
         }else {
+            overlay=0;
             roi = new ImageRoi(0, 0, resultImage.getImageStack().getProcessor(slice));
             roi.setOpacity(win.overlayOpacity);
             inputImage.setOverlay(new Overlay(roi));
