@@ -52,6 +52,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private TrainableSuperpixelSegmentation trainableSuperpixelSegmentation;
     private int overlay = 1;
     private Color[] colors = new Color[]{Color.red, Color.green, Color.blue, Color.cyan, Color.magenta};
+    private LUT overlayLUT = null;
     private boolean calculateFeatures = true;
 
     private class CustomWindow extends StackWindow
@@ -77,7 +78,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton addClassButton = null;
         private JButton saveClassButton = null;
         private double overlayOpacity = 0.33;
-
 
 
         private ActionListener listener = new ActionListener() {
@@ -158,6 +158,44 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         CustomWindow(ImagePlus imp)
         {
             super(imp, new ImageCanvas(imp));
+
+            // Create overlay LUT
+            final byte[] red = new byte[ 256 ];
+            final byte[] green = new byte[ 256 ];
+            final byte[] blue = new byte[ 256 ];
+
+            // assign colors to classes
+            colors = new Color[ 50 ];
+
+            // hue for assigning new color ([0.0-1.0])
+            float hue = 0f;
+            // saturation for assigning new color ([0.5-1.0])
+            float saturation = 1f;
+
+            // first color is red: HSB( 0, 1, 1 )
+
+            for(int i=0; i<50; i++)
+            {
+                colors[ i ] = Color.getHSBColor(hue, saturation, 1);
+
+                hue += 0.38197f; // golden angle
+                if (hue > 1)
+                    hue -= 1;
+                saturation += 0.38197f; // golden angle
+                if (saturation > 1)
+                    saturation -= 1;
+                saturation = 0.5f * saturation + 0.5f;
+            }
+
+            for(int i = 0 ; i < 50; i++)
+            {
+                //IJ.log("i = " + i + " color index = " + colorIndex);
+                red[i] = (byte) colors[ i ].getRed();
+                green[i] = (byte) colors[ i ].getGreen();
+                blue[i] = (byte) colors[ i ].getBlue();
+            }
+            overlayLUT = new LUT(red, green, blue);
+
             final ImageCanvas canvas = (ImageCanvas) getCanvas();
 
             //Training panel layout and constraints
@@ -358,7 +396,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             int classNum = numClasses;
 
             exampleList[classNum] = new java.awt.List(5);
-            exampleList[classNum].setForeground(Color.blue);
+            exampleList[classNum].setForeground(colors[classNum]);
 
             exampleList[classNum].addActionListener(listener);
             exampleList[classNum].addItemListener(itemListener);
@@ -571,17 +609,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         resultImg.setTitle( "Classified image" );
 
         convertTo8bitNoScaling( resultImg );
-
-        byte[] red = new byte[ 256 ];
-        byte[] green = new byte[ 256 ];
-        byte[] blue = new byte[ 256 ];
-        for(int i = 0 ; i < numClasses; i++)
-        {
-            red[i] = (byte) colors[ i ].getRed();
-            green[i] = (byte) colors[ i ].getGreen();
-            blue[i] = (byte) colors[ i ].getBlue();
-        }
-        LUT overlayLUT = new LUT(red, green, blue);
         resultImg.getProcessor().setColorModel( overlayLUT );
         resultImg.getImageStack().setColorModel( overlayLUT );
         resultImg.updateAndDraw();
@@ -786,7 +813,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             inputImage.setOverlay(new Overlay(roi));
         }else {
             overlay=0;
-            roi = new ImageRoi(0, 0, resultImage.getImageStack().getProcessor(slice));
+            ImagePlus resultImg = resultImage.duplicate();
+            resultImg.setTitle( "Classified image" );
+            convertTo8bitNoScaling( resultImg );
+            resultImg.getProcessor().setColorModel( overlayLUT );
+            resultImg.getImageStack().setColorModel( overlayLUT );
+            ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
+            roi = new ImageRoi(0, 0, processor);
             roi.setOpacity(win.overlayOpacity);
             inputImage.setOverlay(new Overlay(roi));
         }
@@ -978,7 +1011,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             for(int i=0; i<numClasses; ++i){
                 classes.add("class "+i);
                 exampleList[i] = new java.awt.List(5);
-                exampleList[i].setForeground(Color.blue);
+                exampleList[i].setForeground(colors[i]);
                 tags.add(new int[0]);
             }
             features = new ArrayList<>();
