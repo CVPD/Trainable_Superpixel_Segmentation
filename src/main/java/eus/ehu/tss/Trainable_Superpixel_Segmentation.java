@@ -52,6 +52,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private TrainableSuperpixelSegmentation trainableSuperpixelSegmentation;
     private int overlay = 0;
     private Color[] colors = new Color[]{Color.red, Color.green, Color.blue, Color.cyan, Color.magenta};
+    private boolean calculateFeatures = true;
 
     private class CustomWindow extends StackWindow
     {
@@ -426,7 +427,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         classes.add(inputName);
         win.addClass();
         repaintWindow();
-
+        calculateFeatures = true;
     }
 
     /**
@@ -449,7 +450,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     void runStopTraining(final String command){
         IJ.log("Training classifier");
         trainableSuperpixelSegmentation.setClasses(classes);
-        trainableSuperpixelSegmentation.calculateRegionFeatures();
+        if(calculateFeatures) {
+            IJ.log("Calculating region features");
+            trainableSuperpixelSegmentation.calculateRegionFeatures();
+            calculateFeatures = false;
+        }
         if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
             IJ.error("Error when training classifier");
         }
@@ -460,11 +465,23 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     void applyClassifier(){
+        if(calculateFeatures){
+            IJ.log("Calculating region features");
+            trainableSuperpixelSegmentation.calculateRegionFeatures();
+            calculateFeatures = false;
+        }
+        if(!trainableSuperpixelSegmentation.isClassifierTrained()){
+            if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
+                IJ.error("Error when training classifier");
+            }
+            classifier = trainableSuperpixelSegmentation.getClassifier();
+        }
         IJ.log("Applying classifier");
         if(!trainableSuperpixelSegmentation.setClassifier(classifier)){
             IJ.error("Error when setting classifier");
             return;
         }
+
         resultImage = trainableSuperpixelSegmentation.applyClassifier();
         IJ.log("Classifier applied");
     }
@@ -553,7 +570,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         classifier = loadedClassifier;
         trainableSuperpixelSegmentation.setClasses(classes);
-        trainableSuperpixelSegmentation.calculateRegionFeatures();
+        calculateFeatures = true;
         IJ.log(loadedClassifier.toString());
 
     }
@@ -561,7 +578,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     void createResult(){
 
         if(resultImage==null){
-            if(classifier==null) {
+            if(!trainableSuperpixelSegmentation.isClassifierTrained()) {
                 runStopTraining("Run");
             }else {
                 applyClassifier();
@@ -638,6 +655,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             if(enabledFeatures[i]){
                 newFeatures.add(RegionFeatures.Feature.fromLabel(avFeatures[i]));
             }
+        }
+        if(!features.equals(newFeatures)){
+            calculateFeatures=true;
         }
         features = newFeatures;
         trainableSuperpixelSegmentation.setSelectedFeatures(features);
@@ -755,6 +775,17 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     void showProbability(){
+        trainableSuperpixelSegmentation.setClasses(classes);
+        if(calculateFeatures) {
+            IJ.log("Calculating region features");
+            trainableSuperpixelSegmentation.calculateRegionFeatures();
+            calculateFeatures = false;
+        }
+        if(!trainableSuperpixelSegmentation.isClassifierTrained()){
+            if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
+                IJ.error("Error when training classifier");
+            }
+        }
         ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
         probabilityImage.show();
     }

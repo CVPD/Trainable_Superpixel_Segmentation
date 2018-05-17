@@ -26,6 +26,7 @@ public class TrainableSuperpixelSegmentation {
     private Instances labeled;
     private Instances trainingData;
     private AbstractClassifier abstractClassifier;
+    private boolean classifierTrained = false;
     ArrayList<String> classes = null;
 
 
@@ -48,9 +49,6 @@ public class TrainableSuperpixelSegmentation {
         labelImage = labels;
         abstractClassifier  = classifier;
         this.classes = classes;
-        if(!this.calculateRegionFeatures()){
-            System.out.println("Error when calculating Region Features");
-        }
     }
 
     /**
@@ -113,6 +111,7 @@ public class TrainableSuperpixelSegmentation {
 
         try {
             abstractClassifier.buildClassifier(trainingData);
+            classifierTrained = true;
             return true;
         } catch (Exception e) {
             System.out.println("Error when building classifier");
@@ -276,4 +275,10 @@ public class TrainableSuperpixelSegmentation {
     public void setSelectedFeatures(ArrayList<RegionFeatures.Feature> selectedFeatures) {
         this.selectedFeatures = selectedFeatures;
     }
+
+
+    public boolean isClassifierTrained() {
+        return classifierTrained;
+    }
+
 }
