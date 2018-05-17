@@ -440,6 +440,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         IJ.log("Classifier trained");
         applyClassifier();
         createResult();
+        overlay = 2;
+        toggleOverlay();
     }
 
     void applyClassifier(){
