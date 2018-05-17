@@ -8,6 +8,7 @@ import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
 import ij.process.*;
+import javafx.util.Pair;
 import weka.classifiers.*;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
@@ -45,6 +46,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
     private  java.awt.List[] exampleList = new java.awt.List[500];
+    private ArrayList<ArrayList<Pair<Integer,Roi>>> exampleRoiList = new ArrayList();
     private ArrayList<int[]> tags = new ArrayList<>();
     private ArrayList<RegionFeatures.Feature> features;
     private AbstractClassifier classifier;
@@ -394,6 +396,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         public void addClass(){
             int classNum = numClasses;
+
+            exampleRoiList.add(numClasses, new ArrayList<>());
 
             exampleList[classNum] = new java.awt.List(5);
             exampleList[classNum].setForeground(colors[classNum]);
@@ -851,6 +855,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         tags.set(i,b);
         try {
             exampleList[i].remove(Integer.toString(f));
+            exampleRoiList.get(i).remove(Integer.toString(f));
         }catch (Exception e1){
             e1.printStackTrace();
         }
@@ -883,12 +888,27 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             a[a.length-1] = label;
             tags.set(i,a);
             exampleList[i].add(label.toString());
+            try {
+                exampleRoiList.get(i).add(new Pair<>(label,r));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
     void listSelected(final ItemEvent e, final int i)
     {
-        System.out.println("To be implemented: List selected: e: "+e.toString()+" i: "+i);
+        for(int j=0;j<numClasses;++j){
+            if(j==i){
+                Pair n = exampleRoiList.get(i).get(exampleList[i].getSelectedIndex());
+                final Roi newRoi = (Roi) n.getValue();
+                newRoi.setImage(inputImage);
+                inputImage.setRoi(newRoi);
+            }else{
+                exampleList[j].deselect(exampleList[j].getSelectedIndex());
+            }
+        }
+        inputImage.updateAndDraw();
     }
 
     /**
@@ -1012,6 +1032,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 classes.add("class "+i);
                 exampleList[i] = new java.awt.List(5);
                 exampleList[i].setForeground(colors[i]);
+                exampleRoiList.add(i,new ArrayList<>());
                 tags.add(new int[0]);
             }
             features = new ArrayList<>();
