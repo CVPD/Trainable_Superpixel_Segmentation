@@ -54,6 +54,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private Color[] colors = new Color[]{Color.red, Color.green, Color.blue, Color.cyan, Color.magenta};
     private LUT overlayLUT = null;
     private boolean calculateFeatures = true;
+    private String inputTitle;
 
     private class CustomWindow extends StackWindow
     {
@@ -477,7 +478,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         classifier = trainableSuperpixelSegmentation.getClassifier();
         IJ.log("Classifier trained");
         applyClassifier();
-        createResult();
         overlay = 2;
         toggleOverlay();
     }
@@ -606,7 +606,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         ImagePlus resultImg = resultImage.duplicate();
 
 
-        resultImg.setTitle( "Classified image" );
+        resultImg.setTitle( inputTitle+"-classified" );
 
         convertTo8bitNoScaling( resultImg );
         resultImg.getProcessor().setColorModel( overlayLUT );
@@ -793,6 +793,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
         }
         ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
+        probabilityImage.setTitle(inputTitle+"-prob");
         probabilityImage.show();
     }
 
@@ -814,7 +815,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }else {
             overlay=0;
             ImagePlus resultImg = resultImage.duplicate();
-            resultImg.setTitle( "Classified image" );
             convertTo8bitNoScaling( resultImg );
             resultImg.getProcessor().setColorModel( overlayLUT );
             resultImg.getImageStack().setColorModel( overlayLUT );
@@ -1003,6 +1003,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         classes = new ArrayList<String>();
         IJ.log("Open input image");
         inputImage =IJ.openImage();
+        inputTitle = inputImage.getTitle();
+        inputImage.setTitle("Trainable Superpixel Segmentation");
         IJ.log("Open superpixel image");
         supImage = IJ.openImage();
         if(inputImage == null || supImage == null){
