@@ -71,6 +71,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton loadClassButton = null;
         private JButton applyClassButton = null;
         private JButton settButton = null;
+        private PropertyPanel classifierEditorPanel = null;
         private JButton plotButton = null;
         private JButton probButton = null;
         private JButton resButton = null;
@@ -79,6 +80,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton addClassButton = null;
         private JButton saveClassButton = null;
         private double overlayOpacity = 0.33;
+        private String originalOptions;
+        private String originalClassifierName;
 
 
         private ActionListener listener = new ActionListener() {
@@ -322,7 +325,48 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             settButton = new JButton("Settings");
             optionsPanel.add(settButton,optionsConstraints);
             optionsConstraints.gridy++;
-
+            GenericObjectEditor classifierEditor = new GenericObjectEditor();
+            classifierEditorPanel = new PropertyPanel(classifierEditor);
+            classifierEditor.setClassType(Classifier.class);
+            classifierEditor.setValue(classifier);
+            Object c = (Object) classifierEditor.getValue();
+            originalOptions = "";
+            originalClassifierName = c.getClass().getName();
+            if (c instanceof OptionHandler)
+            {
+                originalOptions = Utils.joinOptions(((OptionHandler)c).getOptions());
+            }
+            classifierEditor.addPropertyChangeListener(new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    Object c = (Object) classifierEditor.getValue();
+                    String options = "";
+                    final String[] optionsArray = ((OptionHandler)c).getOptions();
+                    if (c instanceof OptionHandler)
+                    {
+                        options = Utils.joinOptions( optionsArray );
+                    }
+                    if( !originalClassifierName.equals( c.getClass().getName() )
+                            || !originalOptions.equals( options ) )
+                    {
+                        AbstractClassifier cls;
+                        try{
+                            cls = (AbstractClassifier) (c.getClass().newInstance());
+                            cls.setOptions( optionsArray );
+                        }
+                        catch(Exception ex)
+                        {
+                            ex.printStackTrace();
+                            return;
+                        }
+                        classifier = cls;
+                        trainableSuperpixelSegmentation.setClassifier(classifier);
+                        IJ.log("Current classifier: " + c.getClass().getName() + " " + options);
+                    }
+                }
+            });
+            optionsPanel.add(classifierEditorPanel,optionsConstraints);
+            optionsConstraints.gridy++;
 
             //Annotations panel
             for(int i=0; i<numClasses;++i){
@@ -634,22 +678,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
         gd.addSlider("Overlay opacity:",0,1,win.overlayOpacity);
 
-        gd.addMessage("Classifier options:");
-        GenericObjectEditor classifierEditor = new GenericObjectEditor();
-        PropertyPanel classifierEditorPanel = new PropertyPanel(classifierEditor);
-        classifierEditor.setClassType(Classifier.class);
-        classifierEditor.setValue(classifier);
-        gd.add(classifierEditorPanel);
-
-        Object c = (Object) classifierEditor.getValue();
-        String originalOptions = "";
-        String originalClassifierName = c.getClass().getName();
-        if (c instanceof OptionHandler)
-        {
-            originalOptions = Utils.joinOptions(((OptionHandler)c).getOptions());
-        }
-
-
         gd.showDialog();
 
         if(gd.wasCanceled()){
@@ -668,47 +696,36 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         features = newFeatures;
         trainableSuperpixelSegmentation.setSelectedFeatures(features);
 
-        c = (Object)classifierEditor.getValue();
-        String options = "";
-        final String[] optionsArray = ((OptionHandler)c).getOptions();
-        if (c instanceof OptionHandler)
-        {
-            options = Utils.joinOptions( optionsArray );
-        }
-        if( !originalClassifierName.equals( c.getClass().getName() )
-                || !originalOptions.equals( options ) )
-        {
-            AbstractClassifier cls;
-            try{
-                cls = (AbstractClassifier) (c.getClass().newInstance());
-                cls.setOptions( optionsArray );
-            }
-            catch(Exception ex)
-            {
-                ex.printStackTrace();
-                return;
-            }
-            classifier = cls;
-            trainableSuperpixelSegmentation.setClassifier(classifier);
-            IJ.log("Current classifier: " + c.getClass().getName() + " " + options);
-        }
-
         final double newOpacity = (double) gd.getNextNumber();
         if( newOpacity != win.overlayOpacity )
         {
-            ImageRoi roi = null;
-            int slice = inputImage.getCurrentSlice();
             win.overlayOpacity = newOpacity;
-            if(overlay==0){
-                inputImage.setOverlay(null);
-            }else if(overlay==1){
+            int slice = inputImage.getCurrentSlice();
+            ImageRoi roi = null;
+            if(inputImage.getOverlay()!=null){
+               if(overlay==0&&resultImage!=null){
+                   ImagePlus resultImg = resultImage.duplicate();
+                   convertTo8bitNoScaling( resultImg );
+                   resultImg.getProcessor().setColorModel( overlayLUT );
+                   resultImg.getImageStack().setColorModel( overlayLUT );
+                   ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
+                   roi = new ImageRoi(0, 0, processor);
+                   roi.setOpacity(win.overlayOpacity);
+                   inputImage.setOverlay(new Overlay(roi));
+               }else{
+                   roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
+                   roi.setOpacity(win.overlayOpacity);
+                   inputImage.setOverlay(new Overlay(roi));
+               }
+            }else{
                 roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
-                roi.setOpacity(newOpacity);
+                roi.setOpacity(win.overlayOpacity);
                 inputImage.setOverlay(new Overlay(roi));
-            }else {
-                roi = new ImageRoi(0, 0, resultImage.getImageStack().getProcessor(slice));
-                roi.setOpacity(newOpacity);
-                inputImage.setOverlay(new Overlay(roi));
+                if(resultImage!=null) {
+                    overlay++;
+                }else {
+                    overlay=0;
+                }
             }
         }
 
