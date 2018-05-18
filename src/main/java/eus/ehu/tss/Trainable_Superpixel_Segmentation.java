@@ -871,7 +871,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }catch (Exception e1){
             e1.printStackTrace();
         }
-        System.out.println("Deleted");
     }
 
     /**
