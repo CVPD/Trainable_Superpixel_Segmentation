@@ -965,7 +965,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         IJ.log("Tag with value 0 not added");
                     }
                     if( Float.compare( 0f, value ) != 0) {
-                        list.putIfAbsent((int) value, new PointRoi(xpoints[i],ypoints[i]));
+                        list.putIfAbsent((int) value, new Roi(xpoints[i],ypoints[i],0,0));
                     }
                 }
             }
@@ -979,7 +979,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         IJ.log("Tag with value 0 not added");
                     }
                     if( Float.compare( 0f, value ) != 0)
-                        list.putIfAbsent((int) value, new PointRoi(xpoints[i],ypoints[i]));
+                        list.putIfAbsent((int) value, new Roi(xpoints[i],ypoints[i],0,0));
                 }
             }
         }else {
