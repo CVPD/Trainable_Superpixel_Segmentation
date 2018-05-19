@@ -8,6 +8,7 @@ import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
 import ij.process.*;
+import javafx.util.Pair;
 import weka.classifiers.*;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
@@ -30,6 +31,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.GZIPInputStream;
@@ -46,6 +48,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private int numClasses = 2;
     private  java.awt.List[] exampleList = new java.awt.List[500];
     private ArrayList<int[]> tags = new ArrayList<>();
+    private ArrayList<HashMap<Integer,Roi>> rois = new ArrayList<>();
     private ArrayList<RegionFeatures.Feature> features;
     private AbstractClassifier classifier;
     private ArrayList<String> classes;
@@ -462,7 +465,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
             numClasses++;
             tags.add(new int[0]);
-
+            rois.add(new HashMap<>());
             // recalculate minimum size of scroll panel
             scrollPanel.setMinimumSize( labelsJPanel.getPreferredSize() );
 
@@ -868,6 +871,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         tags.set(i,b);
         try {
             exampleList[i].remove(Integer.toString(f));
+            rois.get(i).remove(f);
         }catch (Exception e1){
             e1.printStackTrace();
         }
@@ -885,13 +889,14 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             return;
         }
         inputImage.killRoi();
-        ArrayList<Integer> selectedLabel = getSelectedLabels(supImage,r);
-        for(Integer label: selectedLabel){
+        HashMap<Integer,Roi> selectedLabel = getSelectedLabels(supImage,r);
+        int y=0;
+        for(int key : selectedLabel.keySet()){
             boolean dup = false;
             int[] a = tags.get(i);
             //Check if tag already exists on list
             for(int x = 0;x<a.length;++x){
-                if(a[x]==label){
+                if(a[x]==key){
                     IJ.log("Tag already on list");
                     dup = true;
                     break;
@@ -899,20 +904,33 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
             if(!dup) {
                 a = Arrays.copyOf(a, a.length + 1);
-                a[a.length - 1] = label;
+                a[a.length - 1] = key;
                 tags.set(i, a);
-                exampleList[i].add(label.toString());
+                exampleList[i].add(Integer.toString(key));
+                rois.get(i).put(key,selectedLabel.get(key));
             }
         }
     }
 
     void listSelected(final ItemEvent e, final int i)
     {
-        System.out.println("To be implemented: List selected: e: "+e.toString()+" i: "+i);
+        for(int j=0;j<numClasses;++j){
+            if(j==i){
+                int selectedIndex  = exampleList[i].getSelectedIndex();
+                int key = Integer.parseInt(exampleList[i].getItem(selectedIndex));
+                HashMap<Integer,Roi> a = rois.get(i);
+                final Roi newroi = a.get(key);
+                newroi.setImage(inputImage);
+                inputImage.setRoi(newroi);
+            }else{
+                exampleList[j].deselect(exampleList[j].getSelectedIndex());
+            }
+        }
+        inputImage.updateAndDraw();
     }
 
     /**
-     * Taken from MorphoLibJ, LabelImages class
+     * Modified method taken from MorphoLibJ, LabelImages class
      *
      * Get list of selected labels in label image. Labels are selected by
      * either a freehand ROI or point ROIs. Zero-value label is skipped.
@@ -921,11 +939,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param roi  FreehandRoi or PointRoi with selected labels
      * @return list of selected labels
      */
-    public static ArrayList<Integer> getSelectedLabels(
+    public static HashMap<Integer,Roi> getSelectedLabels(
             final ImagePlus labelImage,
             final Roi roi )
     {
-        final ArrayList<Integer> list = new ArrayList<Integer>();
+        final HashMap<Integer,Roi> list = new HashMap<>();
 
         // if the user makes point selections
         if( roi instanceof PointRoi)
@@ -946,8 +964,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     if(Float.compare( 0f, value ) == 0){
                         IJ.log("Tag with value 0 not added");
                     }
-                    if( Float.compare( 0f, value ) != 0 && list.contains( value ) == false ) {
-                        list.add((int) value);
+                    if( Float.compare( 0f, value ) != 0) {
+                        list.putIfAbsent((int) value, new PointRoi(xpoints[i],ypoints[i]));
                     }
                 }
             }
@@ -960,36 +978,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     if(Float.compare( 0f, value ) == 0){
                         IJ.log("Tag with value 0 not added");
                     }
-                    if( Float.compare( 0f, value ) != 0 &&
-                            list.contains( value ) == false )
-                        list.add( (int) value );
+                    if( Float.compare( 0f, value ) != 0)
+                        list.putIfAbsent((int) value, new PointRoi(xpoints[i],ypoints[i]));
                 }
             }
-        }
-        else if( roi instanceof FreehandRoi )
-        {
-            // read values from ROI using a profile plot
-            // save interpolation option
-            boolean interpolateOption = PlotWindow.interpolate;
-            // do not interpolate pixel values
-            PlotWindow.interpolate = false;
-            // get label values from line roi (different from 0)
-            float[] f = ( new ProfilePlot( labelImage ) ).getPlot().getYValues();
-            int[] values = new int[f.length];
-            for(int i=0;i<f.length;++i){
-                values[i]= (int) f[i];
-            }
-            PlotWindow.interpolate = interpolateOption;
-
-            for( int i=0; i<values.length; i++ )
-            {
-                if(Float.compare( 0f, values[i] ) == 0){
-                    IJ.log("Tags with value 0 not added");
-                }
-                if( Float.compare( 0f, values[ i ] ) != 0 &&
-                        list.contains( values[ i ]) == false )
-                    list.add( values[ i ]);
-            }
+        }else {
+            IJ.error("Please use multipoint selection");
+            Toolbar.getInstance().setTool( Toolbar.POINT );
         }
         return list;
     }
@@ -1035,6 +1030,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 exampleList[i] = new java.awt.List(5);
                 exampleList[i].setForeground(colors[i]);
                 tags.add(new int[0]);
+                rois.add(new HashMap<>());
             }
             features = new ArrayList<>();
             features.add(RegionFeatures.Feature.fromLabel("Mean"));
