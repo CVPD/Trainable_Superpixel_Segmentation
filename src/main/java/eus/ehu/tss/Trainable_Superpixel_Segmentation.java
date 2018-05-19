@@ -887,18 +887,22 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         inputImage.killRoi();
         ArrayList<Integer> selectedLabel = getSelectedLabels(supImage,r);
         for(Integer label: selectedLabel){
+            boolean dup = false;
             int[] a = tags.get(i);
             //Check if tag already exists on list
             for(int x = 0;x<a.length;++x){
                 if(a[x]==label){
                     IJ.log("Tag already on list");
-                    return;
+                    dup = true;
+                    break;
                 }
             }
-            a = Arrays.copyOf(a, a.length+1);
-            a[a.length-1] = label;
-            tags.set(i,a);
-            exampleList[i].add(label.toString());
+            if(!dup) {
+                a = Arrays.copyOf(a, a.length + 1);
+                a[a.length - 1] = label;
+                tags.set(i, a);
+                exampleList[i].add(label.toString());
+            }
         }
     }
 
