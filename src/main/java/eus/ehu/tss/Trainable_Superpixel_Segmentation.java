@@ -8,7 +8,6 @@ import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
 import ij.process.*;
-import javafx.util.Pair;
 import weka.classifiers.*;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
