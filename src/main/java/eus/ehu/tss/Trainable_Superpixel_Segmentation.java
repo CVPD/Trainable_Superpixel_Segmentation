@@ -22,7 +22,6 @@ import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
 import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.evaluation.ThresholdCurve;
-import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.RandomForest;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
@@ -51,8 +50,6 @@ import java.awt.Color;
 import java.awt.Panel;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
@@ -107,7 +104,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton loadClassButton = null;
         private JButton applyClassButton = null;
         private JButton settButton = null;
-        private PropertyPanel classifierEditorPanel = null;
         private JButton plotButton = null;
         private JButton probButton = null;
         private JButton resButton = null;
@@ -116,9 +112,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton addClassButton = null;
         private JButton saveClassButton = null;
         private double overlayOpacity = 0.33;
-        private String originalOptions;
-        private String originalClassifierName;
-
 
         private ActionListener listener = new ActionListener() {
             @Override
