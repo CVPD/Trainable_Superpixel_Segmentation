@@ -327,48 +327,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             settButton = new JButton("Settings");
             optionsPanel.add(settButton,optionsConstraints);
             optionsConstraints.gridy++;
-            GenericObjectEditor classifierEditor = new GenericObjectEditor();
-            classifierEditorPanel = new PropertyPanel(classifierEditor);
-            classifierEditor.setClassType(Classifier.class);
-            classifierEditor.setValue(classifier);
-            Object c = (Object) classifierEditor.getValue();
-            originalOptions = "";
-            originalClassifierName = c.getClass().getName();
-            if (c instanceof OptionHandler)
-            {
-                originalOptions = Utils.joinOptions(((OptionHandler)c).getOptions());
-            }
-            classifierEditor.addPropertyChangeListener(new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    Object c = (Object) classifierEditor.getValue();
-                    String options = "";
-                    final String[] optionsArray = ((OptionHandler)c).getOptions();
-                    if (c instanceof OptionHandler)
-                    {
-                        options = Utils.joinOptions( optionsArray );
-                    }
-                    if( !originalClassifierName.equals( c.getClass().getName() )
-                            || !originalOptions.equals( options ) )
-                    {
-                        AbstractClassifier cls;
-                        try{
-                            cls = (AbstractClassifier) (c.getClass().newInstance());
-                            cls.setOptions( optionsArray );
-                        }
-                        catch(Exception ex)
-                        {
-                            ex.printStackTrace();
-                            return;
-                        }
-                        classifier = cls;
-                        trainableSuperpixelSegmentation.setClassifier(classifier);
-                        IJ.log("Current classifier: " + c.getClass().getName() + " " + options);
-                    }
-                }
-            });
-            optionsPanel.add(classifierEditorPanel,optionsConstraints);
-            optionsConstraints.gridy++;
 
             //Annotations panel
             for(int i=0; i<numClasses;++i){
@@ -680,6 +638,22 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
         gd.addSlider("Overlay opacity:",0,1,win.overlayOpacity);
 
+        // classifier options
+        gd.addMessage( "Classifier options:" );
+        GenericObjectEditor classifierEditor = new GenericObjectEditor();
+        PropertyPanel classifierEditorPanel = new PropertyPanel(classifierEditor);
+        classifierEditor.setClassType(Classifier.class);
+        classifierEditor.setValue(classifier);
+        Panel helperPanel = new Panel();
+        helperPanel.add( classifierEditorPanel );
+        gd.addPanel( helperPanel );
+
+        Object c = (Object) classifierEditor.getValue();
+        String originalOptions = "";
+        String originalClassifierName = c.getClass().getName();
+        if (c instanceof OptionHandler)
+        	originalOptions = Utils.joinOptions(((OptionHandler)c).getOptions());
+
         gd.showDialog();
 
         if(gd.wasCanceled()){
@@ -697,6 +671,32 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         features = newFeatures;
         trainableSuperpixelSegmentation.setSelectedFeatures(features);
+
+        // check classifier options
+        c = (Object)classifierEditor.getValue();
+        String options = "";
+        final String[] optionsArray = ((OptionHandler)c).getOptions();
+        if (c instanceof OptionHandler)
+        {
+            options = Utils.joinOptions( optionsArray );
+        }
+        if( !originalClassifierName.equals( c.getClass().getName() )
+                || !originalOptions.equals( options ) )
+        {
+            AbstractClassifier cls;
+            try{
+                cls = (AbstractClassifier) (c.getClass().newInstance());
+                cls.setOptions( optionsArray );
+            }
+            catch(Exception ex)
+            {
+                ex.printStackTrace();
+                return;
+            }
+            classifier = cls;
+            trainableSuperpixelSegmentation.setClassifier(classifier);
+            IJ.log("Current classifier: " + c.getClass().getName() + " " + options);
+        }
 
         final double newOpacity = (double) gd.getNextNumber();
         if( newOpacity != win.overlayOpacity )
