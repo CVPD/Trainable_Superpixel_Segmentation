@@ -18,7 +18,6 @@ import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
 import ij.process.StackConverter;
-import javafx.util.Pair;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
 import weka.classifiers.evaluation.Prediction;
