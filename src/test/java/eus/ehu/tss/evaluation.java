@@ -133,15 +133,6 @@ public class evaluation {
                 }
             }
 
-            try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter("D:\\trainingData"+i+".arff"));
-                writer.write(trainingData.toString());
-                writer.flush();
-                writer.close();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-
             System.out.println(trainingData.toSummaryString());
             tss.setTrainingData(trainingData);
             tss.trainClassifier();
