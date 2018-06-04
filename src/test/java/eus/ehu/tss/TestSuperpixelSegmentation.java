@@ -35,7 +35,7 @@ public class TestSuperpixelSegmentation{
         TrainableSuperpixelSegmentation test =
         		new TrainableSuperpixelSegmentation( inputImage, labelImage,
         				selectedFeatures, exampleClassifier, classes );
-        System.out.println(test.getFeaturesByRegion());
+        //System.out.println(test.getFeaturesByRegion());
 
         // Define training regions (one for background and 4 for rice grains)
         int[] rice = new int[4];
@@ -46,6 +46,7 @@ public class TestSuperpixelSegmentation{
         tags.add(background);
         tags.add(rice);
 
+        test.calculateRegionFeatures();
         // Train classifier using those labels
         if(test.trainClassifier(tags)){
             ImagePlus result = test.applyClassifier();

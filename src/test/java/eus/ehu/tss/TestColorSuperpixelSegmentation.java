@@ -49,6 +49,7 @@ public class TestColorSuperpixelSegmentation {
         tags.add(noStained);
         tags.add(stainedTum);
 
+        test.calculateRegionFeatures();
         // Train classifier using those labels
         if(test.trainClassifier(tags)){
             ImagePlus result = test.applyClassifier();
