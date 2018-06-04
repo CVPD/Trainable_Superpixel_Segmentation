@@ -80,9 +80,10 @@ public class RegionColorFeatures {
     }
 
     /**
-     * Creates Instances object based on the features of each color channel after converting the image to Lab
+     * Creates Instances object based on the features of each color channel after converting the image to Lab and sets class based on provided Ground Truth image
      * @param inputImage RGB input image
      * @param labelImage Label image
+     * @param gtImage Ground Truth image
      * @param selectedFeatures ArrayList with selected features from RegionFeatures.Feature
      * @param classes ArrayList of Strings with names of the classes
      * @return Dataset with the features of each color for each region from the labelImage

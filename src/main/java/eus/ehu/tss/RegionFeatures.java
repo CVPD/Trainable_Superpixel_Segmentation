@@ -3,7 +3,6 @@ package eus.ehu.tss;
 
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.gui.PointRoi;
 import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
 import inra.ijpb.label.LabelImages;
@@ -187,6 +186,7 @@ public class RegionFeatures {
      * Calculates the selected features of each region based on an input image and a labeled image
      * @param inputImage ImagePlus input image from which the features will be calculated
      * @param labelImage ImagePlus where the labels are located
+     * @param gtImage ImagePlus that provides Ground Truth
      * @param selectedFeatures ArrayList of Feature with the features that need to be calculated
      * @param classes list with the class names to use
      * @return dataset with the features of each region from the labelImage
@@ -198,7 +198,7 @@ public class RegionFeatures {
             ArrayList<Feature> selectedFeatures,
             ArrayList<String> classes)
     {
-        HashMap<Integer, int[]> labelCoord = calculateGroundTruth(labelImage);
+        HashMap<Integer, int[]> labelCoord = calculateLabelCoordinates(labelImage);
         ImageStack gtStack = gtImage.getImageStack();
         IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
         ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
@@ -274,7 +274,12 @@ public class RegionFeatures {
         }
     }
 
-    private static HashMap<Integer,int[]> calculateGroundTruth(ImagePlus labelImage){
+    /**
+     * Calculates coordinates corresponding to labels in label image
+     * @param labelImage input image with labels
+     * @return a HashMap where the key is the label and the values are the coordinates of the label
+     */
+    private static HashMap<Integer,int[]> calculateLabelCoordinates(ImagePlus labelImage){
         HashMap<Integer, Integer> labelIndices = null;
         HashMap<Integer, int[]> result = new HashMap<>();
         final int width = labelImage.getWidth();

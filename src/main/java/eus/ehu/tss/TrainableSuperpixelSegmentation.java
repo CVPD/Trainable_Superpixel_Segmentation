@@ -127,6 +127,10 @@ public class TrainableSuperpixelSegmentation {
         }
     }
 
+    /**
+     * Train classifier based on previously loaded training data
+     * @return boolean value false when training has had an error
+     */
     public boolean trainClassifier(){
         try {
             abstractClassifier.buildClassifier(trainingData);
@@ -201,6 +205,10 @@ public class TrainableSuperpixelSegmentation {
         }
     }
 
+    /**
+     * Returns a probability map image
+     * @return
+     */
     public ImagePlus getProbabilityMap(){
         final int numInstances = unlabeled.numInstances();
         final int numClasses = classes.size();
@@ -265,6 +273,10 @@ public class TrainableSuperpixelSegmentation {
         return abstractClassifier;
     }
 
+    /**
+     * Returns labeled instances
+     * @return
+     */
     public Instances getInstances() {
         return labeled;
     }
@@ -277,47 +289,85 @@ public class TrainableSuperpixelSegmentation {
         return resultImage;
     }
 
+    /**
+     * Returns training data
+     * @return training data
+     */
     public Instances getTrainingData() {
         return trainingData;
     }
 
 
+    /**
+     * Returns list of classes
+     * @return list of classes
+     */
     public ArrayList<String> getClasses() {
         return classes;
     }
 
+    /**
+     * Sets list of classes
+     * @param classes ArrayList of class names
+     */
     public void setClasses(ArrayList<String> classes) {
         this.classes = classes;
     }
 
 
+    /**
+     * Sets selected features
+     * @param selectedFeatures ArrayList of RegionFeatures.Feature elements
+     */
     public void setSelectedFeatures(ArrayList<RegionFeatures.Feature> selectedFeatures) {
         this.selectedFeatures = selectedFeatures;
     }
 
-
+    /**
+     * Sets training data
+     * @param trainingData Instances to be used in the training
+     */
     public void setTrainingData(Instances trainingData) {
         this.trainingData = trainingData;
     }
 
-
+    /**
+     * Returns provided input image
+     * @return ImagePlus with input image
+     */
     public ImagePlus getInputImage() {
         return inputImage;
     }
 
+
+    /**
+     * Set input image
+     * @param inputImage
+     */
     public void setInputImage(ImagePlus inputImage) {
         this.inputImage = inputImage;
     }
 
+    /**
+     * Returns superpixel image with labels
+     * @return
+     */
     public ImagePlus getLabelImage() {
         return labelImage;
     }
 
+    /**
+     * Sets superpixel image
+     * @param labelImage
+     */
     public void setLabelImage(ImagePlus labelImage) {
         this.labelImage = labelImage;
     }
 
-
+    /**
+     * Returns wether a classifier has been trained
+     * @return
+     */
     public boolean isClassifierTrained() {
         return classifierTrained;
     }

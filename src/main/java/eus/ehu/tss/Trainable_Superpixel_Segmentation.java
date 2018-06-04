@@ -424,6 +424,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
 
         }
+
+        /**
+         * Add a new class and update interface
+         */
         public void addClass(){
             int classNum = numClasses;
 
@@ -465,6 +469,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
     }
 
+    /**
+     * Add a new class based on user input
+     */
     void addNewClass(){
         String inputName = JOptionPane.showInputDialog("Please input a new label name");
         if(null == inputName || 0 == inputName.length()){
@@ -513,6 +520,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         toggleOverlay();
     }
 
+    /**
+     * Apply classifier, calculates features if not previously calculated and raises error if classifier hasn't been trained previously
+     */
     void applyClassifier(){
         if(calculateFeatures){
             IJ.log("Calculating region features");
@@ -624,6 +634,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     }
 
+    /**
+     *Create result image, trains classifier if it hasn't been trained before
+     */
     void createResult(){
 
         if(resultImage==null){
@@ -647,6 +660,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
 
+    /**
+     * Shows dialog with feature, classifier and overlay opacity options
+     */
     void showSettingsDialog(){
 
         GenericDialog gd = new GenericDialog("Superpixel Segmentation settings");
@@ -826,6 +842,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         jf.setVisible(true);
     }
 
+    /**
+     * Creates and displays probability maps, calculates features if they haven't been calculated
+     */
     void showProbability(){
         trainableSuperpixelSegmentation.setClasses(classes);
         if(calculateFeatures) {
@@ -843,6 +862,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         probabilityImage.show();
     }
 
+    /**
+     * Changes displayed overlay, between no overlay, superpixel overlay and result overlay
+     */
     void toggleOverlay(){
         int slice = inputImage.getCurrentSlice();
         ImageRoi roi = null;
@@ -938,6 +960,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
     }
 
+    /**
+     * Displays selected Roi
+     * @param e
+     * @param i
+     */
     void listSelected(final ItemEvent e, final int i)
     {
         for(int j=0;j<numClasses;++j){
