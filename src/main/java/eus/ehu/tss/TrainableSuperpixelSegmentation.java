@@ -29,6 +29,13 @@ public class TrainableSuperpixelSegmentation {
     private boolean classifierTrained = false;
     ArrayList<String> classes = null;
 
+    /**
+     * Empty builder
+     */
+    public TrainableSuperpixelSegmentation(){
+
+    }
+
 
     /**
      * Creates instance of TrainableSuperpixelSegmentation based on an image and it's corresponding label image, a list of selected features and an AbstractClassifier
