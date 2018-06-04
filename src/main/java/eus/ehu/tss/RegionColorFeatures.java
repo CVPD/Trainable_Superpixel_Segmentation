@@ -79,5 +79,71 @@ public class RegionColorFeatures {
         }
     }
 
+    /**
+     * Creates Instances object based on the features of each color channel after converting the image to Lab
+     * @param inputImage RGB input image
+     * @param labelImage Label image
+     * @param selectedFeatures ArrayList with selected features from RegionFeatures.Feature
+     * @param classes ArrayList of Strings with names of the classes
+     * @return Dataset with the features of each color for each region from the labelImage
+     */
+    public static Instances calculateColorFeaturesWithClass(ImagePlus inputImage,
+                                                   ImagePlus labelImage,
+                                                   ImagePlus gtImage,
+                                                   ArrayList<RegionFeatures.Feature> selectedFeatures,
+                                                   ArrayList<String> classes)
+    {
+        ColorSpaceConverter converter = new ColorSpaceConverter();
+        ImagePlus lab = converter.RGBToLab(inputImage);
+        ImagePlus[] channels = ChannelSplitter.split(lab);
+        Instances lIns = RegionFeatures.calculateRegionFeaturesWithClass(channels[0],labelImage,gtImage,selectedFeatures,classes);
+        Instances aIns = RegionFeatures.calculateRegionFeaturesWithClass(channels[1],labelImage,gtImage,selectedFeatures,classes);
+        Instances bIns = RegionFeatures.calculateRegionFeaturesWithClass(channels[2],labelImage,gtImage,selectedFeatures,classes);
+        if(lIns==null||aIns==null||bIns==null){
+            return null;
+        }else {
+            for (int i = 0; i < lIns.numAttributes(); ++i) {//all channels should have the same number of attributes
+                lIns.renameAttribute(i, lIns.attribute(i).name() + "-L");
+                aIns.renameAttribute(i, aIns.attribute(i).name() + "-a");
+                bIns.renameAttribute(i, bIns.attribute(i).name() + "-b");
+            }
+            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+            int numAttributes = lIns.numAttributes() * 3 - 3;//-3 to remove the class attributes
+            for (int i = 0; i < lIns.numAttributes() - 1; ++i) {
+                attributes.add(lIns.attribute(i));
+            }
+            for (int i = 0; i < aIns.numAttributes() - 1; ++i) {
+                attributes.add(aIns.attribute(i));
+            }
+            for (int i = 0; i < bIns.numAttributes() - 1; ++i) {
+                attributes.add(bIns.attribute(i));
+            }
+            attributes.add(new Attribute("Class", classes));
+            Instances unlabeled = new Instances("training data", attributes, 0);
+            for (int i = 0; i < lIns.numInstances(); ++i) {
+                int k = 0;
+                Instance inst = new DenseInstance(numAttributes + 1);
+                for (int j = 0; j < lIns.numAttributes() - 1; ++j) {
+                    inst.setValue(j, lIns.get(i).value(j));
+                }
+                for (int j = lIns.numAttributes() - 1; j < aIns.numAttributes() * 2 - 2; ++j) {
+                    inst.setValue(j, aIns.get(i).value(k));
+                    k++;
+                }
+                k = 0;
+                for (int j = lIns.numAttributes() * 2 - 2; j < bIns.numAttributes() * 3 - 3; ++j) {
+                    inst.setValue(j, bIns.get(i).value(k));
+                    k++;
+                }
+                double classValue = lIns.get(i).value(lIns.classIndex());
+                inst.setValue(numAttributes,classValue);//Currently taking class of l channel
+                unlabeled.add(inst);
+            }
+            unlabeled.setClassIndex(numAttributes);
+
+            return unlabeled;
+        }
+    }
+
 
 }

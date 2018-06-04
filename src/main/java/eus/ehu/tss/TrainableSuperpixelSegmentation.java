@@ -127,6 +127,18 @@ public class TrainableSuperpixelSegmentation {
         }
     }
 
+    public boolean trainClassifier(){
+        try {
+            abstractClassifier.buildClassifier(trainingData);
+            classifierTrained = true;
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error when building classifier");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     /**
      * Applies classifier to unlabeled data and creates new Instances in labeled private variables
      * @return ImagePlus with classified image
@@ -281,6 +293,28 @@ public class TrainableSuperpixelSegmentation {
 
     public void setSelectedFeatures(ArrayList<RegionFeatures.Feature> selectedFeatures) {
         this.selectedFeatures = selectedFeatures;
+    }
+
+
+    public void setTrainingData(Instances trainingData) {
+        this.trainingData = trainingData;
+    }
+
+
+    public ImagePlus getInputImage() {
+        return inputImage;
+    }
+
+    public void setInputImage(ImagePlus inputImage) {
+        this.inputImage = inputImage;
+    }
+
+    public ImagePlus getLabelImage() {
+        return labelImage;
+    }
+
+    public void setLabelImage(ImagePlus labelImage) {
+        this.labelImage = labelImage;
     }
 
 

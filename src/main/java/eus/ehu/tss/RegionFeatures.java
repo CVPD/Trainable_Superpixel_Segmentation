@@ -2,7 +2,11 @@ package eus.ehu.tss;
 
 
 import ij.ImagePlus;
+import ij.ImageStack;
+import ij.gui.PointRoi;
 import ij.measure.ResultsTable;
+import ij.process.ImageProcessor;
+import inra.ijpb.label.LabelImages;
 import inra.ijpb.measure.IntensityMeasures;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -10,6 +14,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -176,6 +181,123 @@ public class RegionFeatures {
         }else{
             return unlabeled;
         }
+    }
+
+    /**
+     * Calculates the selected features of each region based on an input image and a labeled image
+     * @param inputImage ImagePlus input image from which the features will be calculated
+     * @param labelImage ImagePlus where the labels are located
+     * @param selectedFeatures ArrayList of Feature with the features that need to be calculated
+     * @param classes list with the class names to use
+     * @return dataset with the features of each region from the labelImage
+     */
+    public static Instances calculateRegionFeaturesWithClass(
+            ImagePlus inputImage,
+            ImagePlus labelImage,
+            ImagePlus gtImage,
+            ArrayList<Feature> selectedFeatures,
+            ArrayList<String> classes)
+    {
+        HashMap<Integer, int[]> labelCoord = calculateGroundTruth(labelImage);
+        ImageStack gtStack = gtImage.getImageStack();
+        IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
+        ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
+        for (Feature selectedFeature : selectedFeatures) {
+            switch (selectedFeature) {
+                case Max:
+                    results.add( calculator.getMax() );
+                    break;
+                case Min:
+                    results.add( calculator.getMin() );
+                    break;
+                case Mean:
+                    results.add( calculator.getMean() );
+                    break;
+                case Mode:
+                    results.add( calculator.getMode() );
+                    break;
+                case Median:
+                    results.add( calculator.getMedian() );
+                    break;
+                case StdDev:
+                    results.add( calculator.getStdDev() );
+                    break;
+                case Kurtosis:
+                    results.add( calculator.getKurtosis() );
+                    break;
+                case Skewness:
+                    results.add( calculator.getSkewness() );
+                    break;
+            }
+        }
+
+        ResultsTable mergedTable = new ResultsTable();
+        final int numLabels = results.get( 0 ).getCounter();
+        for(int i=0; i < numLabels; ++i)
+        {
+            mergedTable.incrementCounter();
+            String label = results.get( 0 ).getLabel( i );
+            mergedTable.addLabel(label);
+
+            for (ResultsTable result : results) {
+                String measure = result.getColumnHeading(0);
+                double value = result.getValue(measure, i);
+                mergedTable.addValue(measure, value);
+            }
+        }
+        //mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        int numFeatures = mergedTable.getLastColumn()+1; //Take into account it starts in index 0
+        for(int i=0;i<numFeatures;++i){
+            attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
+        }
+        attributes.add(new Attribute("Class", classes));
+        Instances unlabeled = new Instances("training data",attributes,0);
+        for(int i=0;i<mergedTable.size();++i){
+            //numFeatures is the index, add 1 to get number of attributes needed plus class
+            Instance inst = new DenseInstance(numFeatures+1);
+            for(int j=0;j<numFeatures;++j){
+                inst.setValue(j,mergedTable.getValueAsDouble(j,i));
+            }
+            int[] coord = labelCoord.get(i+1);
+            ImageProcessor gtProcessor = gtImage.getProcessor();
+            float value = (float) gtProcessor.getf(coord[0],coord[1]);
+            inst.setValue( numFeatures, (int) value );
+            unlabeled.add(inst);
+        }
+        unlabeled.setClassIndex( numFeatures );
+        //The number or instances should be the same as the size of the table
+        if(unlabeled.numInstances()!=(mergedTable.size())){
+            return null;
+        }else{
+            return unlabeled;
+        }
+    }
+
+    private static HashMap<Integer,int[]> calculateGroundTruth(ImagePlus labelImage){
+        HashMap<Integer, Integer> labelIndices = null;
+        HashMap<Integer, int[]> result = new HashMap<>();
+        final int width = labelImage.getWidth();
+        final int height = labelImage.getHeight();
+
+        int[] labels = LabelImages.findAllLabels(labelImage.getImageStack());
+        int numLabels = labels.length;
+        labelIndices = LabelImages.mapLabelIndices(labels);
+        final int numSlices = labelImage.getImageStackSize();
+        for( int z=1; z <= numSlices; z++ )
+        {
+            final ImageProcessor labelsIP = labelImage.getImageStack().getProcessor( z );
+
+            for( int x = 0; x<width; x++ )
+                for( int y = 0; y<height; y++ )
+                {
+                    int labelValue = (int) labelsIP.getf( x, y );
+                    int[] coord = new int[3];
+                    coord[0] = x; coord[1] = y; coord[2] = z;
+                    result.putIfAbsent(labelValue,coord);
+                }
+        }
+        return result;
     }
 
 
