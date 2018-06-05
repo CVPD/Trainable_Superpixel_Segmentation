@@ -3,6 +3,7 @@ package eus.ehu.tss;
 
 import ij.IJ;
 import ij.ImagePlus;
+import weka.classifiers.AggregateableEvaluation;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
@@ -89,6 +90,7 @@ public class EvaluationTest {
         gtImage = null;
         System.gc();
 
+        AggregateableEvaluation totalEval = null;
         Instances training = null;
         Instances testing = null;
         try {
@@ -109,10 +111,13 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval = new AggregateableEvaluation(eval);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t1 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -153,10 +158,12 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t2 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -197,10 +204,12 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 3 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -223,6 +232,7 @@ public class EvaluationTest {
             e.printStackTrace();
         }
 
+
         try {
             System.out.println("Merging data for fold 4");
             training = merge(data1, data2);
@@ -241,8 +251,9 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 4 results\n======\n",false));
         }catch (Exception e){
@@ -285,8 +296,9 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 5 results\n======\n",false));
         }catch (Exception e){
@@ -330,8 +342,9 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 6 results\n======\n",false));
         }catch (Exception e){
@@ -375,8 +388,9 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 7 results\n======\n",false));
         }catch (Exception e){
@@ -419,8 +433,9 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 8 results\n======\n",false));
         }catch (Exception e){
@@ -464,8 +479,9 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 9 results\n======\n",false));
         }catch (Exception e){
@@ -508,8 +524,9 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
-            System.out.print("Evaluating model");
+            System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
+            totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 10 results\n======\n",false));
         }catch (Exception e){
@@ -533,6 +550,17 @@ public class EvaluationTest {
         }catch (Exception e) {
             e.printStackTrace();
         }
+
+
+        try {
+            System.out.println("\n===Aggregated evaluation results===\n");
+            System.out.println(totalEval.toMatrixString());
+            System.out.println(totalEval.toSummaryString());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+
 
     }
 
