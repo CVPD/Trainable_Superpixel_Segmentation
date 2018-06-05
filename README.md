@@ -1,2 +1,6 @@
-#Trainable Superpixel Segmentation
-This plugin has as a purpose the supervised classification of images using superpixels. This plugin will be based on a number of plugins that have already been developed and are available as open source tools that offer the ability to segment images in superpixels and to do supervised segmentation of images based on pixels. This document will be further updated.
+# Trainable Superpixel Segmentation
+This plugin has as a purpose the supervised classification of images using superpixels.
+To do so this plugin uses ImageJ, Weka and MorphoLibJ.
+ImageJ provides image handling support, Weka supports classification support and MorphoLibJ provides image feature extraction based on superpixel images.
+
+This project includes a library and a graphic interface.
