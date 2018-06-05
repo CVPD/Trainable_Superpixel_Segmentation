@@ -26,8 +26,8 @@ public class EvaluationTest {
 
         final ArrayList<String> classes = new ArrayList<String>();
         classes.add("background");
-        classes.add("blue");
-        classes.add("red");
+        classes.add("tumoral");
+        classes.add("nontumoral");
 
         ImagePlus inImage = null;
         ImagePlus spImage = null;
@@ -256,6 +256,7 @@ public class EvaluationTest {
             totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 4 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -301,6 +302,7 @@ public class EvaluationTest {
             totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 5 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -347,6 +349,7 @@ public class EvaluationTest {
             totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 6 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -393,6 +396,7 @@ public class EvaluationTest {
             totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 7 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -438,6 +442,7 @@ public class EvaluationTest {
             totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 8 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -484,6 +489,7 @@ public class EvaluationTest {
             totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 9 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -529,6 +535,7 @@ public class EvaluationTest {
             totalEval.aggregate(eval);
             System.out.println("Test result: ");
             System.out.println(eval.toSummaryString("\n\t 10 results\n======\n",false));
+            System.out.println(eval.toMatrixString());
         }catch (Exception e){
             e.printStackTrace();
         }
