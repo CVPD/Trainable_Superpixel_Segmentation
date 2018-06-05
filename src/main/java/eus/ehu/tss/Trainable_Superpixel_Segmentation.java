@@ -1086,14 +1086,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 rois.add(new HashMap<>());
             }
             features = new ArrayList<>();
-            features.add(RegionFeatures.Feature.fromLabel("Mean"));
-            features.add(RegionFeatures.Feature.fromLabel("Median"));
-            features.add(RegionFeatures.Feature.fromLabel("Mode"));
-            features.add(RegionFeatures.Feature.fromLabel("Skewness"));
-            features.add(RegionFeatures.Feature.fromLabel("Kurtosis"));
-            features.add(RegionFeatures.Feature.fromLabel("StdDev"));
-            features.add(RegionFeatures.Feature.fromLabel("Max"));
-            features.add(RegionFeatures.Feature.fromLabel("Min"));
+            String[] selectedFs = RegionFeatures.Feature.getAllLabels();
+            for(int i=0;i<selectedFs.length;++i){
+                features.add(RegionFeatures.Feature.fromLabel(selectedFs[i]));
+            }
             // Define classifier
             classifier = new RandomForest();
             trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,features,classifier,classes);

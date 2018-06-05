@@ -18,14 +18,10 @@ public class evaluation {
     public static void main(final String[] args){
 
         ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<>();
-        selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mean"));
-        selectedFeatures.add(RegionFeatures.Feature.fromLabel("Median"));
-        selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mode"));
-        selectedFeatures.add(RegionFeatures.Feature.fromLabel("Skewness"));
-        selectedFeatures.add(RegionFeatures.Feature.fromLabel("Kurtosis"));
-        selectedFeatures.add(RegionFeatures.Feature.fromLabel("StdDev"));
-        selectedFeatures.add(RegionFeatures.Feature.fromLabel("Max"));
-        selectedFeatures.add(RegionFeatures.Feature.fromLabel("Min"));
+        String[] selectedFs = RegionFeatures.Feature.getAllLabels();
+        for(int i=0;i<selectedFs.length;++i){
+            selectedFeatures.add(RegionFeatures.Feature.fromLabel(selectedFs[i]));
+        }
 
         final ArrayList<String> classes = new ArrayList<String>();
         classes.add("background");
