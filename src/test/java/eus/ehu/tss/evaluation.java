@@ -5,6 +5,7 @@ import com.sun.org.apache.regexp.internal.RE;
 import ij.IJ;
 import ij.ImagePlus;
 import weka.classifiers.AbstractClassifier;
+import weka.classifiers.Evaluation;
 import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
@@ -21,7 +22,6 @@ import java.util.HashMap;
 
 public class evaluation {
     public static void main(final String[] args){
-        TrainableSuperpixelSegmentation tss = new TrainableSuperpixelSegmentation();
 
         ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<>();
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Mean"));
@@ -32,27 +32,26 @@ public class evaluation {
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("StdDev"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Max"));
         selectedFeatures.add(RegionFeatures.Feature.fromLabel("Min"));
-        tss.setSelectedFeatures(selectedFeatures);
-
-        RandomForest exampleClassifier = new RandomForest();
-        tss.setClassifier(exampleClassifier);
 
         final ArrayList<String> classes = new ArrayList<String>();
         classes.add("background");
         classes.add("blue");
         classes.add("red");
-        tss.setClasses(classes);
 
         for(int i=0;i<10;++i){
+
+            RandomForest exampleClassifier = new RandomForest();
+            ImagePlus testImage = null;
+            ImagePlus supTest = null;
+            ImagePlus gtTest = null;
 
             System.out.println("Test class: "+(i+1));
 
             Instances trainingData;
             if(i==0){
-                ImagePlus testImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-01.png" ).getFile() );
-                ImagePlus supTest = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-01.zip" ).getFile() );
-                tss.setInputImage(testImage);
-                tss.setLabelImage(supTest);
+                testImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-01.png" ).getFile() );
+                supTest = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-01.zip" ).getFile() );
+                gtTest = IJ.openImage(TestSuperpixelSegmentation.class.getResource("/eval/groundtruth/groundtruth-01.png").getFile());
                 ImagePlus trainingImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-02.png" ).getFile() );
                 ImagePlus supImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-02.zip" ).getFile() );
                 ImagePlus gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-02.png" ).getFile() );
@@ -79,10 +78,9 @@ public class evaluation {
                     e.printStackTrace();
                 }
             }else if(i==9) {
-                ImagePlus testImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-10.png" ).getFile() );
-                ImagePlus supTest = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-10.zip" ).getFile() );
-                tss.setInputImage(testImage);
-                tss.setLabelImage(supTest);
+                testImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-10.png" ).getFile() );
+                supTest = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-10.zip" ).getFile() );
+                gtTest = IJ.openImage(TestSuperpixelSegmentation.class.getResource("/eval/groundtruth/groundtruth-10.png").getFile());
                 ImagePlus trainingImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-01.png" ).getFile() );
                 ImagePlus supImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-01.zip" ).getFile() );
                 ImagePlus gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-01.png" ).getFile() );
@@ -100,10 +98,9 @@ public class evaluation {
                     }
                 }
             }else {
-                ImagePlus testImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-0"+(i+1)+".png" ).getFile() );
-                ImagePlus supTest = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-0"+(i+1)+".zip" ).getFile() );
-                tss.setInputImage(testImage);
-                tss.setLabelImage(supTest);
+                testImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-0"+(i+1)+".png" ).getFile() );
+                supTest = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-0"+(i+1)+".zip" ).getFile() );
+                gtTest = IJ.openImage(TestSuperpixelSegmentation.class.getResource("/eval/groundtruth/groundtruth-0"+(i+1)+".png").getFile());
                 ImagePlus trainingImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-01.png" ).getFile() );
                 ImagePlus supImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-01.zip" ).getFile() );
                 ImagePlus gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-01.png" ).getFile() );
@@ -132,16 +129,43 @@ public class evaluation {
                     e.printStackTrace();
                 }
             }
-
-            System.out.println(trainingData.toSummaryString());
-            tss.setTrainingData(trainingData);
-            tss.trainClassifier();
-            AbstractClassifier classifier = tss.getClassifier();
-            System.out.println(classifier.toString());
-            tss.calculateRegionFeatures();
-            ImagePlus result = tss.applyClassifier();
-            System.out.println("Test result: ");
-            result.show();
+            System.out.println("\tCalculating features for testing image");
+            Instances testingData = RegionColorFeatures.calculateColorFeaturesWithClass(testImage,supTest,gtTest,selectedFeatures,classes);
+            try {
+                System.out.println("\tTraining classifier");
+                Evaluation eval = new Evaluation(trainingData);
+                exampleClassifier.buildClassifier(trainingData);
+                System.out.print("\tEvaluating model");
+                eval.evaluateModel(exampleClassifier,testingData);
+                System.out.println("Test result: ");
+                System.out.println(eval.toSummaryString("\n\t"+(i+1)+" results\n======\n",false));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try {
+                System.out.println("\tSaving training file");
+                BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData"+i+".arff"));
+                writer.write(trainingData.toString());
+                writer.flush();
+                writer.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try {
+                System.out.println("\tSaving testing file");
+                BufferedWriter writer = new BufferedWriter(new FileWriter("testingData"+i+".arff"));
+                writer.write(testingData.toString());
+                writer.flush();
+                writer.close();
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+            trainingData=null;
+            testingData=null;
+            testImage = null;
+            supTest = null;
+            gtTest = null;
+            System.gc();
         }
 
 
