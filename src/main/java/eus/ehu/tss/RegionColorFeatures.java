@@ -98,8 +98,8 @@ public class RegionColorFeatures {
         ImagePlus lab = converter.RGBToLab(inputImage);
         ImagePlus[] channels = ChannelSplitter.split(lab);
         Instances lIns = RegionFeatures.calculateRegionFeaturesWithClass(channels[0],labelImage,gtImage,selectedFeatures,classes);
-        Instances aIns = RegionFeatures.calculateRegionFeaturesWithClass(channels[1],labelImage,gtImage,selectedFeatures,classes);
-        Instances bIns = RegionFeatures.calculateRegionFeaturesWithClass(channels[2],labelImage,gtImage,selectedFeatures,classes);
+        Instances aIns = RegionFeatures.calculateRegionFeatures(channels[1],labelImage,selectedFeatures,classes);
+        Instances bIns = RegionFeatures.calculateRegionFeatures(channels[2],labelImage,selectedFeatures,classes);
         if(lIns==null||aIns==null||bIns==null){
             return null;
         }else {
