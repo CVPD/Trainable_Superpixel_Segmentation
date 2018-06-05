@@ -23,17 +23,17 @@ public class RegionColorFeatures {
      * @param classes ArrayList of Strings with names of the classes
      * @return Dataset with the features of each color for each region from the labelImage
      */
-    public static Instances calculateColorFeatures(ImagePlus inputImage,
-                                                   ImagePlus labelImage,
-                                                   ArrayList<RegionFeatures.Feature> selectedFeatures,
-                                                   ArrayList<String> classes)
+    public static Instances calculateUnlabeledColorFeatures(ImagePlus inputImage,
+                                                            ImagePlus labelImage,
+                                                            ArrayList<RegionFeatures.Feature> selectedFeatures,
+                                                            ArrayList<String> classes)
     {
         ColorSpaceConverter converter = new ColorSpaceConverter();
         ImagePlus lab = converter.RGBToLab(inputImage);
         ImagePlus[] channels = ChannelSplitter.split(lab);
-        Instances lIns = RegionFeatures.calculateRegionFeatures(channels[0],labelImage,selectedFeatures,classes);
-        Instances aIns = RegionFeatures.calculateRegionFeatures(channels[1],labelImage,selectedFeatures,classes);
-        Instances bIns = RegionFeatures.calculateRegionFeatures(channels[2],labelImage,selectedFeatures,classes);
+        Instances lIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[0],labelImage,selectedFeatures,classes);
+        Instances aIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[1],labelImage,selectedFeatures,classes);
+        Instances bIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[2],labelImage,selectedFeatures,classes);
         if(lIns==null||aIns==null||bIns==null){
             return null;
         }else {
@@ -88,18 +88,18 @@ public class RegionColorFeatures {
      * @param classes ArrayList of Strings with names of the classes
      * @return Dataset with the features of each color for each region from the labelImage
      */
-    public static Instances calculateColorFeaturesWithClass(ImagePlus inputImage,
-                                                   ImagePlus labelImage,
-                                                   ImagePlus gtImage,
-                                                   ArrayList<RegionFeatures.Feature> selectedFeatures,
-                                                   ArrayList<String> classes)
+    public static Instances calculateLabeledColorFeatures(ImagePlus inputImage,
+                                                          ImagePlus labelImage,
+                                                          ImagePlus gtImage,
+                                                          ArrayList<RegionFeatures.Feature> selectedFeatures,
+                                                          ArrayList<String> classes)
     {
         ColorSpaceConverter converter = new ColorSpaceConverter();
         ImagePlus lab = converter.RGBToLab(inputImage);
         ImagePlus[] channels = ChannelSplitter.split(lab);
-        Instances lIns = RegionFeatures.calculateRegionFeaturesWithClass(channels[0],labelImage,gtImage,selectedFeatures,classes);
-        Instances aIns = RegionFeatures.calculateRegionFeatures(channels[1],labelImage,selectedFeatures,classes);
-        Instances bIns = RegionFeatures.calculateRegionFeatures(channels[2],labelImage,selectedFeatures,classes);
+        Instances lIns = RegionFeatures.calculateLabeledRegionFeatures(channels[0],labelImage,gtImage,selectedFeatures,classes);
+        Instances aIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[1],labelImage,selectedFeatures,classes);
+        Instances bIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[2],labelImage,selectedFeatures,classes);
         if(lIns==null||aIns==null||bIns==null){
             return null;
         }else {
@@ -120,7 +120,7 @@ public class RegionColorFeatures {
                 attributes.add(bIns.attribute(i));
             }
             attributes.add(new Attribute("Class", classes));
-            Instances unlabeled = new Instances("training data", attributes, 0);
+            Instances labeled = new Instances("training data", attributes, 0);
             for (int i = 0; i < lIns.numInstances(); ++i) {
                 int k = 0;
                 Instance inst = new DenseInstance(numAttributes + 1);
@@ -138,11 +138,11 @@ public class RegionColorFeatures {
                 }
                 double classValue = lIns.get(i).value(lIns.classIndex());
                 inst.setValue(numAttributes,classValue);//Currently taking class of l channel
-                unlabeled.add(inst);
+                labeled.add(inst);
             }
-            unlabeled.setClassIndex(numAttributes);
+            labeled.setClassIndex(numAttributes);
 
-            return unlabeled;
+            return labeled;
         }
     }
 

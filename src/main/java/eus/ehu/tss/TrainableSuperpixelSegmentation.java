@@ -1,6 +1,5 @@
 package eus.ehu.tss;
 
-import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.FloatProcessor;
@@ -64,13 +63,13 @@ public class TrainableSuperpixelSegmentation {
      */
     public boolean calculateRegionFeatures(){
         if(inputImage.getType()==ImagePlus.COLOR_RGB){
-            unlabeled = RegionColorFeatures.calculateColorFeatures(
+            unlabeled = RegionColorFeatures.calculateUnlabeledColorFeatures(
                     inputImage,
                     labelImage,
                     selectedFeatures,
                     classes);
         }else {
-            unlabeled = RegionFeatures.calculateRegionFeatures(
+            unlabeled = RegionFeatures.calculateUnlabeledRegionFeatures(
                     inputImage,
                     labelImage,
                     selectedFeatures,

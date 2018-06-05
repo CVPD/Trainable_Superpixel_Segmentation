@@ -1,24 +1,18 @@
 package eus.ehu.tss;
 
 
-import com.sun.org.apache.regexp.internal.RE;
 import ij.IJ;
 import ij.ImagePlus;
-import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.converters.ArffSaver;
 import weka.core.converters.ConverterUtils;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class evaluation {
     public static void main(final String[] args){
@@ -56,14 +50,14 @@ public class evaluation {
                 ImagePlus supImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-02.zip" ).getFile() );
                 ImagePlus gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-02.png" ).getFile() );
                 System.out.println("\tCalculating features for image: 2");
-                trainingData = RegionColorFeatures.calculateColorFeaturesWithClass(trainingImage1,supImage1,gtImage,selectedFeatures,classes);
+                trainingData = RegionColorFeatures.calculateLabeledColorFeatures(trainingImage1,supImage1,gtImage,selectedFeatures,classes);
                 for(int j=3;j<10;++j){
                     trainingImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-0"+j+".png" ).getFile() );
                     supImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-0"+j+".zip" ).getFile() );
                     gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-0"+j+".png" ).getFile() );
                     try {
                         System.out.println("\tCalculating features for image: "+j);
-                        trainingData = merge(trainingData,RegionColorFeatures.calculateColorFeaturesWithClass(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
+                        trainingData = merge(trainingData,RegionColorFeatures.calculateLabeledColorFeatures(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -73,7 +67,7 @@ public class evaluation {
                 gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-10.png" ).getFile() );
                 try {
                     System.out.println("\tCalculating features for image: 10");
-                    trainingData = merge(trainingData,RegionColorFeatures.calculateColorFeaturesWithClass(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
+                    trainingData = merge(trainingData,RegionColorFeatures.calculateLabeledColorFeatures(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
                 }catch (Exception e){
                     e.printStackTrace();
                 }
@@ -85,14 +79,14 @@ public class evaluation {
                 ImagePlus supImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-01.zip" ).getFile() );
                 ImagePlus gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-01.png" ).getFile() );
                 System.out.println("\tCalculating features for image: 1");
-                trainingData = RegionColorFeatures.calculateColorFeaturesWithClass(trainingImage1,supImage1,gtImage,selectedFeatures,classes);
+                trainingData = RegionColorFeatures.calculateLabeledColorFeatures(trainingImage1,supImage1,gtImage,selectedFeatures,classes);
                 for(int j=2;j<10;++j){
                     trainingImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-0"+j+".png" ).getFile() );
                     supImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-0"+j+".zip" ).getFile() );
                     gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-0"+j+".png" ).getFile() );
                     try {
                         System.out.println("\tCalculating features for image: "+j);
-                        trainingData = merge(trainingData,RegionColorFeatures.calculateColorFeaturesWithClass(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
+                        trainingData = merge(trainingData,RegionColorFeatures.calculateLabeledColorFeatures(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -105,7 +99,7 @@ public class evaluation {
                 ImagePlus supImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-01.zip" ).getFile() );
                 ImagePlus gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-01.png" ).getFile() );
                 System.out.println("\tCalculating features for image: 1");
-                trainingData = RegionColorFeatures.calculateColorFeaturesWithClass(trainingImage1,supImage1,gtImage,selectedFeatures,classes);
+                trainingData = RegionColorFeatures.calculateLabeledColorFeatures(trainingImage1,supImage1,gtImage,selectedFeatures,classes);
                 for(int j=2;j<10;++j){
                     if(i+1!=j) {
                         trainingImage1 = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-0"+j+".png" ).getFile() );
@@ -113,7 +107,7 @@ public class evaluation {
                         gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-0"+j+".png" ).getFile() );
                         try {
                             System.out.println("\tCalculating features for image: "+j);
-                            trainingData = merge(trainingData,RegionColorFeatures.calculateColorFeaturesWithClass(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
+                            trainingData = merge(trainingData,RegionColorFeatures.calculateLabeledColorFeatures(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
                         }catch (Exception e){
                             e.printStackTrace();
                         }
@@ -124,13 +118,13 @@ public class evaluation {
                 gtImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-10.png" ).getFile() );
                 try {
                     System.out.println("\tCalculating features for image: 10");
-                    trainingData = merge(trainingData,RegionColorFeatures.calculateColorFeaturesWithClass(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
+                    trainingData = merge(trainingData,RegionColorFeatures.calculateLabeledColorFeatures(trainingImage1,supImage1,gtImage,selectedFeatures,classes));
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
             System.out.println("\tCalculating features for testing image");
-            Instances testingData = RegionColorFeatures.calculateColorFeaturesWithClass(testImage,supTest,gtTest,selectedFeatures,classes);
+            Instances testingData = RegionColorFeatures.calculateLabeledColorFeatures(testImage,supTest,gtTest,selectedFeatures,classes);
             try {
                 System.out.println("\tTraining classifier");
                 Evaluation eval = new Evaluation(trainingData);

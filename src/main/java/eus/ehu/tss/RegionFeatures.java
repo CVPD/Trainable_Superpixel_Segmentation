@@ -105,7 +105,7 @@ public class RegionFeatures {
      * @param classes list with the class names to use
      * @return dataset with the features of each region from the labelImage
      */
-    public static Instances calculateRegionFeatures(
+    public static Instances calculateUnlabeledRegionFeatures(
     		ImagePlus inputImage,
     		ImagePlus labelImage,
     		ArrayList<Feature> selectedFeatures,
@@ -183,7 +183,7 @@ public class RegionFeatures {
     }
 
     /**
-     * Calculates the selected features of each region based on an input image and a labeled image
+     * Calculates the selected features of each region based on an input image, a labeled image and a ground truth image
      * @param inputImage ImagePlus input image from which the features will be calculated
      * @param labelImage ImagePlus where the labels are located
      * @param gtImage ImagePlus that provides Ground Truth
@@ -191,7 +191,7 @@ public class RegionFeatures {
      * @param classes list with the class names to use
      * @return dataset with the features of each region from the labelImage
      */
-    public static Instances calculateRegionFeaturesWithClass(
+    public static Instances calculateLabeledRegionFeatures(
             ImagePlus inputImage,
             ImagePlus labelImage,
             ImagePlus gtImage,
@@ -252,7 +252,7 @@ public class RegionFeatures {
             attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
         }
         attributes.add(new Attribute("Class", classes));
-        Instances unlabeled = new Instances("training data",attributes,0);
+        Instances labeled = new Instances("training data",attributes,0);
         for(int i=0;i<mergedTable.size();++i){
             //numFeatures is the index, add 1 to get number of attributes needed plus class
             Instance inst = new DenseInstance(numFeatures+1);
@@ -263,14 +263,14 @@ public class RegionFeatures {
             ImageProcessor gtProcessor = gtImage.getProcessor();
             float value = (float) gtProcessor.getf(coord[0],coord[1]);
             inst.setValue( numFeatures, (int) value );
-            unlabeled.add(inst);
+            labeled.add(inst);
         }
-        unlabeled.setClassIndex( numFeatures );
+        labeled.setClassIndex( numFeatures );
         //The number or instances should be the same as the size of the table
-        if(unlabeled.numInstances()!=(mergedTable.size())){
+        if(labeled.numInstances()!=(mergedTable.size())){
             return null;
         }else{
-            return unlabeled;
+            return labeled;
         }
     }
 
