@@ -10,6 +10,8 @@ import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
+import weka.filters.Filter;
+import weka.filters.supervised.instance.Resample;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -24,6 +26,9 @@ public class EvaluationTest {
             selectedFeatures.add(RegionFeatures.Feature.fromLabel(selectedFs[i]));
         }
 
+        final Resample filter = new Resample();
+        filter.setBiasToUniformClass(1.0);
+
         final ArrayList<String> classes = new ArrayList<String>();
         classes.add("background");
         classes.add("tumoral");
@@ -35,10 +40,14 @@ public class EvaluationTest {
         AggregateableEvaluation totalEval = null;
         Instances training = null;
         Instances testing = null;
+        Instances filteredTraining = null;
 
         RandomForest exampleClassifier = new RandomForest();
 
         ArrayList<Instances> dataSet = new ArrayList<>();
+
+
+
         System.out.println("Calculating image features and classes");
         for(int i=0;i<10;++i) {
             System.out.println("\tCalculating features of image "+String.format("%02d",i+1));
@@ -50,21 +59,27 @@ public class EvaluationTest {
 
         try {
             System.out.println("Merging data for fold 01");
+            testing = dataSet.get(0);
             training = dataSet.get(1);
             System.out.print("\tAdding datasets to training data: 02");
-            testing = dataSet.get(0);
             for(int i=2;i<10;++i){
                 training=merge(training,dataSet.get(i));
                 System.out.print(", "+String.format("%02d",i+1));
             }
-            System.out.print("\n");
+            System.out.println("\nBalancing training data");
+            filter.setInputFormat(training);
+            filter.setNoReplacement(false);
+            filter.setSampleSizePercent(100);
+            filteredTraining = Filter.useFilter(training,filter);
+            System.out.println(filter.toString());
         }catch (Exception e){
             e.printStackTrace();
         }
         try {
             System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
+            exampleClassifier = new RandomForest();
+            Evaluation eval = new Evaluation(filteredTraining);
+            exampleClassifier.buildClassifier(filteredTraining);
             System.out.println("Used classifier\n\t"+exampleClassifier.toString());
             System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
@@ -78,24 +93,24 @@ public class EvaluationTest {
         }
         try {
             System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData1.arff"));
-            writer.write(training.toString());
+            BufferedWriter writer = new BufferedWriter(new FileWriter("FilterNoNghTraining1.arff"));
+            writer.write(filteredTraining.toString());
             writer.flush();
             writer.close();
         }catch (Exception e){
             e.printStackTrace();
         }
         try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData1.arff"));
-            writer.write(training.toString());
+            System.out.println("Saving testing file");
+            BufferedWriter writer = new BufferedWriter(new FileWriter("FilterNoNghTesting1.arff"));
+            writer.write(testing.toString());
             writer.flush();
             writer.close();
         }catch (Exception e) {
             e.printStackTrace();
         }
 
-        for(int i=0;i<10;++i){
+        for(int i=1;i<10;++i){
             try {
                 System.out.println("Merging data for fold "+String.format("%02d",i+1));
                 training = dataSet.get(0);
@@ -107,14 +122,18 @@ public class EvaluationTest {
                         training = merge(training, dataSet.get(j));
                     }
                 }
-                System.out.print("\n");
+                System.out.println("\nBalancing training data");
+                filter.setInputFormat(training);
+                filter.setNoReplacement(false);
+                filter.setSampleSizePercent(100);
+                filteredTraining = Filter.useFilter(training,filter);
             }catch (Exception e){
                 e.printStackTrace();
             }
             try {
-                System.out.println("Training classifier");
-                Evaluation eval = new Evaluation(training);
-                exampleClassifier.buildClassifier(training);
+                System.out.println("\nTraining classifier");
+                Evaluation eval = new Evaluation(filteredTraining);
+                exampleClassifier.buildClassifier(filteredTraining);
                 System.out.println("Used classifier\n\t"+exampleClassifier.toString());
                 System.out.println("Evaluating model");
                 eval.evaluateModel(exampleClassifier,testing);
@@ -127,17 +146,17 @@ public class EvaluationTest {
             }
             try {
                 System.out.println("Saving training file");
-                BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData"+String.format("%02d",i+1)+".arff"));
-                writer.write(training.toString());
+                BufferedWriter writer = new BufferedWriter(new FileWriter("FilterNoNghTraining"+String.format("%02d",i+1)+".arff"));
+                writer.write(filteredTraining.toString());
                 writer.flush();
                 writer.close();
             }catch (Exception e){
                 e.printStackTrace();
             }
             try {
-                System.out.println("\tSaving testing file");
-                BufferedWriter writer = new BufferedWriter(new FileWriter("testingData"+String.format("%02d",i+1)+".arff"));
-                writer.write(training.toString());
+                System.out.println("Saving testing file");
+                BufferedWriter writer = new BufferedWriter(new FileWriter("FilterNoNghTesting"+String.format("%02d",i+1)+".arff"));
+                writer.write(testing.toString());
                 writer.flush();
                 writer.close();
             }catch (Exception e) {

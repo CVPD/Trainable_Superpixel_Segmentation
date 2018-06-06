@@ -371,4 +371,10 @@ public class TrainableSuperpixelSegmentation {
         return classifierTrained;
     }
 
+
+    public Instances getUnlabeled() {
+        return unlabeled;
+    }
+
+
 }
