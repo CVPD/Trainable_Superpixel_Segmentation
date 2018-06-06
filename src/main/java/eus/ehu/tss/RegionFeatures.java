@@ -153,6 +153,11 @@ public class RegionFeatures {
             for (ResultsTable result : results) {
                 String measure = result.getColumnHeading(0);
                 double value = result.getValue(measure, i);
+                if(!Double.isFinite(value)&&measure.equals("Skewness")){
+                    value=0;
+                }else if(!Double.isFinite(value)&&measure.equals("Kurtosis")){
+                    value=-1.2;
+                }
                 mergedTable.addValue(measure, value);
             }
         }
