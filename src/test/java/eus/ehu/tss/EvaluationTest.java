@@ -32,78 +32,32 @@ public class EvaluationTest {
         ImagePlus inImage = null;
         ImagePlus spImage = null;
         ImagePlus gtImage = null;
-
-        RandomForest exampleClassifier = new RandomForest();
-        System.out.println("Calculating image features and classes");
-        System.out.println("\tCalculating features of image 1");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-01.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-01.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-01.png").getFile());
-        Instances data1 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        System.out.println("\tCalculating features of image 2");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-02.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-02.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-02.png").getFile());
-        Instances data2 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        System.out.println("\tCalculating features of image 3");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-03.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-03.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-03.png").getFile());
-        Instances data3 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        System.out.println("\tCalculating features of image 4");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-04.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-04.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-04.png").getFile());
-        Instances data4 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        System.out.println("\tCalculating features of image 5");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-05.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-05.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-05.png").getFile());
-        Instances data5 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        System.out.println("\tCalculating features of image 6");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-06.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-06.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-06.png").getFile());
-        Instances data6 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        System.out.println("\tCalculating features of image 7");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-07.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-07.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-07.png").getFile());
-        Instances data7 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        System.out.println("\tCalculating features of image 8");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-08.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-08.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-08.png").getFile());
-        Instances data8 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        System.out.println("\tCalculating features of image 9");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-09.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-09.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-09.png").getFile());
-        Instances data9 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        System.out.println("\tCalculating features of image 10");
-        inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-10.png").getFile());
-        spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-10.zip").getFile());
-        gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-10.png").getFile());
-        Instances data10 = RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes);
-        inImage = null;
-        spImage = null;
-        gtImage = null;
-        System.gc();
-
         AggregateableEvaluation totalEval = null;
         Instances training = null;
         Instances testing = null;
+
+        RandomForest exampleClassifier = new RandomForest();
+
+        ArrayList<Instances> dataSet = new ArrayList<>();
+        System.out.println("Calculating image features and classes");
+        for(int i=0;i<10;++i) {
+            System.out.println("\tCalculating features of image "+String.format("%02d",i+1));
+            inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-"+String.format("%02d",i+1)+".png").getFile());
+            spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-"+String.format("%02d",i+1)+".zip").getFile());
+            gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-"+String.format("%02d",i+1)+".png").getFile());
+            dataSet.add(RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes));
+        }
+
         try {
-            System.out.println("Merging data for fold 1");
-            training = merge(data2, data3);
-            training = merge(training,data4);
-            training = merge(training,data5);
-            training = merge(training,data6);
-            training = merge(training,data7);
-            training = merge(training,data8);
-            training = merge(training,data9);
-            training = merge(training,data10);
-            testing = data1;
+            System.out.println("Merging data for fold 01");
+            training = dataSet.get(1);
+            System.out.print("\tAdding datasets to training data: 02");
+            testing = dataSet.get(0);
+            for(int i=2;i<10;++i){
+                training=merge(training,dataSet.get(i));
+                System.out.print(", "+String.format("%02d",i+1));
+            }
+            System.out.print("\n");
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -111,6 +65,7 @@ public class EvaluationTest {
             System.out.println("Training classifier");
             Evaluation eval = new Evaluation(training);
             exampleClassifier.buildClassifier(training);
+            System.out.println("Used classifier\n\t"+exampleClassifier.toString());
             System.out.println("Evaluating model");
             eval.evaluateModel(exampleClassifier,testing);
             totalEval = new AggregateableEvaluation(eval);
@@ -140,424 +95,55 @@ public class EvaluationTest {
             e.printStackTrace();
         }
 
-        try {
-            System.out.println("Merging data for fold 2");
-            training = merge(data1, data3);
-            training = merge(training,data4);
-            training = merge(training,data5);
-            training = merge(training,data6);
-            training = merge(training,data7);
-            training = merge(training,data8);
-            training = merge(training,data9);
-            training = merge(training,data10);
-            testing = data2;
-        }catch (Exception e){
-            e.printStackTrace();
+        for(int i=0;i<10;++i){
+            try {
+                System.out.println("Merging data for fold "+String.format("%02d",i+1));
+                training = dataSet.get(0);
+                testing = dataSet.get(i);
+                System.out.print("\tAdding datasets to training data: 01");
+                for(int j=1;j<10;++j){
+                    if(j!=i) {
+                        System.out.print(", "+String.format("%02d",j+1));
+                        training = merge(training, dataSet.get(j));
+                    }
+                }
+                System.out.print("\n");
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try {
+                System.out.println("Training classifier");
+                Evaluation eval = new Evaluation(training);
+                exampleClassifier.buildClassifier(training);
+                System.out.println("Used classifier\n\t"+exampleClassifier.toString());
+                System.out.println("Evaluating model");
+                eval.evaluateModel(exampleClassifier,testing);
+                totalEval.aggregate(eval);
+                System.out.println("Test result: ");
+                System.out.println(eval.toSummaryString("\n\t"+String.format("%02d",i+1)+" results\n======\n",false));
+                System.out.println(eval.toMatrixString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try {
+                System.out.println("Saving training file");
+                BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData"+String.format("%02d",i+1)+".arff"));
+                writer.write(training.toString());
+                writer.flush();
+                writer.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try {
+                System.out.println("\tSaving testing file");
+                BufferedWriter writer = new BufferedWriter(new FileWriter("testingData"+String.format("%02d",i+1)+".arff"));
+                writer.write(training.toString());
+                writer.flush();
+                writer.close();
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        try {
-            System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t2 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData2.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData2.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            System.out.println("Merging data for fold 3");
-            training = merge(data1, data2);
-            training = merge(training,data4);
-            training = merge(training,data5);
-            training = merge(training,data6);
-            training = merge(training,data7);
-            training = merge(training,data8);
-            training = merge(training,data9);
-            training = merge(training,data10);
-            testing = data3;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t 3 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData3.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData3.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            System.out.println("Merging data for fold 4");
-            training = merge(data1, data2);
-            training = merge(training,data3);
-            training = merge(training,data5);
-            training = merge(training,data6);
-            training = merge(training,data7);
-            training = merge(training,data8);
-            training = merge(training,data9);
-            training = merge(training,data10);
-            testing = data4;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t 4 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData4.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData4.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            System.out.println("Merging data for fold 5");
-            training = merge(data1, data2);
-            training = merge(training,data3);
-            training = merge(training,data4);
-            training = merge(training,data6);
-            training = merge(training,data7);
-            training = merge(training,data8);
-            training = merge(training,data9);
-            training = merge(training,data10);
-            testing = data5;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t 5 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData5.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData5.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            System.out.println("Merging data for fold 6");
-            training = merge(data1, data2);
-            training = merge(training,data3);
-            training = merge(training,data4);
-            training = merge(training,data5);
-            training = merge(training,data7);
-            training = merge(training,data8);
-            training = merge(training,data9);
-            training = merge(training,data10);
-            testing = data6;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t 6 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData6.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData6.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            System.out.println("Merging data for fold 7");
-            training = merge(data1, data2);
-            training = merge(training,data3);
-            training = merge(training,data4);
-            training = merge(training,data5);
-            training = merge(training,data6);
-            training = merge(training,data8);
-            training = merge(training,data9);
-            training = merge(training,data10);
-            testing = data7;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t 7 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData7.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData7.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            System.out.println("Merging data for fold 8");
-            training = merge(data1, data2);
-            training = merge(training,data3);
-            training = merge(training,data4);
-            training = merge(training,data5);
-            training = merge(training,data6);
-            training = merge(training,data7);
-            training = merge(training,data9);
-            training = merge(training,data10);
-            testing = data8;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t 8 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData8.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData8.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            System.out.println("Merging data for fold 9");
-            training = merge(data1, data2);
-            training = merge(training,data3);
-            training = merge(training,data4);
-            training = merge(training,data5);
-            training = merge(training,data6);
-            training = merge(training,data7);
-            training = merge(training,data8);
-            training = merge(training,data10);
-            testing = data9;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t 9 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData9.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData9.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            System.out.println("Merging data for fold 10");
-            training = merge(data1, data2);
-            training = merge(training,data3);
-            training = merge(training,data4);
-            training = merge(training,data5);
-            training = merge(training,data6);
-            training = merge(training,data7);
-            training = merge(training,data8);
-            training = merge(training,data9);
-            testing = data10;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Training classifier");
-            Evaluation eval = new Evaluation(training);
-            exampleClassifier.buildClassifier(training);
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t 10 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("trainingData10.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("\tSaving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("testingData10.arff"));
-            writer.write(training.toString());
-            writer.flush();
-            writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
 
         try {
             System.out.println("\n===Aggregated evaluation results===\n");
@@ -566,7 +152,6 @@ public class EvaluationTest {
         }catch (Exception e){
             e.printStackTrace();
         }
-
 
 
     }
