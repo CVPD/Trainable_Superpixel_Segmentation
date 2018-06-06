@@ -37,7 +37,17 @@ public class RegionFeatures {
         Kurtosis("Kurtosis"),
         StdDev("StdDev"),
         Max("Max"),
-        Min("Min");
+        Min("Min"),
+        NeighborsMean("NeighborsMean"),
+        NeighborsMedian("NeighborsMedian"),
+        NeighborsMode("NeighborsMode"),
+        NeighborsSkewness("NeighborsSkewness"),
+        NeighborsKurtosis("NeighborsKurtosis"),
+        NeighborsStdDev("NeighborsStdDev"),
+        NeighborsMax("NeighborsMax"),
+        NeighborsMin("NeighborsMin");
+
+
 
         private final String label;
 
@@ -139,6 +149,30 @@ public class RegionFeatures {
                 case Skewness:
                     results.add( calculator.getSkewness() );
                     break;
+                case NeighborsMean:
+                    results.add(calculator.getNeighborsMean());
+                    break;
+                case NeighborsMedian:
+                    results.add(calculator.getNeighborsMedian());
+                    break;
+                case NeighborsMode:
+                    results.add(calculator.getNeighborsMode());
+                    break;
+                case NeighborsSkewness:
+                    results.add(calculator.getNeighborsSkewness());
+                    break;
+                case NeighborsKurtosis:
+                    results.add(calculator.getNeighborsKurtosis());
+                    break;
+                case NeighborsStdDev:
+                    results.add(calculator.getNeighborsStdDev());
+                    break;
+                case NeighborsMax:
+                    results.add(calculator.getNeighborsMax());
+                    break;
+                case NeighborsMin:
+                    results.add(calculator.getNeighborsMin());
+                    break;
             }
         }
 
@@ -232,6 +266,30 @@ public class RegionFeatures {
                     break;
                 case Skewness:
                     results.add( calculator.getSkewness() );
+                    break;
+                case NeighborsMean:
+                    results.add(calculator.getNeighborsMean());
+                    break;
+                case NeighborsMedian:
+                    results.add(calculator.getNeighborsMedian());
+                    break;
+                case NeighborsMode:
+                    results.add(calculator.getNeighborsMode());
+                    break;
+                case NeighborsSkewness:
+                    results.add(calculator.getNeighborsSkewness());
+                    break;
+                case NeighborsKurtosis:
+                    results.add(calculator.getNeighborsKurtosis());
+                    break;
+                case NeighborsStdDev:
+                    results.add(calculator.getNeighborsStdDev());
+                    break;
+                case NeighborsMax:
+                    results.add(calculator.getNeighborsMax());
+                    break;
+                case NeighborsMin:
+                    results.add(calculator.getNeighborsMin());
                     break;
             }
         }
