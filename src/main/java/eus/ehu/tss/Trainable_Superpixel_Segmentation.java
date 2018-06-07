@@ -542,6 +542,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
 
         resultImage = trainableSuperpixelSegmentation.applyClassifier();
+        createResult();
+        overlay = 2;
+        toggleOverlay();
         IJ.log("Classifier applied");
     }
 
@@ -631,6 +634,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         trainableSuperpixelSegmentation.setClasses(classes);
         calculateFeatures = true;
         IJ.log(loadedClassifier.toString());
+        trainableSuperpixelSegmentation.setClassifierTrained(true);
 
     }
 

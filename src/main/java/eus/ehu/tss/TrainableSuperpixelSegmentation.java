@@ -371,6 +371,9 @@ public class TrainableSuperpixelSegmentation {
         return classifierTrained;
     }
 
+    public void setClassifierTrained(boolean isClassifierTrained){
+        classifierTrained = isClassifierTrained;
+    }
 
     public Instances getUnlabeled() {
         return unlabeled;
