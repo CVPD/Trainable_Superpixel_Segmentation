@@ -1,5 +1,6 @@
 package eus.ehu.tss;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.ChannelSplitter;
 import ij.process.ColorSpaceConverter;
@@ -31,9 +32,22 @@ public class RegionColorFeatures {
         ColorSpaceConverter converter = new ColorSpaceConverter();
         ImagePlus lab = converter.RGBToLab(inputImage);
         ImagePlus[] channels = ChannelSplitter.split(lab);
+        long startTime = System.currentTimeMillis();
         Instances lIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[0],labelImage,selectedFeatures,classes);
+        long elapsedTime = System.currentTimeMillis();
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "    Calculating channel l features took " + estimatedTime + " ms");
+        startTime = System.currentTimeMillis();
         Instances aIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[1],labelImage,selectedFeatures,classes);
+        elapsedTime = System.currentTimeMillis();
+        estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "    Calculating channel a features took " + estimatedTime + " ms");
+        startTime = System.currentTimeMillis();
         Instances bIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[2],labelImage,selectedFeatures,classes);
+        elapsedTime = System.currentTimeMillis();
+        estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "    Calculating channel b features took " + estimatedTime + " ms");
+        startTime = System.currentTimeMillis();
         if(lIns==null||aIns==null||bIns==null){
             return null;
         }else {
@@ -74,7 +88,9 @@ public class RegionColorFeatures {
                 unlabeled.add(inst);
             }
             unlabeled.setClassIndex(numAttributes);
-
+            elapsedTime = System.currentTimeMillis();
+            estimatedTime = System.currentTimeMillis() - startTime;
+            IJ.log( "\tCreating instances took" + estimatedTime + "ms");
             return unlabeled;
         }
     }

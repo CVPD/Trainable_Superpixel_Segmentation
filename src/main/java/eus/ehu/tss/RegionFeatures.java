@@ -1,6 +1,7 @@
 package eus.ehu.tss;
 
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.ResultsTable;
@@ -121,6 +122,7 @@ public class RegionFeatures {
     		ArrayList<Feature> selectedFeatures,
     		ArrayList<String> classes)
     {
+        long startTime = System.currentTimeMillis();
         IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
         ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
         for (Feature selectedFeature : selectedFeatures) {
@@ -175,7 +177,10 @@ public class RegionFeatures {
                     break;
             }
         }
-
+        long elapsedTime = System.currentTimeMillis();
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "        Calculating features took " + estimatedTime + " ms");
+        startTime = System.currentTimeMillis();
         ResultsTable mergedTable = new ResultsTable();
         final int numLabels = results.get( 0 ).getCounter();
         for(int i=0; i < numLabels; ++i)
@@ -195,6 +200,10 @@ public class RegionFeatures {
                 mergedTable.addValue(measure, value);
             }
         }
+        elapsedTime = System.currentTimeMillis();
+        estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "        Merging features took " + estimatedTime + " ms");
+        startTime = System.currentTimeMillis();
         //mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         int numFeatures = mergedTable.getLastColumn()+1; //Take into account it starts in index 0
@@ -213,6 +222,10 @@ public class RegionFeatures {
             unlabeled.add(inst);
         }
         unlabeled.setClassIndex( numFeatures );
+        elapsedTime = System.currentTimeMillis();
+        estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "        Setting class label as 0 took " + estimatedTime + " ms");
+        startTime = System.currentTimeMillis();
         //The number or instances should be the same as the size of the table
         if(unlabeled.numInstances()!=(mergedTable.size())){
             return null;
