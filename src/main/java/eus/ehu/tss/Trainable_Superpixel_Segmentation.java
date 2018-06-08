@@ -3,6 +3,7 @@ package eus.ehu.tss;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.Roi;
@@ -1072,13 +1073,53 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     @Override
     public void run(String s) {
 
-        classes = new ArrayList<String>();
-        IJ.log("Open input image");
-        inputImage =IJ.openImage();
-        inputTitle = inputImage.getTitle();
-        inputImage.setTitle("Trainable Superpixel Segmentation");
-        IJ.log("Open superpixel image");
-        supImage = IJ.openImage();
+    	classes = new ArrayList<String>();
+    	// Check number of open images
+    	int nbima = WindowManager.getImageCount();
+    	// If less than 2 images opened, ask user
+    	if( nbima < 2 )
+    	{
+    		IJ.log("Open input image");
+    		inputImage = IJ.openImage();
+    		inputTitle = inputImage.getTitle();
+    		IJ.log("Open superpixel image");
+    		supImage = IJ.openImage();
+    	}
+    	else // otherwise read currently opened image titles
+    	{
+    		String[] names = new String[ nbima ];
+
+    		for (int i = 0; i < nbima; i++)
+    			names[ i ] = WindowManager.getImage(i + 1).getShortTitle();
+
+    		GenericDialog gd = new GenericDialog( "Trainable Superpixel Segmentation" );
+    		gd.addChoice( "Input image", names, names[ 0 ] );
+    		gd.addChoice( "Superpixel image", names, names[ 1 ] );
+
+    		gd.showDialog();
+
+    		if( gd.wasOKed() )
+    		{
+    			int inputIndex = gd.getNextChoiceIndex();
+    			int supIndex = gd.getNextChoiceIndex();
+    			inputImage = WindowManager.getImage( inputIndex + 1 ).duplicate();
+    			supImage = WindowManager.getImage( supIndex + 1 ).duplicate();
+
+    			if( inputImage.getWidth() != supImage.getWidth() ||
+    					inputImage.getHeight() != supImage.getHeight() ||
+    					inputImage.getImageStackSize() != supImage.getImageStackSize() )
+    			{
+    				IJ.error( "Trainable Superpixel Segmentation input error", "Error: input"
+    						+ " and superpixel images must have the same size" );
+    				return;
+    			}
+    		}
+    		else
+    			return;
+    	}
+
+    	inputImage.setTitle("Trainable Superpixel Segmentation");
+
         if(inputImage == null || supImage == null){
             IJ.error("Error when opening image");
         }else {
