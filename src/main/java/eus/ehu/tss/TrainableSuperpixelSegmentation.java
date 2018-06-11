@@ -313,6 +313,31 @@ public class TrainableSuperpixelSegmentation {
         this.classes = classes;
     }
 
+    /**
+     * Adds features
+     * @param features
+     */
+    public void addFeatures(String[] features){
+        if(selectedFeatures==null){
+            selectedFeatures = new ArrayList<RegionFeatures.Feature>();
+            for(int i=0; i<features.length;++i){
+                if(!selectedFeatures.contains(RegionFeatures.Feature.fromLabel(features[i]))){
+                    selectedFeatures.add(RegionFeatures.Feature.fromLabel(features[i]));
+                }
+            }for(int i=0; i<features.length;++i){
+                if(!selectedFeatures.contains(RegionFeatures.Feature.fromLabel(features[i]))){
+                    selectedFeatures.add(RegionFeatures.Feature.fromLabel(features[i]));
+                }
+            }
+        }else{
+            for(int i=0; i<features.length;++i){
+                if(!selectedFeatures.contains(RegionFeatures.Feature.fromLabel(features[i]))){
+                    selectedFeatures.add(RegionFeatures.Feature.fromLabel(features[i]));
+                }
+            }
+        }
+    }
+
 
     /**
      * Sets selected features
@@ -378,6 +403,16 @@ public class TrainableSuperpixelSegmentation {
     public Instances getUnlabeled() {
         return unlabeled;
     }
+
+    public ArrayList<RegionFeatures.Feature> getSelectedFeatures() {
+        return selectedFeatures;
+    }
+
+
+    public void setUnlabeled(Instances unlabeled) {
+        this.unlabeled = unlabeled;
+    }
+
 
 
 }
