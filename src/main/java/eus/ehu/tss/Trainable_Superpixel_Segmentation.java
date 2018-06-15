@@ -650,18 +650,19 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }else {
                 applyClassifier();
             }
+        }else {
+
+            ImagePlus resultImg = resultImage.duplicate();
+
+
+            resultImg.setTitle(inputTitle + "-classified");
+
+            convertTo8bitNoScaling(resultImg);
+            resultImg.getProcessor().setColorModel(overlayLUT);
+            resultImg.getImageStack().setColorModel(overlayLUT);
+            resultImg.updateAndDraw();
+            resultImg.show();
         }
-
-        ImagePlus resultImg = resultImage.duplicate();
-
-
-        resultImg.setTitle( inputTitle+"-classified" );
-
-        convertTo8bitNoScaling( resultImg );
-        resultImg.getProcessor().setColorModel( overlayLUT );
-        resultImg.getImageStack().setColorModel( overlayLUT );
-        resultImg.updateAndDraw();
-        resultImg.show();
     }
 
 
