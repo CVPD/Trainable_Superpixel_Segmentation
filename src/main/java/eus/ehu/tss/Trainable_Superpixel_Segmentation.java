@@ -538,42 +538,39 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         classifier = trainableSuperpixelSegmentation.getClassifier();
         IJ.log("Classifier trained");
-        applyClassifier();
-        overlay = 2;
-        toggleOverlay();
-    }
-
-    /**
-     * Apply classifier, calculates features if not previously calculated and raises error if classifier hasn't been trained previously
-     */
-    void applyClassifier(){
         for(int i=0;i<tags.size();++i){
             if(tags.get(i).length==0){
                 IJ.showMessage("Add at least one region to class "+classes.get(i));
                 return;
             }
         }
-        if(calculateFeatures){
-            IJ.log("Calculating region features");
-            trainableSuperpixelSegmentation.calculateRegionFeatures();
-            calculateFeatures = false;
-        }
-        if(!trainableSuperpixelSegmentation.isClassifierTrained()){
-            if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
-                IJ.error("Error when training classifier");
-            }
-            classifier = trainableSuperpixelSegmentation.getClassifier();
-        }
         IJ.log("Applying classifier");
-        if(!trainableSuperpixelSegmentation.setClassifier(classifier)){
-            IJ.error("Error when setting classifier");
-            return;
-        }
-
         resultImage = trainableSuperpixelSegmentation.applyClassifier();
         createResult();
         overlay = 2;
         toggleOverlay();
+        IJ.log("Classifier applied");
+    }
+
+    /**
+     * Apply classifier, calculates features if not previously calculated and raises error if classifier hasn't been trained previously
+     */
+    void applyClassifier(){
+        if(!trainableSuperpixelSegmentation.isClassifierTrained()){
+            IJ.error("Train a classifier");
+            return;
+        }
+        IJ.showMessage("Select input image");
+        ImagePlus input = IJ.openImage();
+        IJ.showMessage("Select corresponding label image");
+        ImagePlus sup = IJ.openImage();
+        trainableSuperpixelSegmentation.setInputImage(input);
+        trainableSuperpixelSegmentation.setLabelImage(sup);
+        IJ.log("Calculating region features");
+        trainableSuperpixelSegmentation.calculateRegionFeatures();
+        IJ.log("Applying classifier");
+        resultImage = trainableSuperpixelSegmentation.applyClassifier();
+        resultImage.show();
         IJ.log("Classifier applied");
     }
 
@@ -676,7 +673,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             if(!trainableSuperpixelSegmentation.isClassifierTrained()) {
                 runStopTraining("Run");
             }else {
-                applyClassifier();
+                resultImage = trainableSuperpixelSegmentation.applyClassifier();
+                createResult();
             }
         }else {
 
