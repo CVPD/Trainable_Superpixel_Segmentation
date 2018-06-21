@@ -925,7 +925,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     /**
      * Delete selected tag
      * @param e action command with information about item to be deleted
-     * @param i identifier of class to add tags
+     * @param i identifier of class to remove tags
      */
     void deleteSelected(final ActionEvent e, final int i){
         int f = Integer.parseInt(e.getActionCommand());
