@@ -472,7 +472,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     /**
-     * Add a new class based on user input
+     * Add a new class based on user input, update instances if already created
      */
     void addNewClass(){
         String inputName = JOptionPane.showInputDialog("Please input a new label name");
