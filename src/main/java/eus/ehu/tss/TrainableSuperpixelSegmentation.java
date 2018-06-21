@@ -396,19 +396,34 @@ public class TrainableSuperpixelSegmentation {
         return classifierTrained;
     }
 
+    /**
+     * Sets classifier as trained if true and as not trained if false
+     * @param isClassifierTrained
+     */
     public void setClassifierTrained(boolean isClassifierTrained){
         classifierTrained = isClassifierTrained;
     }
 
+    /**
+     * Returns unlabeled instances
+     * @return
+     */
     public Instances getUnlabeled() {
         return unlabeled;
     }
 
+    /**
+     * Returns selected feature ArrayList
+     * @return
+     */
     public ArrayList<RegionFeatures.Feature> getSelectedFeatures() {
         return selectedFeatures;
     }
 
-
+    /**
+     * Sets unlabeled instances
+     * @param unlabeled
+     */
     public void setUnlabeled(Instances unlabeled) {
         this.unlabeled = unlabeled;
     }

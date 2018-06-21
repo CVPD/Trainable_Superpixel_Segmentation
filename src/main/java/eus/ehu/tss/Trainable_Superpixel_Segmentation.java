@@ -503,6 +503,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
 
+    /**
+     *Trains classifier, calculates features if needed.
+     * @param command
+     */
     void runStopTraining(final String command){
         IJ.log("Training classifier");
         trainableSuperpixelSegmentation.setClasses(classes);
