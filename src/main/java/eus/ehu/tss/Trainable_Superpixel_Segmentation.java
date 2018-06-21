@@ -508,6 +508,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param command
      */
     void runStopTraining(final String command){
+        for(int i=0;i<tags.size();++i){
+            if(tags.get(i).length==0){
+                IJ.showMessage("Add at least one region to class "+classes.get(i));
+                return;
+            }
+        }
         IJ.log("Training classifier");
         trainableSuperpixelSegmentation.setClasses(classes);
         if(calculateFeatures) {
@@ -529,6 +535,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Apply classifier, calculates features if not previously calculated and raises error if classifier hasn't been trained previously
      */
     void applyClassifier(){
+        for(int i=0;i<tags.size();++i){
+            if(tags.get(i).length==0){
+                IJ.showMessage("Add at least one region to class "+classes.get(i));
+                return;
+            }
+        }
         if(calculateFeatures){
             IJ.log("Calculating region features");
             trainableSuperpixelSegmentation.calculateRegionFeatures();
@@ -856,6 +868,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Creates and displays probability maps, calculates features if they haven't been calculated
      */
     void showProbability(){
+        for(int i=0;i<tags.size();++i){
+            if(tags.get(i).length==0){
+                IJ.showMessage("Add at least one region to class "+classes.get(i));
+                return;
+            }
+        }
         trainableSuperpixelSegmentation.setClasses(classes);
         if(calculateFeatures) {
             IJ.log("Calculating region features");
