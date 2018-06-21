@@ -19,6 +19,7 @@ import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
 import ij.process.StackConverter;
+import org.w3c.dom.Attr;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
 import weka.classifiers.evaluation.Prediction;
@@ -483,7 +484,18 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         classes.add(inputName);
         win.addClass();
         repaintWindow();
-        calculateFeatures = true;
+        if(!calculateFeatures){
+            Instances features = trainableSuperpixelSegmentation.getUnlabeled();
+            Attribute c = features.classAttribute();
+            ArrayList<String> newc = new ArrayList<>();
+            for(int i=0;i<c.numValues();++i){
+                newc.add(c.value(i));
+            }
+            newc.add(inputName);
+            Attribute newClass = new Attribute("class",newc);
+            features.replaceAttributeAt(newClass,c.index());
+            trainableSuperpixelSegmentation.setUnlabeled(features);
+        }
     }
 
     /**
