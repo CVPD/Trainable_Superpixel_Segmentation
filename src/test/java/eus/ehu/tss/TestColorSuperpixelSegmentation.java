@@ -3,17 +3,24 @@ package eus.ehu.tss;
 import ij.IJ;
 import ij.ImagePlus;
 import weka.classifiers.lazy.IBk;
+import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
+import weka.core.Instances;
 
 import java.util.ArrayList;
 
 
 public class TestColorSuperpixelSegmentation {
     public static void main(final String[] args){
-        ImagePlus inputImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/TMA3d.tif" ).getFile() );
+        ImagePlus inputImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-01.png" ).getFile() );
         inputImage.show();
-        ImagePlus labelImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/TMA-Segmentation-16-bit3d.tif").getFile() );
+        ImagePlus labelImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-01.zip").getFile() );
         labelImage.show();
+        ImagePlus gt = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-01.png").getFile() );
+        gt.show();
+        ImagePlus testImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource("/eval/histogram-matched-TMA/TMA-09.png").getFile());
+        ImagePlus labelTest = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-09.zip").getFile() );
+
 
         // Use all features
         ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<>();
@@ -30,28 +37,26 @@ public class TestColorSuperpixelSegmentation {
 
         // Define classifier
         RandomForest exampleClassifier = new RandomForest();
-        TrainableSuperpixelSegmentation test =
-                new TrainableSuperpixelSegmentation( inputImage, labelImage,
-                        selectedFeatures, exampleClassifier, classes );
+        TrainableSuperpixelSegmentation tss  = new TrainableSuperpixelSegmentation();
         //System.out.println(test.getFeaturesByRegion());
-
-        // Define training regions
-        int[] noStained = new int[]{ 176, 2111, 1322, 2298 };
-        int[] stainedTum = new int[]{ 416, 591, 2013, 2024 };
-        int[] background = new int[]{ 1, 360, 2742, 2795 };
-
-        ArrayList<int[]> tags = new ArrayList<>();
-        tags.add(background);
-        tags.add(noStained);
-        tags.add(stainedTum);
-
-        test.calculateRegionFeatures();
+        Instances training = RegionColorFeatures.calculateLabeledColorFeatures(inputImage,labelImage,gt,selectedFeatures,classes);
         // Train classifier using those labels
-        if(test.trainClassifier(tags)){
-            ImagePlus result = test.applyClassifier();
+        J48 classifier = new J48();
+        try {
+            classifier.buildClassifier(training);
+            tss.setClassifier(classifier);
+            tss.setClassifierTrained(true);
+            tss.setSelectedFeatures(selectedFeatures);
+            tss.setClasses(classes);
+            tss.setInputImage(testImage);
+            tss.setLabelImage(labelTest);
+            tss.calculateRegionFeatures();
+            ImagePlus result = tss.applyClassifier();
             result.show();
+            IJ.save(result,"D:/Documents");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        ImagePlus probs = test.getProbabilityMap();
-        probs.show();
+
     }
 }

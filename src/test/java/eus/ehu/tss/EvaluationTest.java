@@ -5,6 +5,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import weka.classifiers.AggregateableEvaluation;
 import weka.classifiers.Evaluation;
+import weka.classifiers.bayes.BayesNet;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.Instance;
@@ -13,165 +14,131 @@ import weka.core.converters.ConverterUtils;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.zip.GZIPOutputStream;
 
 public class EvaluationTest {
-    public static void main(final String[] args){
+    public static void main(final String[] args) {
+        IJ.log("****************Starting BayesNet evaluation*******************");
+        long startTime = System.currentTimeMillis();
 
-        ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList<>();
-        String[] selectedFs = RegionFeatures.Feature.getAllLabels();
+        String[] selectedFs = new String[8];
+        selectedFs[0]="Mean";
+        selectedFs[1]="Min";
+        selectedFs[2]="Max";
+        selectedFs[3]="Median";
+        selectedFs[4]="NeighborsMean";
+        selectedFs[5]="NeighborsMin";
+        selectedFs[6]="NeighborsMax";
+        selectedFs[7]="NeighborsMedian";
+
+        ArrayList<RegionFeatures.Feature> selectedFeatures = new ArrayList();
         for(int i=0;i<selectedFs.length;++i){
             selectedFeatures.add(RegionFeatures.Feature.fromLabel(selectedFs[i]));
+            //print(selectedFeatures.get(i));
         }
 
-        final Resample filter = new Resample();
-        filter.setBiasToUniformClass(1.0);
+        BayesNet exampleClassifier = new BayesNet();
 
-        final ArrayList<String> classes = new ArrayList<String>();
+        File inputDir =  new File(args[0]);
+        File gtDir =  new File(args[1]);
+        File spDir =  new File(args[2]);
+        File outputDir = new File(args[3]);
+
+        File[] listOfFiles = inputDir.listFiles();
+        File[] listOfFilesGt = gtDir.listFiles();
+        File[] listOfFilesSp = spDir.listFiles();
+
+        ArrayList<String> classes = new ArrayList();
         classes.add("background");
         classes.add("tumoral");
         classes.add("nontumoral");
 
-        ImagePlus inImage = null;
-        ImagePlus spImage = null;
-        ImagePlus gtImage = null;
-        AggregateableEvaluation totalEval = null;
+        int[] classIndextoLabel = new int[3];
+        classIndextoLabel[0] = 1;
+        classIndextoLabel[1] = 2;
+        classIndextoLabel[2] = 3;
+
         Instances training = null;
         Instances testing = null;
-        Instances filteredTraining = null;
-
-        RandomForest exampleClassifier = new RandomForest();
 
         ArrayList<Instances> dataSet = new ArrayList<>();
 
-
-
-        System.out.println("Calculating image features and classes");
-        for(int i=0;i<10;++i) {
-            System.out.println("\tCalculating features of image "+String.format("%02d",i+1));
-            inImage = IJ.openImage(EvaluationTest.class.getResource("/eval/histogram-matched-TMA/TMA-"+String.format("%02d",i+1)+".png").getFile());
-            spImage = IJ.openImage(EvaluationTest.class.getResource("/eval/superpixels/SLIC-"+String.format("%02d",i+1)+".zip").getFile());
-            gtImage = IJ.openImage(EvaluationTest.class.getResource("/eval/groundtruth/groundtruth-"+String.format("%02d",i+1)+".png").getFile());
-            dataSet.add(RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes));
+        try {
+            IJ.log("Calculating image features and classes");
+            for (int i = 0; i < 4; ++i) {
+                ImagePlus inImage = IJ.openImage(listOfFiles[i].getCanonicalPath());
+                //inImage.show();
+                ImagePlus gtImage = IJ.openImage(listOfFilesGt[i].getCanonicalPath());
+                //gtImage.show();
+                ImagePlus spImage = IJ.openImage(listOfFilesSp[i].getCanonicalPath());
+                //spImage.show();
+                dataSet.add(RegionColorFeatures.calculateLabeledColorFeatures(inImage,spImage,gtImage,selectedFeatures,classes));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
-
         try {
             System.out.println("Merging data for fold 01");
-            testing = dataSet.get(0);
             training = dataSet.get(1);
             System.out.print("\tAdding datasets to training data: 02");
-            for(int i=2;i<10;++i){
+            for(int i=2;i<4;++i){
                 training=merge(training,dataSet.get(i));
                 System.out.print(", "+String.format("%02d",i+1));
             }
-            System.out.println("\nBalancing training data");
-            filter.setInputFormat(training);
-            filter.setNoReplacement(false);
-            filter.setSampleSizePercent(100);
-            filteredTraining = Filter.useFilter(training,filter);
-            System.out.println(filter.toString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
-            System.out.println("Training classifier");
-            exampleClassifier = new RandomForest();
-            Evaluation eval = new Evaluation(filteredTraining);
-            exampleClassifier.buildClassifier(filteredTraining);
-            System.out.println("Used classifier\n\t"+exampleClassifier.toString());
-            System.out.println("Evaluating model");
-            eval.evaluateModel(exampleClassifier,testing);
-            totalEval = new AggregateableEvaluation(eval);
-            totalEval.aggregate(eval);
-            System.out.println("Test result: ");
-            System.out.println(eval.toSummaryString("\n\t1 results\n======\n",false));
-            System.out.println(eval.toMatrixString());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try {
             System.out.println("Saving training file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("FilterNoNghTraining1.arff"));
-            writer.write(filteredTraining.toString());
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputDir.getPath() + File.separator+"training.arff"));
+            writer.write(training.toString());
             writer.flush();
             writer.close();
         }catch (Exception e){
             e.printStackTrace();
         }
+
         try {
+            testing = dataSet.get(0);
             System.out.println("Saving testing file");
-            BufferedWriter writer = new BufferedWriter(new FileWriter("FilterNoNghTesting1.arff"));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputDir.getPath() + File.separator+"testing.arff"));
             writer.write(testing.toString());
             writer.flush();
             writer.close();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        for(int i=1;i<10;++i){
+            System.out.println("Training classifier");
+            exampleClassifier.buildClassifier(training);
             try {
-                System.out.println("Merging data for fold "+String.format("%02d",i+1));
-                training = dataSet.get(0);
-                testing = dataSet.get(i);
-                System.out.print("\tAdding datasets to training data: 01");
-                for(int j=1;j<10;++j){
-                    if(j!=i) {
-                        System.out.print(", "+String.format("%02d",j+1));
-                        training = merge(training, dataSet.get(j));
-                    }
+                System.out.println("Saving classifier");
+                File sFile = new File(outputDir.getPath() + File.separator+"classifier.model");
+                OutputStream os = new FileOutputStream(sFile);
+                if (sFile.getName().endsWith(".gz"))
+                {
+                    os = new GZIPOutputStream(os);
                 }
-                System.out.println("\nBalancing training data");
-                filter.setInputFormat(training);
-                filter.setNoReplacement(false);
-                filter.setSampleSizePercent(100);
-                filteredTraining = Filter.useFilter(training,filter);
-            }catch (Exception e){
-                e.printStackTrace();
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
+                objectOutputStream.writeObject(exampleClassifier);
+                Instances trainHeader = new Instances(training,0);
+                objectOutputStream.writeObject(trainHeader);
+                objectOutputStream.flush();
+                objectOutputStream.close();
             }
-            try {
-                System.out.println("\nTraining classifier");
-                Evaluation eval = new Evaluation(filteredTraining);
-                exampleClassifier.buildClassifier(filteredTraining);
-                System.out.println("Used classifier\n\t"+exampleClassifier.toString());
-                System.out.println("Evaluating model");
-                eval.evaluateModel(exampleClassifier,testing);
-                totalEval.aggregate(eval);
-                System.out.println("Test result: ");
-                System.out.println(eval.toSummaryString("\n\t"+String.format("%02d",i+1)+" results\n======\n",false));
-                System.out.println(eval.toMatrixString());
-            }catch (Exception e){
-                e.printStackTrace();
+            catch (Exception e)
+            {
+                IJ.error("Save Failed", "Error when saving classifier into a file");
             }
-            try {
-                System.out.println("Saving training file");
-                BufferedWriter writer = new BufferedWriter(new FileWriter("FilterNoNghTraining"+String.format("%02d",i+1)+".arff"));
-                writer.write(filteredTraining.toString());
-                writer.flush();
-                writer.close();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            try {
-                System.out.println("Saving testing file");
-                BufferedWriter writer = new BufferedWriter(new FileWriter("FilterNoNghTesting"+String.format("%02d",i+1)+".arff"));
-                writer.write(testing.toString());
-                writer.flush();
-                writer.close();
-            }catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            System.out.println("\n===Aggregated evaluation results===\n");
-            System.out.println(totalEval.toMatrixString());
-            System.out.println(totalEval.toSummaryString());
+            TrainableSuperpixelSegmentation tss = new TrainableSuperpixelSegmentation();
+            tss.setClassifier(exampleClassifier);
+            tss.setClassifierTrained(true);
+            tss.setSelectedFeatures(selectedFeatures);
+            ImagePlus inImage = IJ.openImage(listOfFiles[0].getCanonicalPath());
+            ImagePlus spImage = IJ.openImage(listOfFilesSp[0].getCanonicalPath());
+            tss.setInputImage(inImage);
+            tss.setLabelImage(spImage);
+            tss.setUnlabeled(testing);
+            System.out.println("Evaluating model");
+            ImagePlus result = tss.applyClassifier();
+            result.show();
         }catch (Exception e){
             e.printStackTrace();
         }
-
 
     }
 

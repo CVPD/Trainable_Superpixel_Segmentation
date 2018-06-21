@@ -9,9 +9,9 @@ import java.util.ArrayList;
 
 public class TestSuperpixelSegmentation{
     public static void main(final String[] args){
-        ImagePlus inputImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/grains3d.tif" ).getFile() );
+        ImagePlus inputImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/grains.png" ).getFile() );
         inputImage.show();
-        ImagePlus labelImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/grains-catchment-basins3d.tif").getFile() );
+        ImagePlus labelImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/grains-catchment-basins.png").getFile() );
         labelImage.show();
         
         // Use all features

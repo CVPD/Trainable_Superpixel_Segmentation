@@ -579,6 +579,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      */
     void saveClassifier(){
 
+        if(!trainableSuperpixelSegmentation.isClassifierTrained()){
+            IJ.error("Train classifier");
+            return;
+        }
+
         SaveDialog sd = new SaveDialog("Save model as...","classifier",".model");
         if(sd.getFileName()==null){
             return;
