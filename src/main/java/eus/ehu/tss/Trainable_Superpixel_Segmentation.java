@@ -31,6 +31,7 @@ import weka.core.OptionHandler;
 import weka.core.SerializationHelper;
 import weka.core.Utils;
 import weka.core.Attribute;
+import weka.core.converters.ArffSaver;
 import weka.gui.GenericObjectEditor;
 import weka.gui.PropertyPanel;
 import weka.gui.visualize.PlotData2D;
@@ -52,13 +53,7 @@ import java.awt.Color;
 import java.awt.Panel;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -113,6 +108,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton [] addExampleButton = new JButton[500];
         private JButton addClassButton = null;
         private JButton saveClassButton = null;
+        private JButton saveInstButton = null;
         private double overlayOpacity = 0.33;
 
         private ActionListener listener = new ActionListener() {
@@ -153,6 +149,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         }
                         else if(e.getSource()==saveClassButton){
                             saveClassifier();
+                        }
+                        else if(e.getSource()==saveInstButton){
+                            saveInstances();
                         }
                         else{
                             for(int i = 0; i < numClasses; i++)
@@ -350,6 +349,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             saveClassButton = new JButton("Save classifier");
             optionsPanel.add(saveClassButton,optionsConstraints);
             optionsConstraints.gridy++;
+            saveInstButton = new JButton("Save instances");
+            optionsPanel.add(saveInstButton,optionsConstraints);
+            optionsConstraints.gridy++;
             addClassButton = new JButton("Create new class");
             optionsPanel.add(addClassButton,optionsConstraints);
             optionsConstraints.gridy++;
@@ -412,6 +414,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             overlayButton.addActionListener(listener);
             addClassButton.addActionListener(listener);
             saveClassButton.addActionListener(listener);
+            saveInstButton.addActionListener(listener);
 
             GridBagLayout wingb = new GridBagLayout();
             GridBagConstraints winc = new GridBagConstraints();
@@ -572,6 +575,37 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         resultImage = trainableSuperpixelSegmentation.applyClassifier();
         resultImage.show();
         IJ.log("Classifier applied");
+    }
+
+
+    /**
+     * Save instances into ARFF file
+     */
+    void saveInstances(){
+        try {
+            if(calculateFeatures){
+                IJ.log("Calculating region features");
+                trainableSuperpixelSegmentation.calculateRegionFeatures();
+                calculateFeatures = false;
+            }
+            ArffSaver saver = new ArffSaver();
+            Instances ins = null;
+            ins = trainableSuperpixelSegmentation.getInstances();
+            if(ins ==null){
+                ins = trainableSuperpixelSegmentation.getUnlabeled();
+            }
+            saver.setInstances(ins);
+            SaveDialog sd = new SaveDialog("Save instances as...","instances",".ARFF");
+            if(sd.getFileName()==null){
+                return;
+            }
+            String filename = sd.getDirectory() + sd.getFileName();
+            saver.setFile(new File(filename));
+            saver.writeBatch();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**
