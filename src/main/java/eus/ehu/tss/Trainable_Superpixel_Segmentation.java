@@ -555,7 +555,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     /**
-     * Apply classifier, calculates features if not previously calculated and raises error if classifier hasn't been trained previously
+     * Apply classifier to loaded image and corresponding superpixel image
      */
     void applyClassifier(){
         if(!trainableSuperpixelSegmentation.isClassifierTrained()){
@@ -571,8 +571,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         IJ.log("Calculating region features");
         trainableSuperpixelSegmentation.calculateRegionFeatures();
         IJ.log("Applying classifier");
-        resultImage = trainableSuperpixelSegmentation.applyClassifier();
-        resultImage.show();
+        ImagePlus resultImg = trainableSuperpixelSegmentation.applyClassifier();
+        convertTo8bitNoScaling(resultImg);
+        resultImg.getProcessor().setColorModel(overlayLUT);
+        resultImg.getImageStack().setColorModel(overlayLUT);
+        resultImg.updateAndDraw();
+        resultImg.show();
         IJ.log("Classifier applied");
     }
 
