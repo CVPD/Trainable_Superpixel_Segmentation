@@ -39,22 +39,14 @@ import weka.gui.visualize.PlotData2D;
 import weka.gui.visualize.ThresholdVisualizePanel;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.Insets;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Color;
-import java.awt.Panel;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.GZIPInputStream;
@@ -864,6 +856,14 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
         }
         gd.addCheckboxGroup(rows,2,avFeatures,enabledFeatures);
+
+        if(trainingDataLoaded) {
+            IJ.log("Feature selection disabled because training data has been loaded");
+            Vector<Checkbox> v = gd.getCheckboxes();
+            for (int i = 0; i < v.size(); i++) {
+                v.get(i).setEnabled(false);
+            }
+        }
 
         gd.addSlider("Overlay opacity:",0,1,win.overlayOpacity);
 
