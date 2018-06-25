@@ -85,6 +85,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private LUT overlayLUT = null;
     private boolean calculateFeatures = true;
     private String inputTitle;
+    private boolean classBalance = true;
 
     private class CustomWindow extends StackWindow
     {
@@ -593,7 +594,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
             ArffSaver saver = new ArffSaver();
             Instances ins = null;
-            ins = trainableSuperpixelSegmentation.getInstances();
+            ins = trainableSuperpixelSegmentation.getTrainingData();
             if(ins ==null){
                 ins = trainableSuperpixelSegmentation.getUnlabeled();
             }
@@ -755,6 +756,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
         gd.addSlider("Overlay opacity:",0,1,win.overlayOpacity);
 
+        gd.addCheckbox("Balance classes",classBalance);
+
         // classifier options
         gd.addMessage( "Classifier options:" );
         GenericObjectEditor classifierEditor = new GenericObjectEditor();
@@ -788,6 +791,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         features = newFeatures;
         trainableSuperpixelSegmentation.setSelectedFeatures(features);
+
+        boolean newBalance = gd.getNextBoolean();
+
+        if(newBalance!=classBalance) {
+            classBalance = newBalance;
+            trainableSuperpixelSegmentation.setBalanceClasses(classBalance);
+        }
 
         // check classifier options
         c = (Object)classifierEditor.getValue();

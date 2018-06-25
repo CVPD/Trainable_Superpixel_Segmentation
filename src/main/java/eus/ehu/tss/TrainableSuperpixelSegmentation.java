@@ -9,6 +9,8 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.filters.Filter;
+import weka.filters.supervised.instance.Resample;
 
 import java.util.ArrayList;
 
@@ -26,6 +28,7 @@ public class TrainableSuperpixelSegmentation {
     private Instances trainingData;
     private AbstractClassifier abstractClassifier;
     private boolean classifierTrained = false;
+    private boolean balanceClasses = true;
     ArrayList<String> classes = null;
 
     /**
@@ -114,6 +117,18 @@ public class TrainableSuperpixelSegmentation {
             }
         }
         trainingData.setClassIndex(numFeatures); // set class index
+        if(balanceClasses){
+            try {
+                final Resample filter = new Resample();
+                filter.setBiasToUniformClass(1.0);
+                filter.setInputFormat(trainingData);
+                filter.setNoReplacement(false);
+                filter.setSampleSizePercent(100);
+                trainingData = Filter.useFilter(trainingData, filter);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
 
         try {
             abstractClassifier.buildClassifier(trainingData);
@@ -132,6 +147,18 @@ public class TrainableSuperpixelSegmentation {
      */
     public boolean trainClassifier(){
         try {
+            if(balanceClasses){
+                try {
+                    final Resample filter = new Resample();
+                    filter.setBiasToUniformClass(1.0);
+                    filter.setInputFormat(trainingData);
+                    filter.setNoReplacement(false);
+                    filter.setSampleSizePercent(100);
+                    trainingData = Filter.useFilter(trainingData, filter);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
             abstractClassifier.buildClassifier(trainingData);
             classifierTrained = true;
             return true;
@@ -426,6 +453,14 @@ public class TrainableSuperpixelSegmentation {
      */
     public void setUnlabeled(Instances unlabeled) {
         this.unlabeled = unlabeled;
+    }
+
+    /**
+     * Set balancing of classes
+     * @param balanceClasses
+     */
+    public void setBalanceClasses(boolean balanceClasses) {
+        this.balanceClasses = balanceClasses;
     }
 
 
