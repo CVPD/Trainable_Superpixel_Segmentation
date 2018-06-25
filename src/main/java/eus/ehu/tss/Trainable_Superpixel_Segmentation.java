@@ -36,13 +36,8 @@ import weka.gui.GenericObjectEditor;
 import weka.gui.PropertyPanel;
 import weka.gui.visualize.PlotData2D;
 import weka.gui.visualize.ThresholdVisualizePanel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JButton;
-import javax.swing.BorderFactory;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.JFrame;
+
+import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -106,6 +101,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton probButton = null;
         private JButton resButton = null;
         private JButton overlayButton = null;
+        private JCheckBox overlayCheckbox = null;
         private JButton [] addExampleButton = new JButton[500];
         private JButton addClassButton = null;
         private JButton saveClassButton = null;
@@ -329,6 +325,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             overlayButton = new JButton("Toggle overlay");
             trainingPanel.add(overlayButton,trainingConstraints);
             trainingConstraints.gridy++;
+            overlayCheckbox = new JCheckBox("Display result only");
+            trainingPanel.add(overlayCheckbox,trainingConstraints);
+            overlayCheckbox.setSelected(false);
+            overlayCheckbox.setEnabled(false);
+            trainingConstraints.gridy++;
             resButton = new JButton("Create result");
             trainingPanel.add(resButton,trainingConstraints);
             trainingConstraints.gridy++;
@@ -467,6 +468,14 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
         }
 
+        public void enableOverlayCheckbox(){
+            overlayCheckbox.setEnabled(true);
+        }
+
+        public boolean ovCheckbox(){
+            return overlayCheckbox.isSelected();
+        }
+
         public void repaintAll(){
             this.annotationsPanel.repaint();
             getCanvas().repaint();
@@ -553,6 +562,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         overlay = 2;
         toggleOverlay();
         IJ.log("Classifier applied");
+        win.enableOverlayCheckbox();
     }
 
     /**
@@ -961,25 +971,39 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         if(overlay==0){
             overlay++;
             inputImage.setOverlay(null);
-        }else if(overlay==1){
-            if(resultImage!=null) {
-                overlay++;
-            }else {
-                overlay=0;
-            }
-            roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
-            roi.setOpacity(win.overlayOpacity);
-            inputImage.setOverlay(new Overlay(roi));
         }else {
-            overlay=0;
-            ImagePlus resultImg = resultImage.duplicate();
-            convertTo8bitNoScaling( resultImg );
-            resultImg.getProcessor().setColorModel( overlayLUT );
-            resultImg.getImageStack().setColorModel( overlayLUT );
-            ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
-            roi = new ImageRoi(0, 0, processor);
-            roi.setOpacity(win.overlayOpacity);
-            inputImage.setOverlay(new Overlay(roi));
+            if(win.ovCheckbox()) {
+                overlay = 0;
+                ImagePlus resultImg = resultImage.duplicate();
+                convertTo8bitNoScaling(resultImg);
+                resultImg.getProcessor().setColorModel(overlayLUT);
+                resultImg.getImageStack().setColorModel(overlayLUT);
+                ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
+                roi = new ImageRoi(0, 0, processor);
+                roi.setOpacity(win.overlayOpacity);
+                inputImage.setOverlay(new Overlay(roi));
+            }else {
+                if (overlay == 1) {
+                    if (resultImage != null) {
+                        overlay++;
+                    } else {
+                        overlay = 0;
+                    }
+                    roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
+                    roi.setOpacity(win.overlayOpacity);
+                    inputImage.setOverlay(new Overlay(roi));
+                } else {
+                    overlay = 0;
+                    ImagePlus resultImg = resultImage.duplicate();
+                    convertTo8bitNoScaling(resultImg);
+                    resultImg.getProcessor().setColorModel(overlayLUT);
+                    resultImg.getImageStack().setColorModel(overlayLUT);
+                    ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
+                    roi = new ImageRoi(0, 0, processor);
+                    roi.setOpacity(win.overlayOpacity);
+                    inputImage.setOverlay(new Overlay(roi));
+                }
+            }
         }
     }
 
