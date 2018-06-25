@@ -27,12 +27,9 @@ import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.trees.RandomForest;
 import weka.classifiers.Classifier;
-import weka.core.Instances;
-import weka.core.OptionHandler;
-import weka.core.SerializationHelper;
-import weka.core.Utils;
-import weka.core.Attribute;
+import weka.core.*;
 import weka.core.converters.ArffSaver;
+import weka.core.converters.ConverterUtils;
 import weka.gui.GenericObjectEditor;
 import weka.gui.PropertyPanel;
 import weka.gui.visualize.PlotData2D;
@@ -515,7 +512,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         catch(FileNotFoundException e){IJ.showMessage("File not found!");}
         try {
             if (null != data) {
-                trainableSuperpixelSegmentation.setTrainingData(data);
                 Attribute classAttribute = data.classAttribute();
                 Enumeration<Object> classValues = classAttribute.enumerateValues();
                 ArrayList<String> loadedClassNames = new ArrayList<String>();
@@ -555,10 +551,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     for(int i = 0 ; i < numFeatures; i++)
                         features.add(RegionFeatures.Feature.fromLabel(n));
                 }
-
+                if(trainableSuperpixelSegmentation.getTrainingData()!=null){
+                    data = merge(trainableSuperpixelSegmentation.getTrainingData(),data);
+                    IJ.log("Data merged with previous training data");
+                }
+                trainableSuperpixelSegmentation.setTrainingData(data);
                 trainingDataLoaded = true;
                 IJ.log("Data loaded");
             }
+
         }catch (Exception e){
             IJ.log("Error when loading training data");
             e.printStackTrace();
@@ -630,14 +631,39 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             trainableSuperpixelSegmentation.calculateRegionFeatures();
             calculateFeatures = false;
         }
-        if(trainingDataLoaded) {
-            if (!trainableSuperpixelSegmentation.trainClassifier()) {
-                IJ.error("Error when training classifier");
+        Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        int numFeatures = unlabeled.numAttributes()-1;
+        for(int i=0;i<numFeatures;++i){
+            attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
+        }
+        attributes.add(new Attribute("Class",classes));
+        Instances trainingData = new Instances("training data",attributes,0);
+        // Fill training dataset with the feature vectors of the corresponding
+        // regions given by classRegions
+        for(int i=0;i<tags.size();++i){ //For each class in classRegions
+            for(int j=0;j<tags.get(i).length;++j){
+                Instance inst = new DenseInstance(numFeatures+1);
+                for(int k=0;k<numFeatures;++k){
+                    inst.setValue(k,unlabeled.get(tags.get(i)[j]-1).value(k));
+                }
+                inst.setValue(numFeatures,i); // set class value
+                trainingData.add(inst);
             }
-        }else {
-            if (!trainableSuperpixelSegmentation.trainClassifier(tags)) {
-                IJ.error("Error when training classifier");
+        }
+        trainingData.setClassIndex(numFeatures); // set class index
+        try {
+            if (trainingDataLoaded) {
+                trainingData = merge(trainingData, trainableSuperpixelSegmentation.getTrainingData());
+                IJ.log("Merged selected data with loaded data");
             }
+        }catch (Exception e){
+            e.printStackTrace();
+            IJ.log("Error when merging loaded training data selected data");
+        }
+        trainableSuperpixelSegmentation.setTrainingData(trainingData);
+        if (!trainableSuperpixelSegmentation.trainClassifier()) {
+            IJ.error("Error when training classifier");
         }
         classifier = trainableSuperpixelSegmentation.getClassifier();
         IJ.log("Classifier trained");
@@ -834,6 +860,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             resultImg.getImageStack().setColorModel(overlayLUT);
             resultImg.updateAndDraw();
             resultImg.show();
+            win.enableOverlayCheckbox();
         }
     }
 
@@ -1056,19 +1083,45 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             calculateFeatures = false;
         }
         if(!trainableSuperpixelSegmentation.isClassifierTrained()){
-            if(trainingDataLoaded) {
-                if (!trainableSuperpixelSegmentation.trainClassifier()) {
-                    IJ.error("Error when training classifier");
+            Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
+            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+            int numFeatures = unlabeled.numAttributes()-1;
+            for(int i=0;i<numFeatures;++i){
+                attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
+            }
+            attributes.add(new Attribute("Class",classes));
+            Instances trainingData = new Instances("training data",attributes,0);
+            // Fill training dataset with the feature vectors of the corresponding
+            // regions given by classRegions
+            for(int i=0;i<tags.size();++i){ //For each class in classRegions
+                for(int j=0;j<tags.get(i).length;++j){
+                    Instance inst = new DenseInstance(numFeatures+1);
+                    for(int k=0;k<numFeatures;++k){
+                        inst.setValue(k,unlabeled.get(tags.get(i)[j]-1).value(k));
+                    }
+                    inst.setValue(numFeatures,i); // set class value
+                    trainingData.add(inst);
                 }
-            }else {
-                if (!trainableSuperpixelSegmentation.trainClassifier(tags)) {
-                    IJ.error("Error when training classifier");
+            }
+            trainingData.setClassIndex(numFeatures); // set class index
+            try {
+                if (trainingDataLoaded) {
+                    trainingData = merge(trainingData, trainableSuperpixelSegmentation.getTrainingData());
+                    IJ.log("Merged selected data with loaded data");
                 }
+            }catch (Exception e){
+                e.printStackTrace();
+                IJ.log("Error when merging loaded training data selected data");
+            }
+            trainableSuperpixelSegmentation.setTrainingData(trainingData);
+            if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                IJ.error("Error when training classifier");
             }
         }
         ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
         probabilityImage.setTitle(inputTitle+"-prob");
         probabilityImage.show();
+
     }
 
     /**
@@ -1368,6 +1421,35 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         System.setProperty("plugins.dir", pluginsDir);
         IJ.runPlugIn(clazz.getName(),"");
 
+    }
+
+    public static Instances merge(Instances data1, Instances data2) throws Exception {
+        int asize = data1.numAttributes();
+        boolean[] strings_pos = new boolean[asize];
+
+        for(int i = 0; i < asize; ++i) {
+            Attribute att = data1.attribute(i);
+            strings_pos[i] = att.type() == 2 || att.type() == 1;
+        }
+
+        Instances dest = new Instances(data1);
+        dest.setRelationName(data1.relationName() + "+" + data2.relationName());
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource(data2);
+        Instances instances = source.getStructure();
+        Instance instance = null;
+
+        while(source.hasMoreElements(instances)) {
+            instance = source.nextElement(instances);
+            dest.add(instance);
+
+            for(int i = 0; i < asize; ++i) {
+                if(strings_pos[i]) {
+                    dest.instance(dest.numInstances() - 1).setValue(i, instance.stringValue(i));
+                }
+            }
+        }
+
+        return dest;
     }
 
 
