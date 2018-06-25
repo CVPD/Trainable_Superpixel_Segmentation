@@ -1,7 +1,9 @@
 package eus.ehu.tss;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.io.SaveDialog;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import weka.classifiers.AbstractClassifier;
@@ -9,9 +11,11 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.converters.ArffSaver;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -177,7 +181,8 @@ public class TrainableSuperpixelSegmentation {
         try {
             labeled = new Instances(unlabeled); //Copy of unlabeled to label
             for (int i = 0; i < unlabeled.numInstances(); ++i) {
-                double classLabel = abstractClassifier.classifyInstance(unlabeled.instance(i));
+                Instance ins = unlabeled.instance(i);
+                double classLabel = abstractClassifier.classifyInstance(ins);
                 labeled.instance(i).setClassValue(classLabel);
             }
         } catch (Exception e) {

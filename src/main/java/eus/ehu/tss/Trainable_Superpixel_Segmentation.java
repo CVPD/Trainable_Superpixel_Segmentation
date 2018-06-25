@@ -1,5 +1,6 @@
 package eus.ehu.tss;
 
+import com.sun.scenario.effect.impl.sw.java.JSWBlend_COLOR_BURNPeer;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -49,6 +50,7 @@ import java.awt.Panel;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -81,6 +83,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private boolean calculateFeatures = true;
     private String inputTitle;
     private boolean classBalance = true;
+    private boolean trainingDataLoaded = false;
 
     private class CustomWindow extends StackWindow
     {
@@ -106,6 +109,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         private JButton addClassButton = null;
         private JButton saveClassButton = null;
         private JButton saveInstButton = null;
+        private JButton loadTrainingDataButton = null;
         private double overlayOpacity = 0.33;
 
         private ActionListener listener = new ActionListener() {
@@ -149,6 +153,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         }
                         else if(e.getSource()==saveInstButton){
                             saveInstances();
+                        }
+                        else if(e.getSource()==loadTrainingDataButton){
+                            loadTrainingData();
                         }
                         else{
                             for(int i = 0; i < numClasses; i++)
@@ -354,6 +361,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             saveInstButton = new JButton("Save instances");
             optionsPanel.add(saveInstButton,optionsConstraints);
             optionsConstraints.gridy++;
+            loadTrainingDataButton = new JButton("Load training data");
+            optionsPanel.add(loadTrainingDataButton,optionsConstraints);
+            optionsConstraints.gridy++;
             addClassButton = new JButton("Create new class");
             optionsPanel.add(addClassButton,optionsConstraints);
             optionsConstraints.gridy++;
@@ -417,6 +427,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             addClassButton.addActionListener(listener);
             saveClassButton.addActionListener(listener);
             saveInstButton.addActionListener(listener);
+            loadTrainingDataButton.addActionListener(listener);
 
             GridBagLayout wingb = new GridBagLayout();
             GridBagConstraints winc = new GridBagConstraints();
@@ -485,6 +496,85 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
 
     /**
+     * Load training data from a file.
+     */
+    private void loadTrainingData() {
+        Instances data=null;
+        OpenDialog od = new OpenDialog("Choose data file", OpenDialog.getLastDirectory(), "data.arff");
+        if (od.getFileName()==null)
+            return;
+
+        IJ.log("Loading data from " + od.getDirectory() + od.getFileName() + "...");
+        String pathname = od.getDirectory() + od.getFileName();
+        try{
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(
+                            new FileInputStream(pathname), StandardCharsets.UTF_8));
+            try{
+                data = new Instances(reader);
+                // setting class attribute
+                data.setClassIndex(data.numAttributes() - 1);
+                reader.close();
+            }
+            catch(IOException e){
+                IJ.showMessage("IOException: wrong file format!");
+            }
+        }
+        catch(FileNotFoundException e){IJ.showMessage("File not found!");}
+        try {
+            if (null != data) {
+                trainableSuperpixelSegmentation.setTrainingData(data);
+                Attribute classAttribute = data.classAttribute();
+                Enumeration<Object> classValues = classAttribute.enumerateValues();
+                ArrayList<String> loadedClassNames = new ArrayList<String>();
+                if (classAttribute.numValues() != numClasses) {
+                    IJ.error("ERROR: Loaded number of classes and current number do not match!\n\tExpected number of classes: "+classAttribute.numValues()+"\n\tCurrent number of classes: "+numClasses);
+                    trainingDataLoaded = false;
+                    return;
+                }
+                int j = 0;
+                while (classValues.hasMoreElements()) {
+                    final String className = ((String) classValues.nextElement()).trim();
+                    loadedClassNames.add(className);
+
+                    IJ.log("Read class name: " + className);
+                    if (!className.equals(classes.get(j))) {
+                        IJ.error("ERROR: Loaded classes and current classes do not match!\n\tExpected: " + className+"\n\tFound: "+classes.get(j));
+                        trainingDataLoaded = false;
+                        return;
+                    }
+                    j++;
+                }
+                //Select only loaded features
+                Enumeration<Attribute> attributes = data.enumerateAttributes();
+                final String[] availableFeatures = RegionFeatures.Feature.getAllLabels();
+                final int numFeatures = availableFeatures.length;
+                boolean[] usedFeatures = new boolean[numFeatures];
+                features = new ArrayList<RegionFeatures.Feature>();
+                while(attributes.hasMoreElements())
+                {
+                    final Attribute a = attributes.nextElement();
+                    String n = a.name();
+                    if(a.name().endsWith("-L")||
+                            a.name().endsWith("-a")||
+                            a.name().endsWith("-b")){
+                        n = a.name().substring(0,a.name().length()-2);
+                    }
+                    for(int i = 0 ; i < numFeatures; i++)
+                        features.add(RegionFeatures.Feature.fromLabel(n));
+                }
+
+                trainingDataLoaded = true;
+                IJ.log("Data loaded");
+            }
+        }catch (Exception e){
+            IJ.log("Error when loading training data");
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
      * Add a new class based on user input, update instances if already created
      */
     void addNewClass(){
@@ -533,10 +623,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param command
      */
     void runStopTraining(final String command){
-        for(int i=0;i<tags.size();++i){
-            if(tags.get(i).length==0){
-                IJ.showMessage("Add at least one region to class "+classes.get(i));
-                return;
+        if(!trainingDataLoaded) {
+            for (int i = 0; i < tags.size(); ++i) {
+                if (tags.get(i).length == 0) {
+                    IJ.showMessage("Add at least one region to class " + classes.get(i));
+                    return;
+                }
             }
         }
         IJ.log("Training classifier");
@@ -546,15 +638,23 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             trainableSuperpixelSegmentation.calculateRegionFeatures();
             calculateFeatures = false;
         }
-        if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
-            IJ.error("Error when training classifier");
+        if(trainingDataLoaded) {
+            if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                IJ.error("Error when training classifier");
+            }
+        }else {
+            if (!trainableSuperpixelSegmentation.trainClassifier(tags)) {
+                IJ.error("Error when training classifier");
+            }
         }
         classifier = trainableSuperpixelSegmentation.getClassifier();
         IJ.log("Classifier trained");
-        for(int i=0;i<tags.size();++i){
-            if(tags.get(i).length==0){
-                IJ.showMessage("Add at least one region to class "+classes.get(i));
-                return;
+        if(!trainingDataLoaded) {
+            for (int i = 0; i < tags.size(); ++i) {
+                if (tags.get(i).length == 0) {
+                    IJ.showMessage("Add at least one region to class " + classes.get(i));
+                    return;
+                }
             }
         }
         IJ.log("Applying classifier");
@@ -616,6 +716,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             String filename = sd.getDirectory() + sd.getFileName();
             saver.setFile(new File(filename));
             saver.writeBatch();
+            IJ.log("File saved at "+sd.getDirectory()+sd.getFileName());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -940,10 +1041,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Creates and displays probability maps, calculates features if they haven't been calculated
      */
     void showProbability(){
-        for(int i=0;i<tags.size();++i){
-            if(tags.get(i).length==0){
-                IJ.showMessage("Add at least one region to class "+classes.get(i));
-                return;
+        if(!trainingDataLoaded) {
+            for (int i = 0; i < tags.size(); ++i) {
+                if (tags.get(i).length == 0) {
+                    IJ.showMessage("Add at least one region to class " + classes.get(i));
+                    return;
+                }
             }
         }
         trainableSuperpixelSegmentation.setClasses(classes);
@@ -953,8 +1056,14 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             calculateFeatures = false;
         }
         if(!trainableSuperpixelSegmentation.isClassifierTrained()){
-            if(!trainableSuperpixelSegmentation.trainClassifier(tags)){
-                IJ.error("Error when training classifier");
+            if(trainingDataLoaded) {
+                if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                    IJ.error("Error when training classifier");
+                }
+            }else {
+                if (!trainableSuperpixelSegmentation.trainClassifier(tags)) {
+                    IJ.error("Error when training classifier");
+                }
             }
         }
         ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
