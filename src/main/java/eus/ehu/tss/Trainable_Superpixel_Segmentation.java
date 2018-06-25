@@ -599,7 +599,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 ins = trainableSuperpixelSegmentation.getUnlabeled();
             }
             saver.setInstances(ins);
-            SaveDialog sd = new SaveDialog("Save instances as...","instances",".ARFF");
+            SaveDialog sd = new SaveDialog("Save instances as...","instances",".arff");
             if(sd.getFileName()==null){
                 return;
             }
