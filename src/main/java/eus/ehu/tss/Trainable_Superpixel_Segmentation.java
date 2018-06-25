@@ -417,7 +417,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 annotationsPanel.add(exampleList[i], annotationsConstraints);
                 annotationsConstraints.gridy++;
             }
-            addExampleButton[0].setSelected(true);
 
             controlsPanel.add(trainingPanel,controlConstraints);
             controlConstraints.gridy++;
@@ -508,6 +507,25 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
         }
 
+        public void setButtonsEnabled(boolean f){
+            trainClassButton.setEnabled(f);
+            loadClassButton.setEnabled(f);
+            applyClassButton.setEnabled(f);
+            settButton.setEnabled(f);
+            plotButton.setEnabled(f);
+            probButton.setEnabled(f);
+            resButton.setEnabled(f);
+            overlayButton.setEnabled(f);
+            overlayCheckbox.setEnabled(f);
+            for(int i=0;i<numClasses;++i){
+                addExampleButton[i].setEnabled(f);
+            }
+            addClassButton.setEnabled(f);
+            saveClassButton.setEnabled(f);
+            saveInstButton.setEnabled(f);
+            loadTrainingDataButton.setEnabled(f);
+        }
+
         public void enableOverlayCheckbox(){
             overlayCheckbox.setEnabled(true);
         }
@@ -528,10 +546,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Load training data from a file.
      */
     private void loadTrainingData() {
+        win.setButtonsEnabled(false);
         Instances data=null;
         OpenDialog od = new OpenDialog("Choose data file", OpenDialog.getLastDirectory(), "data.arff");
-        if (od.getFileName()==null)
+        if (od.getFileName()==null) {
+            win.setButtonsEnabled(true);
             return;
+        }
 
         IJ.log("Loading data from " + od.getDirectory() + od.getFileName() + "...");
         String pathname = od.getDirectory() + od.getFileName();
@@ -558,6 +579,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 if (classAttribute.numValues() != numClasses) {
                     IJ.error("ERROR: Loaded number of classes and current number do not match!\n\tExpected number of classes: "+classAttribute.numValues()+"\n\tCurrent number of classes: "+numClasses);
                     trainingDataLoaded = false;
+                    win.setButtonsEnabled(true);
                     return;
                 }
                 int j = 0;
@@ -569,6 +591,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     if (!className.equals(classes.get(j))) {
                         IJ.error("ERROR: Loaded classes and current classes do not match!\n\tExpected: " + className+"\n\tFound: "+classes.get(j));
                         trainingDataLoaded = false;
+                        win.setButtonsEnabled(true);
                         return;
                     }
                     j++;
@@ -598,9 +621,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 trainableSuperpixelSegmentation.setTrainingData(data);
                 trainingDataLoaded = true;
                 IJ.log("Data loaded");
+                win.setButtonsEnabled(true);
             }
 
         }catch (Exception e){
+            win.setButtonsEnabled(true);
             IJ.log("Error when loading training data");
             e.printStackTrace();
         }
@@ -656,10 +681,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param command
      */
     void runStopTraining(final String command){
+        win.setButtonsEnabled(false);
         if(!trainingDataLoaded) {
             for (int i = 0; i < tags.size(); ++i) {
                 if (tags.get(i).length == 0) {
                     IJ.showMessage("Add at least one region to class " + classes.get(i));
+                    win.setButtonsEnabled(true);
                     return;
                 }
             }
@@ -711,6 +738,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             for (int i = 0; i < tags.size(); ++i) {
                 if (tags.get(i).length == 0) {
                     IJ.showMessage("Add at least one region to class " + classes.get(i));
+                    win.setButtonsEnabled(true);
                     return;
                 }
             }
@@ -721,14 +749,17 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         toggleOverlay();
         IJ.log("Classifier applied");
         win.enableOverlayCheckbox();
+        win.setButtonsEnabled(true);
     }
 
     /**
      * Apply classifier to loaded image and corresponding superpixel image
      */
     void applyClassifier(){
+        win.setButtonsEnabled(false);
         if(!trainableSuperpixelSegmentation.isClassifierTrained()){
             IJ.error("Train a classifier");
+            win.setButtonsEnabled(true);
             return;
         }
         IJ.showMessage("Select input image");
@@ -747,6 +778,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         resultImg.updateAndDraw();
         resultImg.show();
         IJ.log("Classifier applied");
+        win.setButtonsEnabled(true);
     }
 
 
@@ -754,6 +786,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Save instances into ARFF file
      */
     void saveInstances(){
+        win.setButtonsEnabled(false);
         try {
             if(calculateFeatures){
                 IJ.log("Calculating region features");
@@ -775,7 +808,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             saver.setFile(new File(filename));
             saver.writeBatch();
             IJ.log("File saved at "+sd.getDirectory()+sd.getFileName());
+            win.setButtonsEnabled(true);
         } catch (IOException e) {
+            win.setButtonsEnabled(true);
             e.printStackTrace();
         }
 
@@ -785,14 +820,17 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Save classifier to file
      */
     void saveClassifier(){
+        win.setButtonsEnabled(false);
 
         if(!trainableSuperpixelSegmentation.isClassifierTrained()){
             IJ.error("Train classifier");
+            win.setButtonsEnabled(true);
             return;
         }
 
         SaveDialog sd = new SaveDialog("Save model as...","classifier",".model");
         if(sd.getFileName()==null){
+            win.setButtonsEnabled(true);
             return;
         }
         String filename = sd.getDirectory() + sd.getFileName();
@@ -816,10 +854,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         catch (Exception e)
         {
+            win.setButtonsEnabled(true);
             IJ.error("Save Failed", "Error when saving classifier into a file");
             saveOK = false;
         }
         if (saveOK)
+            win.setButtonsEnabled(true);
             IJ.log("Saved model into " + filename );
 
 
@@ -829,9 +869,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Load classifier from file
      */
     void loadClassifier(){
+        win.setButtonsEnabled(false);
         OpenDialog od = new OpenDialog( "Choose Weka classifier file", "" );
-        if (od.getFileName()==null)
+        if (od.getFileName()==null) {
+            win.setButtonsEnabled(true);
             return;
+        }
         IJ.log("Loading Weka classifier from " + od.getDirectory() + od.getFileName() + "...");
         String path = od.getDirectory() + od.getFileName();
 
@@ -866,6 +909,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             objectInputStream.close();
         }catch (Exception e){
             IJ.log("Loading file failed: "+e.getMessage());
+            win.setButtonsEnabled(true);
             return;
         }
         classifier = loadedClassifier;
@@ -873,6 +917,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         calculateFeatures = true;
         IJ.log(loadedClassifier.toString());
         trainableSuperpixelSegmentation.setClassifierTrained(true);
+        win.setButtonsEnabled(true);
 
     }
 
@@ -880,7 +925,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      *Create result image, trains classifier if it hasn't been trained before
      */
     void createResult(){
-
+        win.setButtonsEnabled(false);
         if(resultImage==null){
             if(!trainableSuperpixelSegmentation.isClassifierTrained()) {
                 runStopTraining("Run");
@@ -902,6 +947,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             resultImg.show();
             win.enableOverlayCheckbox();
         }
+        win.setButtonsEnabled(true);
     }
 
 
@@ -909,7 +955,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Shows dialog with feature, classifier and overlay opacity options
      */
     void showSettingsDialog(){
-
+        win.setButtonsEnabled(false);
         GenericDialog gd = new GenericDialog("Superpixel Segmentation settings");
         gd.addMessage("Training features:");
         final int rows = RegionFeatures.totalFeatures()/2;
@@ -955,6 +1001,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         gd.showDialog();
 
         if(gd.wasCanceled()){
+            win.setButtonsEnabled(true);
             return;
         }
         ArrayList<RegionFeatures.Feature> newFeatures = new ArrayList<RegionFeatures.Feature>();
@@ -996,6 +1043,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             catch(Exception ex)
             {
                 ex.printStackTrace();
+                win.setButtonsEnabled(true);
                 return;
             }
             classifier = cls;
@@ -1035,6 +1083,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
             }
         }
+        win.setButtonsEnabled(true);
 
 
     }
@@ -1044,6 +1093,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Plot the current result
      */
     void showPlot(){
+
         IJ.showStatus("Evaluating current data...");
         IJ.log("Evaluating current data...");
         final Instances data;
@@ -1108,6 +1158,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Creates and displays probability maps, calculates features if they haven't been calculated
      */
     void showProbability(){
+        win.setButtonsEnabled(false);
         if(!trainingDataLoaded) {
             for (int i = 0; i < tags.size(); ++i) {
                 if (tags.get(i).length == 0) {
@@ -1161,6 +1212,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
         probabilityImage.setTitle(inputTitle+"-prob");
         probabilityImage.show();
+        win.setButtonsEnabled(true);
 
     }
 
