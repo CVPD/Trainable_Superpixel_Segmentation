@@ -553,7 +553,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 loadClassButton.setEnabled(true);
                 applyClassButton.setEnabled(true);
                 settButton.setEnabled(true);
-                plotButton.setEnabled(false);
+                if(trainingDataLoaded) {
+                    plotButton.setEnabled(true);
+                }else {
+                    plotButton.setEnabled(false);
+                }
                 probButton.setEnabled(false);
                 resButton.setEnabled(true);
                 overlayButton.setEnabled(true);
