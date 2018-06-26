@@ -1006,7 +1006,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
         gd.addMessage("Class names:");
         for(int i = 0; i < numClasses; i++)
-            gd.addStringField("Class "+(i+1), classes.get(i), 15);
+            gd.addStringField("Class "+i, classes.get(i), 15);
 
         gd.showDialog();
 
