@@ -554,8 +554,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 applyClassButton.setEnabled(true);
                 settButton.setEnabled(true);
                 plotButton.setEnabled(false);
-                probButton.setEnabled(true);
-                resButton.setEnabled(false);
+                probButton.setEnabled(false);
+                resButton.setEnabled(true);
                 overlayButton.setEnabled(true);
                 overlayCheckbox.setEnabled(false);
                 for(int i=0;i<numClasses;++i){
@@ -978,6 +978,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         repaintWindow();
                     }
                 }
+                trainableSuperpixelSegmentation.setClassifier(loadedClassifier);
             }catch (Exception e){
             }
             objectInputStream.close();
@@ -1001,6 +1002,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     void createResult(){
         win.disableAllButtons();
         if(resultImage==null){
+            if(calculateFeatures){
+                trainableSuperpixelSegmentation.calculateRegionFeatures();
+                calculateFeatures = false;
+            }
             if(!trainableSuperpixelSegmentation.isClassifierTrained()) {
                 runStopTraining("Run");
             }else {
