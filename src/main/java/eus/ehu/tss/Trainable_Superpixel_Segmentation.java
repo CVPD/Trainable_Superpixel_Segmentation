@@ -704,7 +704,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
             }
         }
-        IJ.log("Training classifier");
         trainableSuperpixelSegmentation.setClasses(classes);
         if(calculateFeatures) {
             IJ.log("Calculating region features");
@@ -741,6 +740,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             e.printStackTrace();
             IJ.log("Error when merging loaded training data selected data");
         }
+        IJ.log("Training classifier");
         trainableSuperpixelSegmentation.setTrainingData(trainingData);
         if (!trainableSuperpixelSegmentation.trainClassifier()) {
             IJ.error("Error when training classifier");
@@ -815,6 +815,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             saver.setInstances(ins);
             SaveDialog sd = new SaveDialog("Save instances as...","instances",".arff");
             if(sd.getFileName()==null){
+                win.setButtonsEnabled(true);
                 return;
             }
             String filename = sd.getDirectory() + sd.getFileName();
@@ -1201,6 +1202,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             for (int i = 0; i < tags.size(); ++i) {
                 if (tags.get(i).length == 0) {
                     IJ.showMessage("Add at least one region to class " + classes.get(i));
+                    win.setButtonsEnabled(true);
                     return;
                 }
             }
