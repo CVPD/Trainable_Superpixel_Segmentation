@@ -841,8 +841,18 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         IJ.showMessage("Select input image");
         ImagePlus input = IJ.openImage();
+        if(input==null){
+            win.setButtonsEnabled(0);
+            IJ.log("Classifier applying was cancelled");
+            return;
+        }
         IJ.showMessage("Select corresponding label image");
         ImagePlus sup = IJ.openImage();
+        if(sup==null){
+            win.setButtonsEnabled(0);
+            IJ.log("Classifier applying was cancelled");
+            return;
+        }
         trainableSuperpixelSegmentation.setInputImage(input);
         trainableSuperpixelSegmentation.setLabelImage(sup);
         IJ.log("Calculating region features");
