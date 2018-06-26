@@ -747,15 +747,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         classifier = trainableSuperpixelSegmentation.getClassifier();
         IJ.log("Classifier trained");
-        if(!trainingDataLoaded) {
-            for (int i = 0; i < tags.size(); ++i) {
-                if (tags.get(i).length == 0) {
-                    IJ.showMessage("Add at least one region to class " + classes.get(i));
-                    win.setButtonsEnabled(true);
-                    return;
-                }
-            }
-        }
         IJ.log("Applying classifier");
         resultImage = trainableSuperpixelSegmentation.applyClassifier();
         overlay = 2;
