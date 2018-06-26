@@ -998,6 +998,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         if (c instanceof OptionHandler)
         	originalOptions = Utils.joinOptions(((OptionHandler)c).getOptions());
 
+
+        gd.addMessage("Class names:");
+        for(int i = 0; i < numClasses; i++)
+            gd.addStringField("Class "+(i+1), classes.get(i), 15);
+
         gd.showDialog();
 
         if(gd.wasCanceled()){
@@ -1081,6 +1086,26 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }else {
                     overlay=0;
                 }
+            }
+        }
+        boolean classNameChanged = false;
+        for(int i = 0; i < numClasses; i++)
+        {
+            String s = gd.getNextString();
+            if (null == s || 0 == s.length()) {
+                IJ.log("Invalid name for class " + (i+1));
+                continue;
+            }
+            s = s.trim();
+            if(!s.equals(classes.get(i)))
+            {
+                if (0 == s.toLowerCase().indexOf("add to ")) {
+                    s = s.substring(7);
+                }
+
+                classes.set(i,s);
+                classNameChanged = true;
+                win.addExampleButton[i].setText("Add to " + s);
             }
         }
         win.setButtonsEnabled(true);
