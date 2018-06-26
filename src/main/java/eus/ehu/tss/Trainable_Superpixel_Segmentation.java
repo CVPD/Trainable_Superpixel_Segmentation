@@ -356,23 +356,29 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
             //Training panel buttons
             trainClassButton = new JButton("Train classifier");
+            trainClassButton.setToolTipText("Train a classifier based on selected regions");
             trainingPanel.add(trainClassButton,trainingConstraints);
             trainingConstraints.gridy++;
             overlayButton = new JButton("Toggle overlay");
+            overlayButton.setToolTipText("Toggle between superpixel image, result image and original image");
             trainingPanel.add(overlayButton,trainingConstraints);
             trainingConstraints.gridy++;
             overlayCheckbox = new JCheckBox("Display result only");
+            overlayCheckbox.setToolTipText("Disable superpixel overlay showing");
             trainingPanel.add(overlayCheckbox,trainingConstraints);
             overlayCheckbox.setSelected(false);
             overlayCheckbox.setEnabled(false);
             trainingConstraints.gridy++;
             resButton = new JButton("Create result");
+            resButton.setToolTipText("Create a duplicate of the result image");
             trainingPanel.add(resButton,trainingConstraints);
             trainingConstraints.gridy++;
             probButton = new JButton("Get probability");
+            probButton.setToolTipText("Create a probability image");
             trainingPanel.add(probButton,trainingConstraints);
             trainingConstraints.gridy++;
             plotButton = new JButton("Plot result");
+            plotButton.setToolTipText("Plot various metrics");
             trainingPanel.add(plotButton,trainingConstraints);
             trainingConstraints.gridy++;
 
@@ -380,23 +386,30 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             //Options panel buttons
             applyClassButton = new JButton("Apply classifier");
             optionsPanel.add(applyClassButton,optionsConstraints);
+            applyClassButton.setToolTipText("Load an image and apply trained classifier");
             optionsConstraints.gridy++;
             loadClassButton = new JButton("Load classifier");
+            loadClassButton.setToolTipText("Load Weka classifier from a file");
             optionsPanel.add(loadClassButton,optionsConstraints);
             optionsConstraints.gridy++;
             saveClassButton = new JButton("Save classifier");
+            saveClassButton.setToolTipText("Save trained classifier into a file");
             optionsPanel.add(saveClassButton,optionsConstraints);
             optionsConstraints.gridy++;
             saveInstButton = new JButton("Save instances");
+            saveInstButton.setToolTipText("Save training data into a Weka file");
             optionsPanel.add(saveInstButton,optionsConstraints);
             optionsConstraints.gridy++;
             loadTrainingDataButton = new JButton("Load training data");
+            loadTrainingDataButton.setToolTipText("Load training data from a Weka file");
             optionsPanel.add(loadTrainingDataButton,optionsConstraints);
             optionsConstraints.gridy++;
             addClassButton = new JButton("Create new class");
+            addClassButton.setToolTipText("Add a new class");
             optionsPanel.add(addClassButton,optionsConstraints);
             optionsConstraints.gridy++;
             settButton = new JButton("Settings");
+            settButton.setToolTipText("Open a settings dialog");
             optionsPanel.add(settButton,optionsConstraints);
             optionsConstraints.gridy++;
 
