@@ -1208,7 +1208,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         if(null == data)
         {
-            IJ.error( "Train classifier");
+            IJ.error( "Error in plot result",
+                    "No data available yet to plot results: you need to train a classifier" );
+            IJ.log("Failed to display plot");
             return;
         }
         displayGraphs(data,trainableSuperpixelSegmentation.getClassifier());
@@ -1263,15 +1265,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      */
     void showProbability(){
         win.disableAllButtons();
-        if(!trainingDataLoaded) {
-            for (int i = 0; i < tags.size(); ++i) {
-                if (tags.get(i).length == 0) {
-                    IJ.showMessage("Add at least one region to class " + classes.get(i));
-                    win.setButtonsEnabled(0);
-                    return;
-                }
-            }
-        }
         trainableSuperpixelSegmentation.setClasses(classes);
         if(calculateFeatures) {
             IJ.log("Calculating region features");
@@ -1279,6 +1272,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             calculateFeatures = false;
         }
         if(!trainableSuperpixelSegmentation.isClassifierTrained()){
+            if(!trainingDataLoaded) {
+                for (int i = 0; i < tags.size(); ++i) {
+                    if (tags.get(i).length == 0) {
+                        IJ.showMessage("Add at least one region to class " + classes.get(i));
+                        win.setButtonsEnabled(0);
+                        return;
+                    }
+                }
+            }
             Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
             ArrayList<Attribute> attributes = new ArrayList<Attribute>();
             int numFeatures = unlabeled.numAttributes()-1;
