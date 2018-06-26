@@ -33,16 +33,19 @@ public class RegionColorFeatures {
         ImagePlus lab = converter.RGBToLab(inputImage);
         ImagePlus[] channels = ChannelSplitter.split(lab);
         long startTime = System.currentTimeMillis();
+        IJ.log("Calculating channel l features");
         Instances lIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[0],labelImage,selectedFeatures,classes);
         long elapsedTime = System.currentTimeMillis();
         long estimatedTime = System.currentTimeMillis() - startTime;
         IJ.log( "    Calculating channel l features took " + estimatedTime + " ms");
         startTime = System.currentTimeMillis();
+        IJ.log("Calculating channel a features");
         Instances aIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[1],labelImage,selectedFeatures,classes);
         elapsedTime = System.currentTimeMillis();
         estimatedTime = System.currentTimeMillis() - startTime;
         IJ.log( "    Calculating channel a features took " + estimatedTime + " ms");
         startTime = System.currentTimeMillis();
+        IJ.log("Calculating channel b features");
         Instances bIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[2],labelImage,selectedFeatures,classes);
         elapsedTime = System.currentTimeMillis();
         estimatedTime = System.currentTimeMillis() - startTime;
@@ -113,9 +116,25 @@ public class RegionColorFeatures {
         ColorSpaceConverter converter = new ColorSpaceConverter();
         ImagePlus lab = converter.RGBToLab(inputImage);
         ImagePlus[] channels = ChannelSplitter.split(lab);
+        long startTime = System.currentTimeMillis();
+        IJ.log("Calculating channel l features");
         Instances lIns = RegionFeatures.calculateLabeledRegionFeatures(channels[0],labelImage,gtImage,selectedFeatures,classes);
+        long elapsedTime = System.currentTimeMillis();
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "    Calculating channel l features took " + estimatedTime + " ms");
+        startTime = System.currentTimeMillis();
+        IJ.log("Calculating channel a features");
         Instances aIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[1],labelImage,selectedFeatures,classes);
+        elapsedTime = System.currentTimeMillis();
+        estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "    Calculating channel a features took " + estimatedTime + " ms");
+        startTime = System.currentTimeMillis();
+        IJ.log("Calculating channel b features");
         Instances bIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[2],labelImage,selectedFeatures,classes);
+        elapsedTime = System.currentTimeMillis();
+        estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "    Calculating channel b features took " + estimatedTime + " ms");
+        startTime = System.currentTimeMillis();
         if(lIns==null||aIns==null||bIns==null){
             return null;
         }else {
@@ -157,7 +176,9 @@ public class RegionColorFeatures {
                 labeled.add(inst);
             }
             labeled.setClassIndex(numAttributes);
-
+            elapsedTime = System.currentTimeMillis();
+            estimatedTime = System.currentTimeMillis() - startTime;
+            IJ.log( "\tCreating instances took" + estimatedTime + "ms");
             return labeled;
         }
     }
