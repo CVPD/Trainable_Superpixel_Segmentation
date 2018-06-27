@@ -10,11 +10,31 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * This class will extract region features from colored images using the Lab color space
  */
 public class RegionColorFeatures {
+
+    private static Callable<Instances> getInstances(ImagePlus inputImage,
+                                                   ImagePlus labelImage,
+                                                   ArrayList<RegionFeatures.Feature> selectedFeatures,
+                                                   ArrayList<String> classes){
+        if(Thread.currentThread().isInterrupted()){
+            return null;
+        }
+        return new Callable<Instances>() {
+            @Override
+            public Instances call() throws Exception {
+                Instances result =  RegionFeatures.calculateUnlabeledRegionFeatures(inputImage,labelImage,selectedFeatures,classes);
+                return result;
+            }
+        };
+    }
 
     /**
      * Creates Instances object based on the features of each color channel after converting the image to Lab
@@ -32,25 +52,31 @@ public class RegionColorFeatures {
         ColorSpaceConverter converter = new ColorSpaceConverter();
         ImagePlus lab = converter.RGBToLab(inputImage);
         ImagePlus[] channels = ChannelSplitter.split(lab);
-        long startTime = System.currentTimeMillis();
-        IJ.log("Calculating channel l features");
-        Instances lIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[0],labelImage,selectedFeatures,classes);
-        long elapsedTime = System.currentTimeMillis();
-        long estimatedTime = System.currentTimeMillis() - startTime;
-        IJ.log( "    Calculating channel l features took " + estimatedTime + " ms");
-        startTime = System.currentTimeMillis();
-        IJ.log("Calculating channel a features");
-        Instances aIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[1],labelImage,selectedFeatures,classes);
-        elapsedTime = System.currentTimeMillis();
-        estimatedTime = System.currentTimeMillis() - startTime;
-        IJ.log( "    Calculating channel a features took " + estimatedTime + " ms");
-        startTime = System.currentTimeMillis();
-        IJ.log("Calculating channel b features");
-        Instances bIns = RegionFeatures.calculateUnlabeledRegionFeatures(channels[2],labelImage,selectedFeatures,classes);
-        elapsedTime = System.currentTimeMillis();
-        estimatedTime = System.currentTimeMillis() - startTime;
-        IJ.log( "    Calculating channel b features took " + estimatedTime + " ms");
-        startTime = System.currentTimeMillis();
+        if(Thread.currentThread().isInterrupted()){
+            return null;
+        }
+        ArrayList<Instances> ins = new ArrayList<Instances>();
+        ExecutorService exe = Executors.newFixedThreadPool(3);
+        final ArrayList<Future< Instances > > futures = new ArrayList<Future<Instances>>();
+        try {
+            futures.add(exe.submit(getInstances(channels[0],labelImage,selectedFeatures,classes)));
+            futures.add(exe.submit(getInstances(channels[1],labelImage,selectedFeatures,classes)));
+            futures.add(exe.submit(getInstances(channels[2],labelImage,selectedFeatures,classes)));
+            int i=0;
+            for(Future<Instances> f : futures){
+                Instances res = f.get();
+                ins.add(res);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+        finally {
+            exe.shutdown();
+        }
+        Instances lIns = ins.get(0);
+        Instances aIns = ins.get(1);
+        Instances bIns = ins.get(2);
         if(lIns==null||aIns==null||bIns==null){
             return null;
         }else {
@@ -91,9 +117,6 @@ public class RegionColorFeatures {
                 unlabeled.add(inst);
             }
             unlabeled.setClassIndex(numAttributes);
-            elapsedTime = System.currentTimeMillis();
-            estimatedTime = System.currentTimeMillis() - startTime;
-            IJ.log( "\tCreating instances took" + estimatedTime + "ms");
             return unlabeled;
         }
     }

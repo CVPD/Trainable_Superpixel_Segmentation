@@ -188,6 +188,7 @@ public class TrainableSuperpixelSegmentation {
         } catch (Exception e) {
             System.out.println("Error when applying classifier");
             e.printStackTrace();
+            return null;
         }
         int height = inputImage.getHeight();
         int width = inputImage.getWidth();
