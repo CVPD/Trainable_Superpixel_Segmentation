@@ -113,6 +113,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private String inputTitle;
     private boolean classBalance = true;
     private boolean trainingDataLoaded = false;
+    private Instances loadedTrainingData = null;
 
     private class CustomWindow extends StackWindow
     {
@@ -700,11 +701,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     for(int i = 0 ; i < numFeatures; i++)
                         features.add(RegionFeatures.Feature.fromLabel(n));
                 }
-                if(trainableSuperpixelSegmentation.getTrainingData()!=null){
-                    data = merge(trainableSuperpixelSegmentation.getTrainingData(),data);
-                    IJ.log("Data merged with previous training data");
+                if(loadedTrainingData==null) {
+                    loadedTrainingData = data;
+                }else {
+                    loadedTrainingData = merge(loadedTrainingData,data);
                 }
-                trainableSuperpixelSegmentation.setTrainingData(data);
                 trainingDataLoaded = true;
                 IJ.log("Data loaded");
                 win.setButtonsEnabled(0);
@@ -806,7 +807,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         trainingData.setClassIndex(numFeatures); // set class index
         try {
             if (trainingDataLoaded) {
-                trainingData = merge(trainingData, trainableSuperpixelSegmentation.getTrainingData());
+                trainingData = merge(trainingData, loadedTrainingData);
                 IJ.log("Merged selected data with loaded data");
             }
         }catch (Exception e){
@@ -1318,7 +1319,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             trainingData.setClassIndex(numFeatures); // set class index
             try {
                 if (trainingDataLoaded) {
-                    trainingData = merge(trainingData, trainableSuperpixelSegmentation.getTrainingData());
+                    trainingData = merge(trainingData,loadedTrainingData);
                     IJ.log("Merged selected data with loaded data");
                 }
             }catch (Exception e){
