@@ -18,7 +18,7 @@
 
 	<name>Trainable Superpixel Segmentation</name>
 	<description>A Maven project implementing an ImageJ 1.x plugin.</description>
-	<url></url>
+	<url>https://github.com/96jsalinas/Trainable_Superpixel_Segmentation</url>
 	<inceptionYear>2018</inceptionYear>
 	<organization>
 		<name>EHU</name>
@@ -48,10 +48,29 @@
 			<id>iarganda</id>
 			<name>Ignacio Arganda-Carreras</name>
 			<roles>
-				<role>Supervisor</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
 			</roles>
 		</developer>
 	</developers>
+	<contributors>
+		<contributor>
+			<name>Josu Salinas</name>
+			<url>https://github.com/96jsalinas</url>
+		</contributor>
+		<contributor>
+			<name>Ignacio Arganda</name>
+			<url>https://github.com/iarganda</url>
+		</contributor>
+	</contributors>
+	<mailingLists>
+		<mailingList>
+			<name>GitHub project issues</name>
+			<archive>https://github.com/96jsalinas/Trainable_Superpixel_Segmentation/issues</archive>
+		</mailingList>
+	</mailingLists>
 
 	<scm>
 		<connection>scm:git:git://github.com/96jsalinas/Trainable_Superpixel_Segmentation</connection>
@@ -86,7 +105,7 @@
 		<dependency>
 			<groupId>fr.inra.ijpb</groupId>
 			<artifactId>MorphoLibJ_</artifactId>
-			<version>1.3.4</version>
+			<version>1.3.5</version>
 		</dependency>
 	</dependencies>
 	<repositories>
