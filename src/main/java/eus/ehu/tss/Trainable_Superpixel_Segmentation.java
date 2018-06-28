@@ -981,18 +981,26 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 Instances loadedInstances = (Instances) objectInputStream.readObject();
                 Attribute classAttribute = loadedInstances.classAttribute();
                 Enumeration<Object> classValues = classAttribute.enumerateValues();
-                int j=classAttribute.numValues();
-                if(j!=numClasses){
-                    int t = numClasses;
-                    for(int i=0;i<t;++i){
-                        classValues.nextElement();
+                ArrayList<String> loadedClassNames = new ArrayList<String>();
+                if (classAttribute.numValues() != numClasses) {
+                    IJ.error("ERROR: Loaded number of classes and current number do not match!\n\tExpected number of classes: "+classAttribute.numValues()+"\n\tCurrent number of classes: "+numClasses);
+                    trainingDataLoaded = false;
+                    win.setButtonsEnabled(0);
+                    return;
+                }
+                int j = 0;
+                while (classValues.hasMoreElements()) {
+                    final String className = ((String) classValues.nextElement()).trim();
+                    loadedClassNames.add(className);
+
+                    IJ.log("Read class name: " + className);
+                    if (!className.equals(classes.get(j))) {
+                        IJ.error("ERROR: Loaded classes and current classes do not match!\n\tExpected: " + className + "\n\tFound: " + classes.get(j));
+                        trainingDataLoaded = false;
+                        win.setButtonsEnabled(0);
+                        return;
                     }
-                    for(int i=t;i<j;++i){
-                        final String className = ((String)classValues.nextElement()).trim();
-                        classes.add(className);
-                        win.addClass();
-                        repaintWindow();
-                    }
+                    j++;
                 }
                 trainableSuperpixelSegmentation.setClassifier(loadedClassifier);
             }catch (Exception e){
@@ -1017,32 +1025,38 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      */
     void createResult(){
         win.disableAllButtons();
-        if(resultImage==null){
-            if(calculateFeatures){
-                trainableSuperpixelSegmentation.calculateRegionFeatures();
-                calculateFeatures = false;
+        try {
+            if (resultImage == null) {
+                if (calculateFeatures) {
+                    trainableSuperpixelSegmentation.calculateRegionFeatures();
+                    calculateFeatures = false;
+                }
+                if (!trainableSuperpixelSegmentation.isClassifierTrained()) {
+                    runStopTraining("Run");
+                } else {
+                    resultImage = trainableSuperpixelSegmentation.applyClassifier();
+                    createResult();
+                }
+            } else {
+
+                ImagePlus resultImg = resultImage.duplicate();
+
+
+                resultImg.setTitle(inputTitle + "-classified");
+
+                convertTo8bitNoScaling(resultImg);
+                resultImg.getProcessor().setColorModel(overlayLUT);
+                resultImg.getImageStack().setColorModel(overlayLUT);
+                resultImg.updateAndDraw();
+                resultImg.show();
+                win.enableOverlayCheckbox();
             }
-            if(!trainableSuperpixelSegmentation.isClassifierTrained()) {
-                runStopTraining("Run");
-            }else {
-                resultImage = trainableSuperpixelSegmentation.applyClassifier();
-                createResult();
-            }
-        }else {
-
-            ImagePlus resultImg = resultImage.duplicate();
-
-
-            resultImg.setTitle(inputTitle + "-classified");
-
-            convertTo8bitNoScaling(resultImg);
-            resultImg.getProcessor().setColorModel(overlayLUT);
-            resultImg.getImageStack().setColorModel(overlayLUT);
-            resultImg.updateAndDraw();
-            resultImg.show();
-            win.enableOverlayCheckbox();
+            win.setButtonsEnabled(2);
+        }catch (Exception e){
+            e.printStackTrace();
+            IJ.log("Error when creating result");
+            win.setButtonsEnabled(0);
         }
-        win.setButtonsEnabled(2);
     }
 
 
