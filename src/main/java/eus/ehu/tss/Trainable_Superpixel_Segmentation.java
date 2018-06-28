@@ -114,6 +114,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private boolean classBalance = true;
     private boolean trainingDataLoaded = false;
     private Instances loadedTrainingData = null;
+    private Thread trainingTask = null;
 
     private class CustomWindow extends StackWindow
     {
@@ -769,67 +770,96 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param command
      */
     void runStopTraining(final String command){
-        win.disableAllButtons();
-        if(!trainingDataLoaded) {
-            for (int i = 0; i < tags.size(); ++i) {
-                if (tags.get(i).length == 0) {
-                    IJ.showMessage("Add at least one region to class " + classes.get(i));
-                    win.setButtonsEnabled(0);
-                    return;
+        if(command=="Train classifier") {
+            win.disableAllButtons();
+            win.trainClassButton.setText("STOP");
+            win.trainClassButton.setEnabled(true);
+            Thread newTask = new Thread() {
+
+                public void run() {
+
+                    if (!trainingDataLoaded) {
+                        for (int i = 0; i < tags.size(); ++i) {
+                            if (tags.get(i).length == 0) {
+                                IJ.showMessage("Add at least one region to class " + classes.get(i));
+                                win.setButtonsEnabled(0);
+                                return;
+                            }
+                        }
+                    }
+                    trainableSuperpixelSegmentation.setClasses(classes);
+                    if (calculateFeatures) {
+                        IJ.log("Calculating region features");
+                        trainableSuperpixelSegmentation.calculateRegionFeatures();
+                        calculateFeatures = false;
+                    }
+                    Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
+                    ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+                    int numFeatures = unlabeled.numAttributes() - 1;
+                    for (int i = 0; i < numFeatures; ++i) {
+                        attributes.add(new Attribute(unlabeled.attribute(i).name(), i));
+                    }
+                    attributes.add(new Attribute("Class", classes));
+                    Instances trainingData = new Instances("training data", attributes, 0);
+                    // Fill training dataset with the feature vectors of the corresponding
+                    // regions given by classRegions
+                    for (int i = 0; i < tags.size(); ++i) { //For each class in classRegions
+                        for (int j = 0; j < tags.get(i).length; ++j) {
+                            Instance inst = new DenseInstance(numFeatures + 1);
+                            for (int k = 0; k < numFeatures; ++k) {
+                                inst.setValue(k, unlabeled.get(tags.get(i)[j] - 1).value(k));
+                            }
+                            inst.setValue(numFeatures, i); // set class value
+                            trainingData.add(inst);
+                        }
+                    }
+                    trainingData.setClassIndex(numFeatures); // set class index
+                    try {
+                        if (trainingDataLoaded) {
+                            IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
+                            trainingData = merge(trainingData, loadedTrainingData);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        IJ.log("Error when merging loaded training data selected data");
+                    }
+                    IJ.log("Training classifier");
+                    trainableSuperpixelSegmentation.setTrainingData(trainingData);
+                    if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                        IJ.error("Error when training classifier");
+                    }
+                    classifier = trainableSuperpixelSegmentation.getClassifier();
+                    IJ.log("Classifier trained");
+                    IJ.log("Applying classifier");
+                    resultImage = trainableSuperpixelSegmentation.applyClassifier();
+                    overlay = 2;
+                    toggleOverlay();
+                    IJ.log("Classifier applied");
+                    win.enableOverlayCheckbox();
+                    win.setButtonsEnabled(2);
                 }
+            };
+            trainingTask = newTask;
+            newTask.start();
+            win.trainClassButton.setText("Train classifier");
+        }else if(command.equals("STOP")){
+            try{
+
+                IJ.log("Training was stopped by the user!");
+                win.setButtonsEnabled(0);
+                win.trainClassButton.setText("Train classifier");
+
+                if(null != trainingTask)
+                    trainingTask.interrupt();
+                else
+                    IJ.log("Error: interrupting training failed becaused the thread is null!");
+
+            }catch(Exception ex){
+                ex.printStackTrace();
             }
         }
-        trainableSuperpixelSegmentation.setClasses(classes);
-        if(calculateFeatures) {
-            IJ.log("Calculating region features");
-            trainableSuperpixelSegmentation.calculateRegionFeatures();
-            calculateFeatures = false;
-        }
-        Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
-        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-        int numFeatures = unlabeled.numAttributes()-1;
-        for(int i=0;i<numFeatures;++i){
-            attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
-        }
-        attributes.add(new Attribute("Class",classes));
-        Instances trainingData = new Instances("training data",attributes,0);
-        // Fill training dataset with the feature vectors of the corresponding
-        // regions given by classRegions
-        for(int i=0;i<tags.size();++i){ //For each class in classRegions
-            for(int j=0;j<tags.get(i).length;++j){
-                Instance inst = new DenseInstance(numFeatures+1);
-                for(int k=0;k<numFeatures;++k){
-                    inst.setValue(k,unlabeled.get(tags.get(i)[j]-1).value(k));
-                }
-                inst.setValue(numFeatures,i); // set class value
-                trainingData.add(inst);
-            }
-        }
-        trainingData.setClassIndex(numFeatures); // set class index
-        try {
-            if (trainingDataLoaded) {
-                IJ.log("Merging previously loaded data -"+loadedTrainingData.numInstances()+" instances- with selected regions -"+trainingData.numInstances()+" instances-");
-                trainingData = merge(trainingData, loadedTrainingData);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-            IJ.log("Error when merging loaded training data selected data");
-        }
-        IJ.log("Training classifier");
-        trainableSuperpixelSegmentation.setTrainingData(trainingData);
-        if (!trainableSuperpixelSegmentation.trainClassifier()) {
-            IJ.error("Error when training classifier");
-        }
-        classifier = trainableSuperpixelSegmentation.getClassifier();
-        IJ.log("Classifier trained");
-        IJ.log("Applying classifier");
-        resultImage = trainableSuperpixelSegmentation.applyClassifier();
-        overlay = 2;
-        toggleOverlay();
-        IJ.log("Classifier applied");
-        win.enableOverlayCheckbox();
-        win.setButtonsEnabled(2);
     }
+
 
     /**
      * Apply classifier to loaded image and corresponding superpixel image
