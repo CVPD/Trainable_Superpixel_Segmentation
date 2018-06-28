@@ -704,6 +704,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 if(loadedTrainingData==null) {
                     loadedTrainingData = data;
                 }else {
+                    IJ.log("Merging previously loaded data -"+loadedTrainingData.numInstances()+" instances- with new data -"+data.numInstances()+" instances-");
                     loadedTrainingData = merge(loadedTrainingData,data);
                 }
                 trainingDataLoaded = true;
@@ -807,8 +808,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         trainingData.setClassIndex(numFeatures); // set class index
         try {
             if (trainingDataLoaded) {
+                IJ.log("Merging previously loaded data -"+loadedTrainingData.numInstances()+" instances- with selected regions -"+trainingData.numInstances()+" instances-");
                 trainingData = merge(trainingData, loadedTrainingData);
-                IJ.log("Merged selected data with loaded data");
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -1319,8 +1320,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             trainingData.setClassIndex(numFeatures); // set class index
             try {
                 if (trainingDataLoaded) {
+                    IJ.log("Merging previously loaded data -"+loadedTrainingData.numInstances()+" instances- with selected regions -"+trainingData.numInstances()+" instances-");
                     trainingData = merge(trainingData,loadedTrainingData);
-                    IJ.log("Merged selected data with loaded data");
                 }
             }catch (Exception e){
                 e.printStackTrace();
