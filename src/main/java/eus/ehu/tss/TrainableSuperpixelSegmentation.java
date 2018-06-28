@@ -102,9 +102,6 @@ public class TrainableSuperpixelSegmentation {
     public boolean trainClassifier(ArrayList<int[]> classRegions){
     	// read attributes from unlabeled data
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-        if(unlabeled==null){
-            calculateRegionFeatures();
-        }
         int numFeatures = unlabeled.numAttributes()-1;
         for(int i=0;i<numFeatures;++i){
             attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
@@ -202,7 +199,7 @@ public class TrainableSuperpixelSegmentation {
             ImageProcessor ip = stackLabels.getProcessor(slice);
             for (int x = 0; x < width; ++x) {
                 for (int y = 0; y < height; ++y) {
-                    int index = (int) ip.getf(x, y);
+                    int index = ip.getPixel(x, y);
                     if (index == 0) { //edge pixel
                         tags[x + y * width] = index;
                     } else {
@@ -270,7 +267,7 @@ public class TrainableSuperpixelSegmentation {
                 ImageProcessor ip = stackLabels.getProcessor(slice);
                 for (int x = 0; x < width; ++x) {
                     for (int y = 0; y < height; ++y) {
-                        int index = (int) ip.getf(x, y);
+                        int index = ip.getPixel(x, y);
                         if (index == 0) { //edge pixel
                             tags[x + y * width] = index;
                         } else {
