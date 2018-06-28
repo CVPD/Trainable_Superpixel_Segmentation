@@ -852,6 +852,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 if(null != trainingTask) {
                     trainingTask.interrupt();
                     trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage, supImage, features, classifier, classes);
+                    trainableSuperpixelSegmentation.setClassifierTrained(false);
+                    calculateFeatures = true;
                 }else {
                     IJ.log("Error: interrupting training failed becaused the thread is null!");
                 }

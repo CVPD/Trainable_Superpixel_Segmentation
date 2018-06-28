@@ -12,14 +12,10 @@ import java.util.ArrayList;
 
 public class TestColorSuperpixelSegmentation {
     public static void main(final String[] args){
-        ImagePlus inputImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/histogram-matched-TMA/TMA-01.png" ).getFile() );
+        ImagePlus inputImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/TMA3d.tif" ).getFile() );
         inputImage.show();
-        ImagePlus labelImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-01.zip").getFile() );
+        ImagePlus labelImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/TMA-Segmentation-16-bit3d.tif").getFile() );
         labelImage.show();
-        ImagePlus gt = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/groundtruth/groundtruth-01.png").getFile() );
-        gt.show();
-        ImagePlus testImage = IJ.openImage( TestSuperpixelSegmentation.class.getResource("/eval/histogram-matched-TMA/TMA-09.png").getFile());
-        ImagePlus labelTest = IJ.openImage( TestSuperpixelSegmentation.class.getResource( "/eval/superpixels/SLIC-09.zip").getFile() );
 
 
         // Use all features
@@ -37,26 +33,10 @@ public class TestColorSuperpixelSegmentation {
 
         // Define classifier
         RandomForest exampleClassifier = new RandomForest();
-        TrainableSuperpixelSegmentation tss  = new TrainableSuperpixelSegmentation();
-        //System.out.println(test.getFeaturesByRegion());
-        Instances training = RegionColorFeatures.calculateLabeledColorFeatures(inputImage,labelImage,gt,selectedFeatures,classes);
-        // Train classifier using those labels
-        J48 classifier = new J48();
-        try {
-            classifier.buildClassifier(training);
-            tss.setClassifier(classifier);
-            tss.setClassifierTrained(true);
-            tss.setSelectedFeatures(selectedFeatures);
-            tss.setClasses(classes);
-            tss.setInputImage(testImage);
-            tss.setLabelImage(labelTest);
-            tss.calculateRegionFeatures();
-            ImagePlus result = tss.applyClassifier();
-            result.show();
-            IJ.save(result,"D:/Documents");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        TrainableSuperpixelSegmentation tss  = new TrainableSuperpixelSegmentation(inputImage,labelImage,selectedFeatures,exampleClassifier,classes);
+        tss.calculateRegionFeatures();
+        ImagePlus result = tss.applyClassifier();
+
 
     }
 }

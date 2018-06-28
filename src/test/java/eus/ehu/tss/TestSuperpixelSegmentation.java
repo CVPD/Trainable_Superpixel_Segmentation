@@ -42,7 +42,7 @@ public class TestSuperpixelSegmentation{
         tags.add(background);
         tags.add(rice);
 
-        test.calculateRegionFeatures();
+        //test.calculateRegionFeatures();
         // Train classifier using those labels
         if(test.trainClassifier(tags)){
             ImagePlus result = test.applyClassifier();
