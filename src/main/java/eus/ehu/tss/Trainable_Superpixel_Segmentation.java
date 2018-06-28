@@ -113,8 +113,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private String inputTitle;
     private boolean classBalance = true;
     private boolean trainingDataLoaded = false;
-    private boolean loadedDataMerged = false;
-    private boolean addTrainingData = false;
 
     private class CustomWindow extends StackWindow
     {
@@ -704,7 +702,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
                 if(trainableSuperpixelSegmentation.getTrainingData()!=null){
                     data = merge(trainableSuperpixelSegmentation.getTrainingData(),data);
-                    loadedDataMerged = true;
                     IJ.log("Data merged with previous training data");
                 }
                 trainableSuperpixelSegmentation.setTrainingData(data);
@@ -786,42 +783,38 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             trainableSuperpixelSegmentation.calculateRegionFeatures();
             calculateFeatures = false;
         }
-        if(addTrainingData) {
-            Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
-            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-            int numFeatures = unlabeled.numAttributes() - 1;
-            for (int i = 0; i < numFeatures; ++i) {
-                attributes.add(new Attribute(unlabeled.attribute(i).name(), i));
-            }
-            attributes.add(new Attribute("Class", classes));
-            Instances trainingData = new Instances("training data", attributes, 0);
-            // Fill training dataset with the feature vectors of the corresponding
-            // regions given by classRegions
-            for (int i = 0; i < tags.size(); ++i) { //For each class in classRegions
-                for (int j = 0; j < tags.get(i).length; ++j) {
-                    Instance inst = new DenseInstance(numFeatures + 1);
-                    for (int k = 0; k < numFeatures; ++k) {
-                        inst.setValue(k, unlabeled.get(tags.get(i)[j] - 1).value(k));
-                    }
-                    inst.setValue(numFeatures, i); // set class value
-                    trainingData.add(inst);
-                }
-            }
-            trainingData.setClassIndex(numFeatures); // set class index
-            try {
-                if (trainingDataLoaded && loadedDataMerged == false) {
-                    trainingData = merge(trainingData, trainableSuperpixelSegmentation.getTrainingData());
-                    loadedDataMerged = true;
-                    IJ.log("Merged selected data with loaded data");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                IJ.log("Error when merging loaded training data selected data");
-            }
-            IJ.log("Training classifier");
-            trainableSuperpixelSegmentation.setTrainingData(trainingData);
-            addTrainingData = false;
+        Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        int numFeatures = unlabeled.numAttributes()-1;
+        for(int i=0;i<numFeatures;++i){
+            attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
         }
+        attributes.add(new Attribute("Class",classes));
+        Instances trainingData = new Instances("training data",attributes,0);
+        // Fill training dataset with the feature vectors of the corresponding
+        // regions given by classRegions
+        for(int i=0;i<tags.size();++i){ //For each class in classRegions
+            for(int j=0;j<tags.get(i).length;++j){
+                Instance inst = new DenseInstance(numFeatures+1);
+                for(int k=0;k<numFeatures;++k){
+                    inst.setValue(k,unlabeled.get(tags.get(i)[j]-1).value(k));
+                }
+                inst.setValue(numFeatures,i); // set class value
+                trainingData.add(inst);
+            }
+        }
+        trainingData.setClassIndex(numFeatures); // set class index
+        try {
+            if (trainingDataLoaded) {
+                trainingData = merge(trainingData, trainableSuperpixelSegmentation.getTrainingData());
+                IJ.log("Merged selected data with loaded data");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            IJ.log("Error when merging loaded training data selected data");
+        }
+        IJ.log("Training classifier");
+        trainableSuperpixelSegmentation.setTrainingData(trainingData);
         if (!trainableSuperpixelSegmentation.trainClassifier()) {
             IJ.error("Error when training classifier");
         }
@@ -1292,54 +1285,50 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             trainableSuperpixelSegmentation.calculateRegionFeatures();
             calculateFeatures = false;
         }
-        if(addTrainingData) {
-            if (!trainableSuperpixelSegmentation.isClassifierTrained()) {
-                if (!trainingDataLoaded) {
-                    for (int i = 0; i < tags.size(); ++i) {
-                        if (tags.get(i).length == 0) {
-                            IJ.showMessage("Add at least one region to class " + classes.get(i));
-                            win.setButtonsEnabled(0);
-                            return;
-                        }
+        if(!trainableSuperpixelSegmentation.isClassifierTrained()){
+            if(!trainingDataLoaded) {
+                for (int i = 0; i < tags.size(); ++i) {
+                    if (tags.get(i).length == 0) {
+                        IJ.showMessage("Add at least one region to class " + classes.get(i));
+                        win.setButtonsEnabled(0);
+                        return;
                     }
                 }
-                Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
-                ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-                int numFeatures = unlabeled.numAttributes() - 1;
-                for (int i = 0; i < numFeatures; ++i) {
-                    attributes.add(new Attribute(unlabeled.attribute(i).name(), i));
-                }
-                attributes.add(new Attribute("Class", classes));
-                Instances trainingData = new Instances("training data", attributes, 0);
-                // Fill training dataset with the feature vectors of the corresponding
-                // regions given by classRegions
-                for (int i = 0; i < tags.size(); ++i) { //For each class in classRegions
-                    for (int j = 0; j < tags.get(i).length; ++j) {
-                        Instance inst = new DenseInstance(numFeatures + 1);
-                        for (int k = 0; k < numFeatures; ++k) {
-                            inst.setValue(k, unlabeled.get(tags.get(i)[j] - 1).value(k));
-                        }
-                        inst.setValue(numFeatures, i); // set class value
-                        trainingData.add(inst);
-                    }
-                }
-                trainingData.setClassIndex(numFeatures); // set class index
-                try {
-                    if (trainingDataLoaded && loadedDataMerged == false) {
-                        trainingData = merge(trainingData, trainableSuperpixelSegmentation.getTrainingData());
-                        loadedDataMerged = true;
-                        IJ.log("Merged selected data with loaded data");
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    IJ.log("Error when merging loaded training data selected data");
-                }
-                trainableSuperpixelSegmentation.setTrainingData(trainingData);
             }
-            addTrainingData = false;
-        }
-        if (!trainableSuperpixelSegmentation.trainClassifier()) {
-            IJ.error("Error when training classifier");
+            Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
+            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+            int numFeatures = unlabeled.numAttributes()-1;
+            for(int i=0;i<numFeatures;++i){
+                attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
+            }
+            attributes.add(new Attribute("Class",classes));
+            Instances trainingData = new Instances("training data",attributes,0);
+            // Fill training dataset with the feature vectors of the corresponding
+            // regions given by classRegions
+            for(int i=0;i<tags.size();++i){ //For each class in classRegions
+                for(int j=0;j<tags.get(i).length;++j){
+                    Instance inst = new DenseInstance(numFeatures+1);
+                    for(int k=0;k<numFeatures;++k){
+                        inst.setValue(k,unlabeled.get(tags.get(i)[j]-1).value(k));
+                    }
+                    inst.setValue(numFeatures,i); // set class value
+                    trainingData.add(inst);
+                }
+            }
+            trainingData.setClassIndex(numFeatures); // set class index
+            try {
+                if (trainingDataLoaded) {
+                    trainingData = merge(trainingData, trainableSuperpixelSegmentation.getTrainingData());
+                    IJ.log("Merged selected data with loaded data");
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+                IJ.log("Error when merging loaded training data selected data");
+            }
+            trainableSuperpixelSegmentation.setTrainingData(trainingData);
+            if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                IJ.error("Error when training classifier");
+            }
         }
         ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
         probabilityImage.setTitle(inputTitle+"-prob");
@@ -1458,8 +1447,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 rois.get(i).put(key,selectedLabel.get(key));
             }
         }
-        loadedDataMerged=false;
-        addTrainingData = true;
     }
 
     /**
