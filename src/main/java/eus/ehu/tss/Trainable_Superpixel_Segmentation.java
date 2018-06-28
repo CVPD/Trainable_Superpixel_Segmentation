@@ -837,11 +837,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     IJ.log("Classifier applied");
                     win.enableOverlayCheckbox();
                     win.setButtonsEnabled(2);
+                    win.trainClassButton.setText("Train classifier");
                 }
             };
             trainingTask = newTask;
             newTask.start();
-            win.trainClassButton.setText("Train classifier");
         }else if(command.equals("STOP")){
             try{
 
@@ -849,10 +849,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 win.setButtonsEnabled(0);
                 win.trainClassButton.setText("Train classifier");
 
-                if(null != trainingTask)
+                if(null != trainingTask) {
                     trainingTask.interrupt();
-                else
+                    trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage, supImage, features, classifier, classes);
+                }else {
                     IJ.log("Error: interrupting training failed becaused the thread is null!");
+                }
 
             }catch(Exception ex){
                 ex.printStackTrace();
@@ -1062,7 +1064,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     calculateFeatures = false;
                 }
                 if (!trainableSuperpixelSegmentation.isClassifierTrained()) {
-                    runStopTraining("Run");
+                    runStopTraining("Train classifier");
                 } else {
                     resultImage = trainableSuperpixelSegmentation.applyClassifier();
                     createResult();
@@ -1374,7 +1376,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             trainableSuperpixelSegmentation.setTrainingData(trainingData);
             if (!trainableSuperpixelSegmentation.trainClassifier()) {
                 IJ.error("Error when training classifier");
+                win.setButtonsEnabled(0);
+                return;
             }
+            classifier = trainableSuperpixelSegmentation.getClassifier();
         }
         ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
         probabilityImage.setTitle(inputTitle+"-prob");
