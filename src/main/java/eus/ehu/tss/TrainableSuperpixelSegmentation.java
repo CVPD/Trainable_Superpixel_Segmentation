@@ -102,6 +102,9 @@ public class TrainableSuperpixelSegmentation {
     public boolean trainClassifier(ArrayList<int[]> classRegions){
     	// read attributes from unlabeled data
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        if(unlabeled==null){
+            calculateRegionFeatures();
+        }
         int numFeatures = unlabeled.numAttributes()-1;
         for(int i=0;i<numFeatures;++i){
             attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
@@ -179,6 +182,9 @@ public class TrainableSuperpixelSegmentation {
      */
     public ImagePlus applyClassifier(){
         try {
+            if(unlabeled==null){
+                calculateRegionFeatures();
+            }
             labeled = new Instances(unlabeled); //Copy of unlabeled to label
             for (int i = 0; i < unlabeled.numInstances(); ++i) {
                 Instance ins = unlabeled.instance(i);
@@ -242,6 +248,9 @@ public class TrainableSuperpixelSegmentation {
      * @return
      */
     public ImagePlus getProbabilityMap(){
+        if(unlabeled==null){
+            calculateRegionFeatures();
+        }
         final int numInstances = unlabeled.numInstances();
         final int numClasses = classes.size();
         final int width = labelImage.getWidth();
