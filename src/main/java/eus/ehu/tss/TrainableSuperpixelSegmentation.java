@@ -205,7 +205,7 @@ public class TrainableSuperpixelSegmentation {
             ImageProcessor ip = stackLabels.getProcessor(slice);
             for (int x = 0; x < width; ++x) {
                 for (int y = 0; y < height; ++y) {
-                    int index = ip.getPixel(x, y);
+                    int index = (int) ip.getPixelValue(x, y);
                     if (index == 0) { //edge pixel
                         tags[x + y * width] = index;
                     } else {
@@ -276,7 +276,7 @@ public class TrainableSuperpixelSegmentation {
                 ImageProcessor ip = stackLabels.getProcessor(slice);
                 for (int x = 0; x < width; ++x) {
                     for (int y = 0; y < height; ++y) {
-                        int index = ip.getPixel(x, y);
+                        int index = (int) ip.getPixelValue(x, y);
                         if (index == 0) { //edge pixel
                             tags[x + y * width] = index;
                         } else {
