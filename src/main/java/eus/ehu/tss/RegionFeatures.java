@@ -398,7 +398,7 @@ public class RegionFeatures {
             for( int x = 0; x<width; x++ )
                 for( int y = 0; y<height; y++ )
                 {
-                    int labelValue = (int) labelsIP.getf( x, y );
+                    int labelValue = (int) labelsIP.getPixelValue( x, y );
                     int[] coord = new int[3];
                     coord[0] = x; coord[1] = y; coord[2] = z;
                     result.putIfAbsent(labelValue,coord);
