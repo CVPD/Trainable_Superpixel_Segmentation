@@ -154,6 +154,10 @@ public class TrainableSuperpixelSegmentation {
      */
     public boolean trainClassifier(){
         try {
+            if(trainingData==null){
+                System.out.println("Add training data for training");
+                return false;
+            }
             if(balanceClasses){
                 try {
                     final Resample filter = new Resample();
@@ -184,6 +188,12 @@ public class TrainableSuperpixelSegmentation {
         try {
             if(unlabeled==null){
                 calculateRegionFeatures();
+            }
+            if(!classifierTrained){
+                if(!trainClassifier()){
+                    System.out.println("Error when training classifier");
+                    return null;
+                }
             }
             labeled = new Instances(unlabeled); //Copy of unlabeled to label
             for (int i = 0; i < unlabeled.numInstances(); ++i) {
@@ -228,19 +238,21 @@ public class TrainableSuperpixelSegmentation {
      * @return classified image
      */
     public ImagePlus applyClassifier(ImagePlus inImage, ImagePlus lbImage){
-        if(abstractClassifier==null){
-            System.out.println("Train a classifier first!");
-            return inImage;
-        }else{
-            inputImage = inImage;
-            labelImage = lbImage;
-            if(calculateRegionFeatures()){
-                return applyClassifier();
-            }else {
-                System.out.println("Error when calculating region features");
-                return inImage;
+        if(!classifierTrained){
+            if(!trainClassifier()){
+                System.out.println("Error when training classifier");
+                return null;
             }
         }
+        inputImage = inImage;
+        labelImage = lbImage;
+        if(calculateRegionFeatures()){
+            return applyClassifier();
+        }else {
+            System.out.println("Error when calculating region features");
+            return inImage;
+        }
+
     }
 
     /**
@@ -250,6 +262,12 @@ public class TrainableSuperpixelSegmentation {
     public ImagePlus getProbabilityMap(){
         if(unlabeled==null){
             calculateRegionFeatures();
+        }
+        if(!classifierTrained){
+            if(!trainClassifier()){
+                System.out.println("Error when training classifier");
+                return null;
+            }
         }
         final int numInstances = unlabeled.numInstances();
         final int numClasses = classes.size();
