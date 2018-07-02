@@ -217,10 +217,13 @@ public class TrainableSuperpixelSegmentation {
                 for (int y = 0; y < height; ++y) {
                     int index = (int) ip.getPixelValue(x, y);
                     if (index == 0) { //edge pixel
-                        tags[x + y * width] = index;
+                        tags[x + y * width] = 0;
                     } else {
-                        Instance instance = labeled.get(index - 1);
-                        tags[x + y * width] = (float) instance.classValue();
+                        if(slice!=1) {
+                            tags[x + y * width] = (float) labeled.get(index).classValue();
+                        }else{
+                            tags[x + y * width] = (float) labeled.get(index - 1).classValue();
+                        }
                     }
                 }
             }
