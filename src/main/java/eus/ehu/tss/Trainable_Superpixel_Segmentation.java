@@ -60,11 +60,17 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Checkbox;
 import java.awt.BorderLayout;
-import java.awt.event.ActionListener;
+
+import java.awt.event.AdjustmentListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -115,6 +121,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private boolean trainingDataLoaded = false;
     private Instances loadedTrainingData = null;
     private Thread trainingTask = null;
+    private int currentSlice = 1;
 
     private class CustomWindow extends StackWindow
     {
@@ -473,6 +480,81 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             saveInstButton.addActionListener(listener);
             loadTrainingDataButton.addActionListener(listener);
 
+            if(null != sliceSelector) {
+                // set slice selector to the correct number
+                sliceSelector.setValue(imp.getSlice());
+                // add adjustment listener to the scroll bar
+                sliceSelector.addAdjustmentListener(new AdjustmentListener() {
+
+                    public void adjustmentValueChanged(final AdjustmentEvent e) {
+                        exec.submit(new Runnable() {
+                            public void run() {
+                                if (e.getSource() == sliceSelector) {
+                                    inputImage.killRoi();
+                                    currentSlice = inputImage.getCurrentSlice();
+                                    updateOverlay();
+                                }
+
+                            }
+                        });
+
+                    }
+                });
+                addMouseWheelListener(new MouseWheelListener() {
+
+                    @Override
+                    public void mouseWheelMoved(final MouseWheelEvent e) {
+
+                        exec.submit(new Runnable() {
+                            public void run()
+                            {
+                                //IJ.log("moving scroll");
+                                inputImage.killRoi();
+                                currentSlice = inputImage.getCurrentSlice();
+                                updateOverlay();
+                            }
+                        });
+
+                    }
+                });
+
+                // key listener to repaint the display image and the traces
+                // when using the keys to scroll the stack
+                KeyListener keyListener = new KeyListener() {
+
+                    @Override
+                    public void keyTyped(KeyEvent e) {}
+
+                    @Override
+                    public void keyReleased(final KeyEvent e) {
+                        exec.submit(new Runnable() {
+                            public void run()
+                            {
+                                if(e.getKeyCode() == KeyEvent.VK_LEFT ||
+                                        e.getKeyCode() == KeyEvent.VK_RIGHT ||
+                                        e.getKeyCode() == KeyEvent.VK_LESS ||
+                                        e.getKeyCode() == KeyEvent.VK_GREATER ||
+                                        e.getKeyCode() == KeyEvent.VK_COMMA ||
+                                        e.getKeyCode() == KeyEvent.VK_PERIOD)
+                                {
+                                    //IJ.log("moving scroll");
+                                    inputImage.killRoi();
+                                    currentSlice = inputImage.getCurrentSlice();
+                                    updateOverlay();
+                                }
+                            }
+                        });
+
+                    }
+
+                    @Override
+                    public void keyPressed(KeyEvent e) {}
+                };
+                // add key listener to the window and the canvas
+                addKeyListener(keyListener);
+                canvas.addKeyListener(keyListener);
+            }
+
             GridBagLayout wingb = new GridBagLayout();
             GridBagConstraints winc = new GridBagConstraints();
             winc.anchor = GridBagConstraints.NORTHWEST;
@@ -485,6 +567,28 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             setMinimumSize(getPreferredSize());
 
 
+        }
+
+        public void updateOverlay(){
+            int slice = inputImage.getCurrentSlice();
+            if(inputImage.getOverlay()==null){
+                return;
+            }
+            ImageRoi roi = null;
+            if(overlay==0&&resultImage!=null){
+                ImagePlus resultImg = resultImage.duplicate();
+                convertTo8bitNoScaling(resultImg);
+                resultImg.getProcessor().setColorModel(overlayLUT);
+                resultImg.getImageStack().setColorModel(overlayLUT);
+                ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
+                roi = new ImageRoi(0, 0, processor);
+                roi.setOpacity(win.overlayOpacity);
+                inputImage.setOverlay(new Overlay(roi));
+            }else{
+                roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
+                roi.setOpacity(win.overlayOpacity);
+                inputImage.setOverlay(new Overlay(roi));
+            }
         }
 
         /**
@@ -1433,6 +1537,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
             }
         }
+        System.out.println(overlay);
     }
 
 
@@ -1472,7 +1577,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param i identifier of class to add tags
      */
     void addExamples(int i){
-
         final Roi r = inputImage.getRoi();
         if(null == r){
             IJ.log("Select a ROI before adding");
@@ -1534,7 +1638,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param roi  FreehandRoi or PointRoi with selected labels
      * @return list of selected labels
      */
-    public static HashMap<Integer,Roi> getSelectedLabels(
+    public HashMap<Integer,Roi> getSelectedLabels(
             final ImagePlus labelImage,
             final Roi roi )
     {
@@ -1545,7 +1649,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         {
             int[] xpoints = roi.getPolygon().xpoints;
             int[] ypoints = roi.getPolygon().ypoints;
-
+            int zpoint = currentSlice;
             // read label values at those positions
             if( labelImage.getImageStackSize() > 1 )
             {
@@ -1554,8 +1658,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 {
                     float value = (float) labelStack.getVoxel(
                             xpoints[ i ],
-                            ypoints[ i ],
-                            ((PointRoi) roi).getPointPosition( i )-1 );
+                            ypoints[ i ],zpoint-1);
                     if(Float.compare( 0f, value ) == 0){
                         IJ.log("Tag with value 0 not added");
                     }
