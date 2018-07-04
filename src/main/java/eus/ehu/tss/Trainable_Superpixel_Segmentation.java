@@ -454,8 +454,29 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             allConstraints.gridx++;
 
             all.add(canvas,allConstraints);
-            allConstraints.gridx++;
+            allConstraints.gridy++;
+            allConstraints.weightx = 0;
+            allConstraints.weighty = 0;
+            if( null != super.sliceSelector )
+            {
+                sliceSelector.setValue( inputImage.getCurrentSlice() );
+                supImage.setSlice( inputImage.getCurrentSlice() );
 
+                all.add( super.sliceSelector, allConstraints );
+                if( null != super.zSelector ) {
+                    all.add(super.zSelector, allConstraints);
+                }
+                if( null != super.tSelector ){
+                    all.add( super.tSelector, allConstraints );
+                }
+                if( null != super.cSelector ){
+                    all.add( super.cSelector, allConstraints );
+                }
+            }
+            allConstraints.gridy--;
+
+
+            allConstraints.gridx++;
             allConstraints.anchor = GridBagConstraints.NORTHEAST;
             allConstraints.weightx = 0;
             allConstraints.weighty = 0;
