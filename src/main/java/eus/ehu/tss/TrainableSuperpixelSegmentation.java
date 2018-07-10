@@ -1,7 +1,9 @@
 package eus.ehu.tss;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.io.SaveDialog;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import weka.classifiers.AbstractClassifier;
@@ -9,7 +11,11 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.converters.ArffSaver;
+import weka.filters.Filter;
+import weka.filters.supervised.instance.Resample;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -26,6 +32,7 @@ public class TrainableSuperpixelSegmentation {
     private Instances trainingData;
     private AbstractClassifier abstractClassifier;
     private boolean classifierTrained = false;
+    private boolean balanceClasses = true;
     ArrayList<String> classes = null;
 
     /**
@@ -95,6 +102,9 @@ public class TrainableSuperpixelSegmentation {
     public boolean trainClassifier(ArrayList<int[]> classRegions){
     	// read attributes from unlabeled data
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        if(unlabeled==null){
+            calculateRegionFeatures();
+        }
         int numFeatures = unlabeled.numAttributes()-1;
         for(int i=0;i<numFeatures;++i){
             attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
@@ -114,6 +124,18 @@ public class TrainableSuperpixelSegmentation {
             }
         }
         trainingData.setClassIndex(numFeatures); // set class index
+        if(balanceClasses){
+            try {
+                final Resample filter = new Resample();
+                filter.setBiasToUniformClass(1.0);
+                filter.setInputFormat(trainingData);
+                filter.setNoReplacement(false);
+                filter.setSampleSizePercent(100);
+                trainingData = Filter.useFilter(trainingData, filter);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
 
         try {
             abstractClassifier.buildClassifier(trainingData);
@@ -132,6 +154,22 @@ public class TrainableSuperpixelSegmentation {
      */
     public boolean trainClassifier(){
         try {
+            if(trainingData==null){
+                System.out.println("Add training data for training");
+                return false;
+            }
+            if(balanceClasses){
+                try {
+                    final Resample filter = new Resample();
+                    filter.setBiasToUniformClass(1.0);
+                    filter.setInputFormat(trainingData);
+                    filter.setNoReplacement(false);
+                    filter.setSampleSizePercent(100);
+                    trainingData = Filter.useFilter(trainingData, filter);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
             abstractClassifier.buildClassifier(trainingData);
             classifierTrained = true;
             return true;
@@ -148,14 +186,25 @@ public class TrainableSuperpixelSegmentation {
      */
     public ImagePlus applyClassifier(){
         try {
+            if(unlabeled==null){
+                calculateRegionFeatures();
+            }
+            if(!classifierTrained){
+                if(!trainClassifier()){
+                    System.out.println("Error when training classifier");
+                    return null;
+                }
+            }
             labeled = new Instances(unlabeled); //Copy of unlabeled to label
             for (int i = 0; i < unlabeled.numInstances(); ++i) {
-                double classLabel = abstractClassifier.classifyInstance(unlabeled.instance(i));
+                Instance ins = unlabeled.instance(i);
+                double classLabel = abstractClassifier.classifyInstance(ins);
                 labeled.instance(i).setClassValue(classLabel);
             }
         } catch (Exception e) {
             System.out.println("Error when applying classifier");
             e.printStackTrace();
+            return null;
         }
         int height = inputImage.getHeight();
         int width = inputImage.getWidth();
@@ -166,12 +215,15 @@ public class TrainableSuperpixelSegmentation {
             ImageProcessor ip = stackLabels.getProcessor(slice);
             for (int x = 0; x < width; ++x) {
                 for (int y = 0; y < height; ++y) {
-                    int index = ip.getPixel(x, y);
+                    int index = (int) ip.getPixelValue(x, y);
                     if (index == 0) { //edge pixel
-                        tags[x + y * width] = index;
+                        tags[x + y * width] = 0;
                     } else {
-                        Instance instance = labeled.get(index - 1);
-                        tags[x + y * width] = (float) instance.classValue();
+                        if(slice!=1) {
+                            tags[x + y * width] = (float) labeled.get(index).classValue();
+                        }else{
+                            tags[x + y * width] = (float) labeled.get(index - 1).classValue();
+                        }
                     }
                 }
             }
@@ -189,19 +241,21 @@ public class TrainableSuperpixelSegmentation {
      * @return classified image
      */
     public ImagePlus applyClassifier(ImagePlus inImage, ImagePlus lbImage){
-        if(abstractClassifier==null){
-            System.out.println("Train a classifier first!");
-            return inImage;
-        }else{
-            inputImage = inImage;
-            labelImage = lbImage;
-            if(calculateRegionFeatures()){
-                return applyClassifier();
-            }else {
-                System.out.println("Error when calculating region features");
-                return inImage;
+        if(!classifierTrained){
+            if(!trainClassifier()){
+                System.out.println("Error when training classifier");
+                return null;
             }
         }
+        inputImage = inImage;
+        labelImage = lbImage;
+        if(calculateRegionFeatures()){
+            return applyClassifier();
+        }else {
+            System.out.println("Error when calculating region features");
+            return inImage;
+        }
+
     }
 
     /**
@@ -209,6 +263,15 @@ public class TrainableSuperpixelSegmentation {
      * @return
      */
     public ImagePlus getProbabilityMap(){
+        if(unlabeled==null){
+            calculateRegionFeatures();
+        }
+        if(!classifierTrained){
+            if(!trainClassifier()){
+                System.out.println("Error when training classifier");
+                return null;
+            }
+        }
         final int numInstances = unlabeled.numInstances();
         final int numClasses = classes.size();
         final int width = labelImage.getWidth();
@@ -234,7 +297,7 @@ public class TrainableSuperpixelSegmentation {
                 ImageProcessor ip = stackLabels.getProcessor(slice);
                 for (int x = 0; x < width; ++x) {
                     for (int y = 0; y < height; ++y) {
-                        int index = ip.getPixel(x, y);
+                        int index = (int) ip.getPixelValue(x, y);
                         if (index == 0) { //edge pixel
                             tags[x + y * width] = index;
                         } else {
@@ -426,6 +489,14 @@ public class TrainableSuperpixelSegmentation {
      */
     public void setUnlabeled(Instances unlabeled) {
         this.unlabeled = unlabeled;
+    }
+
+    /**
+     * Set balancing of classes
+     * @param balanceClasses
+     */
+    public void setBalanceClasses(boolean balanceClasses) {
+        this.balanceClasses = balanceClasses;
     }
 
 

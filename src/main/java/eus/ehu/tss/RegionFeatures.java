@@ -12,9 +12,11 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -122,10 +124,162 @@ public class RegionFeatures {
     		ArrayList<Feature> selectedFeatures,
     		ArrayList<String> classes)
     {
+        ImageStack stack = inputImage.getStack();
+        ImageStack spStack = labelImage.getStack();
+        Instances[] unlabeled = new Instances[inputImage.getNSlices()];
+        for(int l=1;l<inputImage.getNSlices()+1;++l) {
+            ImageProcessor sliceProcessor = stack.getProcessor(l);
+            ImagePlus slice =  new ImagePlus("Slice"+l,sliceProcessor);
+            ImageProcessor spProcessor = spStack.getProcessor(l);
+            ImagePlus spSlice = new ImagePlus("Slice "+l,spProcessor);
+            int progress = 0;
+            long startTime = System.currentTimeMillis();
+            IntensityMeasures calculator = new IntensityMeasures(slice, spSlice);
+            ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
+            IJ.showProgress(progress, selectedFeatures.size());
+            for (Feature selectedFeature : selectedFeatures) {
+                IJ.showStatus("Calculating " + selectedFeature.label);
+                switch (selectedFeature) {
+                    case Max:
+                        results.add(calculator.getMax());
+                        break;
+                    case Min:
+                        results.add(calculator.getMin());
+                        break;
+                    case Mean:
+                        results.add(calculator.getMean());
+                        break;
+                    case Mode:
+                        results.add(calculator.getMode());
+                        break;
+                    case Median:
+                        results.add(calculator.getMedian());
+                        break;
+                    case StdDev:
+                        results.add(calculator.getStdDev());
+                        break;
+                    case Kurtosis:
+                        results.add(calculator.getKurtosis());
+                        break;
+                    case Skewness:
+                        results.add(calculator.getSkewness());
+                        break;
+                    case NeighborsMean:
+                        results.add(calculator.getNeighborsMean());
+                        break;
+                    case NeighborsMedian:
+                        results.add(calculator.getNeighborsMedian());
+                        break;
+                    case NeighborsMode:
+                        results.add(calculator.getNeighborsMode());
+                        break;
+                    case NeighborsSkewness:
+                        results.add(calculator.getNeighborsSkewness());
+                        break;
+                    case NeighborsKurtosis:
+                        results.add(calculator.getNeighborsKurtosis());
+                        break;
+                    case NeighborsStdDev:
+                        results.add(calculator.getNeighborsStdDev());
+                        break;
+                    case NeighborsMax:
+                        results.add(calculator.getNeighborsMax());
+                        break;
+                    case NeighborsMin:
+                        results.add(calculator.getNeighborsMin());
+                        break;
+                }
+                ++progress;
+                IJ.showProgress(progress, selectedFeatures.size());
+            }
+            long elapsedTime = System.currentTimeMillis();
+            long estimatedTime = System.currentTimeMillis() - startTime;
+            IJ.log("        Calculating features took " + estimatedTime + " ms");
+            startTime = System.currentTimeMillis();
+            ResultsTable mergedTable = new ResultsTable();
+            final int numLabels = results.get(0).getCounter();
+            for (int i = 0; i < numLabels; ++i) {
+                mergedTable.incrementCounter();
+                String label = results.get(0).getLabel(i);
+                mergedTable.addLabel(label);
+
+                for (ResultsTable result : results) {
+                    String measure = result.getColumnHeading(0);
+                    double value = result.getValue(measure, i);
+                    if (!Double.isFinite(value) && measure.equals("Skewness")) {
+                        value = 0;
+                    } else if (!Double.isFinite(value) && measure.equals("Kurtosis")) {
+                        value = -1.2;
+                    }
+                    mergedTable.addValue(measure, value);
+                }
+            }
+            elapsedTime = System.currentTimeMillis();
+            estimatedTime = System.currentTimeMillis() - startTime;
+            IJ.log("        Merging features took " + estimatedTime + " ms");
+            startTime = System.currentTimeMillis();
+            //mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
+            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+            int numFeatures = mergedTable.getLastColumn() + 1; //Take into account it starts in index 0
+            for (int i = 0; i < numFeatures; ++i) {
+                attributes.add(new Attribute(mergedTable.getColumnHeading(i), i));
+            }
+            attributes.add(new Attribute("Class", classes));
+            unlabeled[l-1] = new Instances("training data", attributes, 0);
+            for (int i = 0; i < mergedTable.size(); ++i) {
+                //numFeatures is the index, add 1 to get number of attributes needed plus class
+                Instance inst = new DenseInstance(numFeatures + 1);
+                for (int j = 0; j < numFeatures; ++j) {
+                    inst.setValue(j, mergedTable.getValueAsDouble(j, i));
+                }
+                inst.setValue(numFeatures, 0);//set class as 0
+                unlabeled[l-1].add(inst);
+            }
+            unlabeled[l-1].setClassIndex(numFeatures);
+            elapsedTime = System.currentTimeMillis();
+            estimatedTime = System.currentTimeMillis() - startTime;
+            IJ.log("        Setting class label as 0 took " + estimatedTime + " ms");
+            //The number or instances should be the same as the size of the table
+            if (unlabeled[l-1].numInstances() != (mergedTable.size())) {
+                return null;
+            }
+        }
+        Instances fUnlabeled = unlabeled[0];
+        try{
+            for(int l=1;l<unlabeled.length;++l) {
+                fUnlabeled = merge(fUnlabeled,unlabeled[l]);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return fUnlabeled;
+    }
+
+    /**
+     * Calculates the selected features of each region based on an input image, a labeled image and a ground truth image
+     * @param inputImage ImagePlus input image from which the features will be calculated
+     * @param labelImage ImagePlus where the labels are located
+     * @param gtImage ImagePlus that provides Ground Truth
+     * @param selectedFeatures ArrayList of Feature with the features that need to be calculated
+     * @param classes list with the class names to use
+     * @return dataset with the features of each region from the labelImage
+     */
+    public static Instances calculateLabeledRegionFeatures(
+            ImagePlus inputImage,
+            ImagePlus labelImage,
+            ImagePlus gtImage,
+            ArrayList<Feature> selectedFeatures,
+            ArrayList<String> classes)
+    {
+        int progress = 0;
         long startTime = System.currentTimeMillis();
+        HashMap<Integer, int[]> labelCoord = calculateLabelCoordinates(labelImage);
+        ImageStack gtStack = gtImage.getImageStack();
         IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
         ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
+        IJ.showProgress(progress,selectedFeatures.size());
         for (Feature selectedFeature : selectedFeatures) {
+            IJ.showStatus("Calculating "+selectedFeature.label);
             switch (selectedFeature) {
                 case Max:
                     results.add( calculator.getMax() );
@@ -176,6 +330,8 @@ public class RegionFeatures {
                     results.add(calculator.getNeighborsMin());
                     break;
             }
+            ++progress;
+            IJ.showProgress(progress,selectedFeatures.size());
         }
         long elapsedTime = System.currentTimeMillis();
         long estimatedTime = System.currentTimeMillis() - startTime;
@@ -211,123 +367,6 @@ public class RegionFeatures {
             attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
         }
         attributes.add(new Attribute("Class", classes));
-        Instances unlabeled = new Instances("training data",attributes,0);
-        for(int i=0;i<mergedTable.size();++i){
-            //numFeatures is the index, add 1 to get number of attributes needed plus class
-            Instance inst = new DenseInstance(numFeatures+1);
-            for(int j=0;j<numFeatures;++j){
-                inst.setValue(j,mergedTable.getValueAsDouble(j,i));
-            }
-            inst.setValue( numFeatures, 0 );//set class as 0
-            unlabeled.add(inst);
-        }
-        unlabeled.setClassIndex( numFeatures );
-        elapsedTime = System.currentTimeMillis();
-        estimatedTime = System.currentTimeMillis() - startTime;
-        IJ.log( "        Setting class label as 0 took " + estimatedTime + " ms");
-        startTime = System.currentTimeMillis();
-        //The number or instances should be the same as the size of the table
-        if(unlabeled.numInstances()!=(mergedTable.size())){
-            return null;
-        }else{
-            return unlabeled;
-        }
-    }
-
-    /**
-     * Calculates the selected features of each region based on an input image, a labeled image and a ground truth image
-     * @param inputImage ImagePlus input image from which the features will be calculated
-     * @param labelImage ImagePlus where the labels are located
-     * @param gtImage ImagePlus that provides Ground Truth
-     * @param selectedFeatures ArrayList of Feature with the features that need to be calculated
-     * @param classes list with the class names to use
-     * @return dataset with the features of each region from the labelImage
-     */
-    public static Instances calculateLabeledRegionFeatures(
-            ImagePlus inputImage,
-            ImagePlus labelImage,
-            ImagePlus gtImage,
-            ArrayList<Feature> selectedFeatures,
-            ArrayList<String> classes)
-    {
-        HashMap<Integer, int[]> labelCoord = calculateLabelCoordinates(labelImage);
-        ImageStack gtStack = gtImage.getImageStack();
-        IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
-        ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
-        for (Feature selectedFeature : selectedFeatures) {
-            switch (selectedFeature) {
-                case Max:
-                    results.add( calculator.getMax() );
-                    break;
-                case Min:
-                    results.add( calculator.getMin() );
-                    break;
-                case Mean:
-                    results.add( calculator.getMean() );
-                    break;
-                case Mode:
-                    results.add( calculator.getMode() );
-                    break;
-                case Median:
-                    results.add( calculator.getMedian() );
-                    break;
-                case StdDev:
-                    results.add( calculator.getStdDev() );
-                    break;
-                case Kurtosis:
-                    results.add( calculator.getKurtosis() );
-                    break;
-                case Skewness:
-                    results.add( calculator.getSkewness() );
-                    break;
-                case NeighborsMean:
-                    results.add(calculator.getNeighborsMean());
-                    break;
-                case NeighborsMedian:
-                    results.add(calculator.getNeighborsMedian());
-                    break;
-                case NeighborsMode:
-                    results.add(calculator.getNeighborsMode());
-                    break;
-                case NeighborsSkewness:
-                    results.add(calculator.getNeighborsSkewness());
-                    break;
-                case NeighborsKurtosis:
-                    results.add(calculator.getNeighborsKurtosis());
-                    break;
-                case NeighborsStdDev:
-                    results.add(calculator.getNeighborsStdDev());
-                    break;
-                case NeighborsMax:
-                    results.add(calculator.getNeighborsMax());
-                    break;
-                case NeighborsMin:
-                    results.add(calculator.getNeighborsMin());
-                    break;
-            }
-        }
-
-        ResultsTable mergedTable = new ResultsTable();
-        final int numLabels = results.get( 0 ).getCounter();
-        for(int i=0; i < numLabels; ++i)
-        {
-            mergedTable.incrementCounter();
-            String label = results.get( 0 ).getLabel( i );
-            mergedTable.addLabel(label);
-
-            for (ResultsTable result : results) {
-                String measure = result.getColumnHeading(0);
-                double value = result.getValue(measure, i);
-                mergedTable.addValue(measure, value);
-            }
-        }
-        //mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
-        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-        int numFeatures = mergedTable.getLastColumn()+1; //Take into account it starts in index 0
-        for(int i=0;i<numFeatures;++i){
-            attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
-        }
-        attributes.add(new Attribute("Class", classes));
         Instances labeled = new Instances("training data",attributes,0);
         for(int i=0;i<mergedTable.size();++i){
             //numFeatures is the index, add 1 to get number of attributes needed plus class
@@ -342,6 +381,9 @@ public class RegionFeatures {
             labeled.add(inst);
         }
         labeled.setClassIndex( numFeatures );
+        elapsedTime = System.currentTimeMillis();
+        estimatedTime = System.currentTimeMillis() - startTime;
+        IJ.log( "        Setting class label as 0 took " + estimatedTime + " ms");
         //The number or instances should be the same as the size of the table
         if(labeled.numInstances()!=(mergedTable.size())){
             return null;
@@ -372,7 +414,7 @@ public class RegionFeatures {
             for( int x = 0; x<width; x++ )
                 for( int y = 0; y<height; y++ )
                 {
-                    int labelValue = (int) labelsIP.getf( x, y );
+                    int labelValue = (int) labelsIP.getPixelValue( x, y );
                     int[] coord = new int[3];
                     coord[0] = x; coord[1] = y; coord[2] = z;
                     result.putIfAbsent(labelValue,coord);
@@ -382,4 +424,32 @@ public class RegionFeatures {
     }
 
 
+    public static Instances merge(Instances data1, Instances data2) throws Exception {
+        int asize = data1.numAttributes();
+        boolean[] strings_pos = new boolean[asize];
+
+        for(int i = 0; i < asize; ++i) {
+            Attribute att = data1.attribute(i);
+            strings_pos[i] = att.type() == 2 || att.type() == 1;
+        }
+
+        Instances dest = new Instances(data1);
+        dest.setRelationName(data1.relationName() + "+" + data2.relationName());
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource(data2);
+        Instances instances = source.getStructure();
+        Instance instance = null;
+
+        while(source.hasMoreElements(instances)) {
+            instance = source.nextElement(instances);
+            dest.add(instance);
+
+            for(int i = 0; i < asize; ++i) {
+                if(strings_pos[i]) {
+                    dest.instance(dest.numInstances() - 1).setValue(i, instance.stringValue(i));
+                }
+            }
+        }
+
+        return dest;
+    }
 }
