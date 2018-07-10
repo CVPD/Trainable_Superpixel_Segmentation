@@ -1076,7 +1076,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             win.setButtonsEnabled(0);
             return;
         }
-
         SaveDialog sd = new SaveDialog("Save model as...",inputImage.getShortTitle()+"-classifier",".model");
         if(sd.getFileName()==null){
             win.setButtonsEnabled(0);
