@@ -2,8 +2,10 @@ package eus.ehu.tss;
 
 
 import ij.ImagePlus;
+import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
 import inra.ijpb.label.LabelImages;
+import inra.ijpb.measure.ResultsBuilder;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -69,6 +71,24 @@ public class Utils {
                     coord[0] = x; coord[1] = y; coord[2] = z;
                     result.putIfAbsent(labelValue,coord);
                 }
+        }
+        return result;
+    }
+
+    /**
+     * Merge two Results Tables assuming both have the same columns
+     * @param rs1
+     * @param rs2
+     * @return resulting resultstable
+     */
+    public static ResultsTable mergeResultsTables(ResultsTable rs1, ResultsTable rs2){
+        ResultsTable result = (ResultsTable) rs1.clone();
+        for(int i=0;i<rs2.getCounter();++i){
+            result.incrementCounter();
+            result.addLabel(rs2.getLabel(i));
+            for(int j=0;j<rs2.getLastColumn();++j){
+                result.addValue(j,rs2.getValueAsDouble(j,i));
+            }
         }
         return result;
     }
