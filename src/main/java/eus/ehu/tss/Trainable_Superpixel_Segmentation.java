@@ -831,7 +831,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     loadedTrainingData = data;
                 }else {
                     IJ.log("Merging previously loaded data -"+loadedTrainingData.numInstances()+" instances- with new data -"+data.numInstances()+" instances-");
-                    loadedTrainingData = merge(loadedTrainingData,data);
+                    loadedTrainingData = eus.ehu.tss.Utils.merge(loadedTrainingData,data);
                 }
                 trainingDataLoaded = true;
                 IJ.log("Data loaded");
@@ -942,7 +942,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     try {
                         if (trainingDataLoaded) {
                             IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
-                            trainingData = merge(trainingData, loadedTrainingData);
+                            trainingData = eus.ehu.tss.Utils.merge(trainingData, loadedTrainingData);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -1493,7 +1493,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             try {
                 if (trainingDataLoaded) {
                     IJ.log("Merging previously loaded data -"+loadedTrainingData.numInstances()+" instances- with selected regions -"+trainingData.numInstances()+" instances-");
-                    trainingData = merge(trainingData,loadedTrainingData);
+                    trainingData = eus.ehu.tss.Utils.merge(trainingData,loadedTrainingData);
                 }
             }catch (Exception e){
                 e.printStackTrace();
@@ -1811,35 +1811,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         System.setProperty("plugins.dir", pluginsDir);
         IJ.runPlugIn(clazz.getName(),"");
 
-    }
-
-    public static Instances merge(Instances data1, Instances data2) throws Exception {
-        int asize = data1.numAttributes();
-        boolean[] strings_pos = new boolean[asize];
-
-        for(int i = 0; i < asize; ++i) {
-            Attribute att = data1.attribute(i);
-            strings_pos[i] = att.type() == 2 || att.type() == 1;
-        }
-
-        Instances dest = new Instances(data1);
-        dest.setRelationName(data1.relationName() + "+" + data2.relationName());
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource(data2);
-        Instances instances = source.getStructure();
-        Instance instance = null;
-
-        while(source.hasMoreElements(instances)) {
-            instance = source.nextElement(instances);
-            dest.add(instance);
-
-            for(int i = 0; i < asize; ++i) {
-                if(strings_pos[i]) {
-                    dest.instance(dest.numInstances() - 1).setValue(i, instance.stringValue(i));
-                }
-            }
-        }
-
-        return dest;
     }
 
 

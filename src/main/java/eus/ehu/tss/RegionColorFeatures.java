@@ -3,6 +3,7 @@ package eus.ehu.tss;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.measure.ResultsTable;
 import ij.plugin.ChannelSplitter;
 import ij.process.ColorSpaceConverter;
 import ij.process.ImageProcessor;
@@ -12,6 +13,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -54,6 +56,7 @@ public class RegionColorFeatures {
             }
         };
     }
+
 
     /**
      * Creates Instances object based on the features of each color channel after converting the image to Lab
@@ -148,7 +151,7 @@ public class RegionColorFeatures {
         Instances fUnlabeled = unlabeled[0];
         try{
             for(int l=1;l<unlabeled.length;++l) {
-                fUnlabeled = merge(fUnlabeled,unlabeled[l]);
+                fUnlabeled = Utils.merge(fUnlabeled,unlabeled[l]);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -242,36 +245,5 @@ public class RegionColorFeatures {
             labeled.setClassIndex(numAttributes);
             return labeled;
         }
-    }
-
-
-
-    public static Instances merge(Instances data1, Instances data2) throws Exception {
-        int asize = data1.numAttributes();
-        boolean[] strings_pos = new boolean[asize];
-
-        for(int i = 0; i < asize; ++i) {
-            Attribute att = data1.attribute(i);
-            strings_pos[i] = att.type() == 2 || att.type() == 1;
-        }
-
-        Instances dest = new Instances(data1);
-        dest.setRelationName(data1.relationName() + "+" + data2.relationName());
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource(data2);
-        Instances instances = source.getStructure();
-        Instance instance = null;
-
-        while(source.hasMoreElements(instances)) {
-            instance = source.nextElement(instances);
-            dest.add(instance);
-
-            for(int i = 0; i < asize; ++i) {
-                if(strings_pos[i]) {
-                    dest.instance(dest.numInstances() - 1).setValue(i, instance.stringValue(i));
-                }
-            }
-        }
-
-        return dest;
     }
 }

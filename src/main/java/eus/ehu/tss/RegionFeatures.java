@@ -8,6 +8,7 @@ import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
 import inra.ijpb.label.LabelImages;
 import inra.ijpb.measure.IntensityMeasures;
+import inra.ijpb.measure.ResultsBuilder;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -108,6 +109,118 @@ public class RegionFeatures {
         }
 
     };
+
+    public static ResultsTable calculateFeaturesTable(
+            ImagePlus inputImage,
+            ImagePlus labelImage,
+            ArrayList<Feature> selectedFeatures,
+            ArrayList<String> classes)
+    {
+        ResultsTable[] resultsTables = new ResultsTable[inputImage.getNSlices()];
+        ImageStack stack = inputImage.getStack();
+        ImageStack spStack = labelImage.getStack();
+        Instances[] unlabeled = new Instances[inputImage.getNSlices()];
+        for(int l=1;l<inputImage.getNSlices()+1;++l) {
+            ImageProcessor sliceProcessor = stack.getProcessor(l);
+            ImagePlus slice = new ImagePlus("Slice" + l, sliceProcessor);
+            ImageProcessor spProcessor = spStack.getProcessor(l);
+            ImagePlus spSlice = new ImagePlus("Slice " + l, spProcessor);
+            int progress = 0;
+            long startTime = System.currentTimeMillis();
+            IntensityMeasures calculator = new IntensityMeasures(slice, spSlice);
+            ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
+            IJ.showProgress(progress, selectedFeatures.size());
+            for (Feature selectedFeature : selectedFeatures) {
+                IJ.showStatus("Calculating " + selectedFeature.label);
+                switch (selectedFeature) {
+                    case Max:
+                        results.add(calculator.getMax());
+                        break;
+                    case Min:
+                        results.add(calculator.getMin());
+                        break;
+                    case Mean:
+                        results.add(calculator.getMean());
+                        break;
+                    case Mode:
+                        results.add(calculator.getMode());
+                        break;
+                    case Median:
+                        results.add(calculator.getMedian());
+                        break;
+                    case StdDev:
+                        results.add(calculator.getStdDev());
+                        break;
+                    case Kurtosis:
+                        results.add(calculator.getKurtosis());
+                        break;
+                    case Skewness:
+                        results.add(calculator.getSkewness());
+                        break;
+                    case NeighborsMean:
+                        results.add(calculator.getNeighborsMean());
+                        break;
+                    case NeighborsMedian:
+                        results.add(calculator.getNeighborsMedian());
+                        break;
+                    case NeighborsMode:
+                        results.add(calculator.getNeighborsMode());
+                        break;
+                    case NeighborsSkewness:
+                        results.add(calculator.getNeighborsSkewness());
+                        break;
+                    case NeighborsKurtosis:
+                        results.add(calculator.getNeighborsKurtosis());
+                        break;
+                    case NeighborsStdDev:
+                        results.add(calculator.getNeighborsStdDev());
+                        break;
+                    case NeighborsMax:
+                        results.add(calculator.getNeighborsMax());
+                        break;
+                    case NeighborsMin:
+                        results.add(calculator.getNeighborsMin());
+                        break;
+                }
+                ++progress;
+                IJ.showProgress(progress, selectedFeatures.size());
+            }
+            long elapsedTime = System.currentTimeMillis();
+            long estimatedTime = System.currentTimeMillis() - startTime;
+            IJ.log("        Calculating features took " + estimatedTime + " ms");
+            startTime = System.currentTimeMillis();
+            ResultsTable mergedTable = new ResultsTable();
+            final int numLabels = results.get(0).getCounter();
+            for (int i = 0; i < numLabels; ++i) {
+                mergedTable.incrementCounter();
+                String label = results.get(0).getLabel(i);
+                mergedTable.addLabel(label);
+
+                for (ResultsTable result : results) {
+                    String measure = result.getColumnHeading(0);
+                    double value = result.getValue(measure, i);
+                    if (!Double.isFinite(value) && measure.equals("Skewness")) {
+                        value = 0;
+                    } else if (!Double.isFinite(value) && measure.equals("Kurtosis")) {
+                        value = -1.2;
+                    }
+                    mergedTable.addValue(measure, value);
+                }
+            }
+            elapsedTime = System.currentTimeMillis();
+            estimatedTime = System.currentTimeMillis() - startTime;
+            IJ.log("        Merging features took " + estimatedTime + " ms");
+            resultsTables[l-1]=mergedTable;
+        }
+        ResultsBuilder rb = new ResultsBuilder(resultsTables[0]);
+        resultsTables[0].show("Slice 0");
+        for (int i=1;i<inputImage.getNSlices();++i){
+            rb = rb.addResult(resultsTables[i]);
+            resultsTables[i].show("Slice "+i);
+        }
+        rb.getResultsTable().show("MergedTable");
+        return rb.getResultsTable();
+    }
 
 
     /**
@@ -247,7 +360,7 @@ public class RegionFeatures {
         Instances fUnlabeled = unlabeled[0];
         try{
             for(int l=1;l<unlabeled.length;++l) {
-                fUnlabeled = merge(fUnlabeled,unlabeled[l]);
+                fUnlabeled = Utils.merge(fUnlabeled,unlabeled[l]);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -273,7 +386,7 @@ public class RegionFeatures {
     {
         int progress = 0;
         long startTime = System.currentTimeMillis();
-        HashMap<Integer, int[]> labelCoord = calculateLabelCoordinates(labelImage);
+        HashMap<Integer, int[]> labelCoord = Utils.calculateLabelCoordinates(labelImage);
         ImageStack gtStack = gtImage.getImageStack();
         IntensityMeasures calculator = new IntensityMeasures(inputImage,labelImage);
         ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
@@ -392,64 +505,6 @@ public class RegionFeatures {
         }
     }
 
-    /**
-     * Calculates coordinates corresponding to labels in label image
-     * @param labelImage input image with labels
-     * @return a HashMap where the key is the label and the values are the coordinates of the label
-     */
-    private static HashMap<Integer,int[]> calculateLabelCoordinates(ImagePlus labelImage){
-        HashMap<Integer, Integer> labelIndices = null;
-        HashMap<Integer, int[]> result = new HashMap<>();
-        final int width = labelImage.getWidth();
-        final int height = labelImage.getHeight();
-
-        int[] labels = LabelImages.findAllLabels(labelImage.getImageStack());
-        int numLabels = labels.length;
-        labelIndices = LabelImages.mapLabelIndices(labels);
-        final int numSlices = labelImage.getImageStackSize();
-        for( int z=1; z <= numSlices; z++ )
-        {
-            final ImageProcessor labelsIP = labelImage.getImageStack().getProcessor( z );
-
-            for( int x = 0; x<width; x++ )
-                for( int y = 0; y<height; y++ )
-                {
-                    int labelValue = (int) labelsIP.getPixelValue( x, y );
-                    int[] coord = new int[3];
-                    coord[0] = x; coord[1] = y; coord[2] = z;
-                    result.putIfAbsent(labelValue,coord);
-                }
-        }
-        return result;
-    }
 
 
-    public static Instances merge(Instances data1, Instances data2) throws Exception {
-        int asize = data1.numAttributes();
-        boolean[] strings_pos = new boolean[asize];
-
-        for(int i = 0; i < asize; ++i) {
-            Attribute att = data1.attribute(i);
-            strings_pos[i] = att.type() == 2 || att.type() == 1;
-        }
-
-        Instances dest = new Instances(data1);
-        dest.setRelationName(data1.relationName() + "+" + data2.relationName());
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource(data2);
-        Instances instances = source.getStructure();
-        Instance instance = null;
-
-        while(source.hasMoreElements(instances)) {
-            instance = source.nextElement(instances);
-            dest.add(instance);
-
-            for(int i = 0; i < asize; ++i) {
-                if(strings_pos[i]) {
-                    dest.instance(dest.numInstances() - 1).setValue(i, instance.stringValue(i));
-                }
-            }
-        }
-
-        return dest;
-    }
 }
