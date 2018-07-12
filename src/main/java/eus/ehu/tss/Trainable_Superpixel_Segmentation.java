@@ -1276,11 +1276,21 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             win.setButtonsEnabled(0);
             return;
         }
+        int numSelectedFeatures =0;
         ArrayList<RegionFeatures.Feature> newFeatures = new ArrayList<RegionFeatures.Feature>();
         for(int i=0;i<RegionFeatures.totalFeatures();++i){
             enabledFeatures[i] = gd.getNextBoolean();
             if(enabledFeatures[i]){
                 newFeatures.add(RegionFeatures.Feature.fromLabel(avFeatures[i]));
+                numSelectedFeatures++;
+            }
+        }
+        if(numSelectedFeatures==0){
+            IJ.error("Select at least one training feature");
+            IJ.log("Default features selected");
+            for(int i=0;i<RegionFeatures.totalFeatures();++i){
+                newFeatures.add(RegionFeatures.Feature.fromLabel(avFeatures[i]));
+                numSelectedFeatures++;
             }
         }
         if(!features.equals(newFeatures)){
