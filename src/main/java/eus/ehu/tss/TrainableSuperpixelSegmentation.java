@@ -4,8 +4,11 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.SaveDialog;
+import ij.measure.ResultsTable;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+import inra.ijpb.label.LabelImages;
+import inra.ijpb.measure.ResultsBuilder;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -31,6 +34,7 @@ public class TrainableSuperpixelSegmentation {
     private Instances labeled;
     private Instances trainingData;
     private AbstractClassifier abstractClassifier;
+    private ResultsTable unlabeledTable=null;
     private boolean classifierTrained = false;
     private boolean balanceClasses = true;
     ArrayList<String> classes = null;
@@ -70,19 +74,19 @@ public class TrainableSuperpixelSegmentation {
      */
     public boolean calculateRegionFeatures(){
         if(inputImage.getType()==ImagePlus.COLOR_RGB){
-            unlabeled = RegionColorFeatures.calculateUnlabeledColorFeatures(
+            unlabeledTable = RegionColorFeatures.calculateFeaturesTable(
                     inputImage,
                     labelImage,
-                    selectedFeatures,
-                    classes);
+                    selectedFeatures);
+            unlabeled = RegionColorFeatures.calculateUnabeledInstances(unlabeledTable,classes);
         }else {
-            unlabeled = RegionFeatures.calculateUnlabeledRegionFeatures(
+            unlabeledTable = RegionFeatures.calculateFeaturesTable(
                     inputImage,
                     labelImage,
-                    selectedFeatures,
-                    classes);
+                    selectedFeatures);
+            unlabeled = RegionFeatures.calculateUnabeledInstances(unlabeledTable,classes);
         }
-        return unlabeled != null;
+        return unlabeledTable != null;
     }
 
 
@@ -100,7 +104,7 @@ public class TrainableSuperpixelSegmentation {
      * @return boolean value false when training has had an error
      */
     public boolean trainClassifier(ArrayList<int[]> classRegions){
-    	// read attributes from unlabeled data
+        // read attributes from unlabeled data
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         if(unlabeled==null){
             calculateRegionFeatures();
@@ -195,43 +199,44 @@ public class TrainableSuperpixelSegmentation {
                     return null;
                 }
             }
-            labeled = new Instances(unlabeled); //Copy of unlabeled to label
-            for (int i = 0; i < unlabeled.numInstances(); ++i) {
-                Instance ins = unlabeled.instance(i);
-                double classLabel = abstractClassifier.classifyInstance(ins);
-                labeled.instance(i).setClassValue(classLabel);
+            int numAttributes = unlabeledTable.getLastColumn();//Check if label is taken into account
+            System.out.println("Numattributes: "+numAttributes);
+            unlabeledTable.show("unlabeled");
+            ResultsBuilder resultsBuilder = new ResultsBuilder(unlabeledTable);
+            ResultsTable classesTable = new ResultsTable();
+            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+            for(int i=0;i<numAttributes;++i){
+                attributes.add(new Attribute(unlabeledTable.getColumnHeading(i),i));
             }
+            attributes.add(new Attribute("Class", classes));
+            labeled = new Instances("Labeled",attributes,0);
+            labeled.setClassIndex(numAttributes);
+            double[] values = new double[unlabeledTable.getCounter()];
+            for(int i=0;i<unlabeledTable.getCounter();++i){
+                Instance ins = new DenseInstance(numAttributes+1);//+1 for class attribute
+                for(int j=0;j<numAttributes;++j){
+                    ins.setValue(j,unlabeledTable.getValueAsDouble(j,i));
+                }
+                ins.setDataset(labeled);
+                double classLabel = abstractClassifier.classifyInstance(ins);
+                values[i]=classLabel;
+                classesTable.incrementCounter();
+                classesTable.addLabel(unlabeledTable.getLabel(i));
+                classesTable.addValue("Class",classLabel);
+                labeled.add(ins);
+            }
+            classesTable.show("classes");
+            resultsBuilder.addResult(classesTable);
+            resultsBuilder.getResultsTable().show("labeled");
+            ImageStack res = LabelImages.applyLut(labelImage.getImageStack(),values);
+            ImagePlus result = new ImagePlus(inputImage.getShortTitle()+"-classified",res);
+            result.show();
+            return result;
         } catch (Exception e) {
             System.out.println("Error when applying classifier");
             e.printStackTrace();
             return null;
         }
-        int height = inputImage.getHeight();
-        int width = inputImage.getWidth();
-        float tags[] = new float[height*width];
-        ImageStack result = new ImageStack(width,height);
-        ImageStack stackLabels = labelImage.getStack();
-        for(int slice = 1; slice <= inputImage.getNSlices(); ++slice) {
-            ImageProcessor ip = stackLabels.getProcessor(slice);
-            for (int x = 0; x < width; ++x) {
-                for (int y = 0; y < height; ++y) {
-                    int index = (int) ip.getPixelValue(x, y);
-                    if (index == 0) { //edge pixel
-                        tags[x + y * width] = 0;
-                    } else {
-                        if(slice!=1) {
-                            tags[x + y * width] = (float) labeled.get(index).classValue();
-                        }else{
-                            tags[x + y * width] = (float) labeled.get(index - 1).classValue();
-                        }
-                    }
-                }
-            }
-            FloatProcessor processor = new FloatProcessor(width, height, tags);
-            result.addSlice(stackLabels.getSliceLabel(slice),processor.duplicate());
-        }
-        resultImage = new ImagePlus(inputImage.getShortTitle()+"-supseg",result);
-        return resultImage;
     }
 
     /**
