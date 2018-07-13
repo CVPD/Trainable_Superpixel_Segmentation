@@ -16,12 +16,14 @@ import ij.gui.PointRoi;
 import ij.gui.Toolbar;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
+import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
 import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
 import ij.process.StackConverter;
 
+import inra.ijpb.label.LabelImages;
 import org.w3c.dom.Attr;
 
 import weka.classifiers.AbstractClassifier;
@@ -39,6 +41,8 @@ import weka.core.SerializationHelper;
 import weka.core.OptionHandler;
 import weka.core.converters.ArffSaver;
 import weka.core.converters.ConverterUtils;
+import weka.filters.Filter;
+import weka.filters.supervised.instance.Resample;
 import weka.gui.GenericObjectEditor;
 import weka.gui.PropertyPanel;
 import weka.gui.visualize.PlotData2D;
@@ -819,7 +823,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 {
                     final Attribute a = attributes.nextElement();
                     String n = a.name();
-                    if(a.name().endsWith("-L")||
+                    if(a.name().endsWith("-l")||
                             a.name().endsWith("-a")||
                             a.name().endsWith("-b")){
                         n = a.name().substring(0,a.name().length()-2);
@@ -859,7 +863,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         classes.add(inputName);
         win.addClass();
         repaintWindow();
-        if(!calculateFeatures){
+        trainableSuperpixelSegmentation.setClasses(classes);
+        /*if(!calculateFeatures){
             Instances features = trainableSuperpixelSegmentation.getUnlabeled();
             Attribute c = features.classAttribute();
             ArrayList<String> newc = new ArrayList<>();
@@ -870,7 +875,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             Attribute newClass = new Attribute("class",newc);
             features.replaceAttributeAt(newClass,c.index());
             trainableSuperpixelSegmentation.setUnlabeled(features);
-        }
+        }*/
     }
 
     /**
@@ -918,7 +923,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         trainableSuperpixelSegmentation.calculateRegionFeatures();
                         calculateFeatures = false;
                     }
-                    Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
+                    /*Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
                     ArrayList<Attribute> attributes = new ArrayList<Attribute>();
                     int numFeatures = unlabeled.numAttributes() - 1;
                     for (int i = 0; i < numFeatures; ++i) {
@@ -939,19 +944,60 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         }
                     }
                     trainingData.setClassIndex(numFeatures); // set class index
+                    */
                     try {
                         if (trainingDataLoaded) {
+                            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+                            ResultsTable unlabeledTable = trainableSuperpixelSegmentation.getUnlabeledTable();
+                            int numFeatures = unlabeledTable.getLastColumn()+ 1;
+                            for(int i=0;i<numFeatures;++i){
+                                attributes.add(new Attribute(unlabeledTable.getColumnHeading(i),i));
+                            }
+                            attributes.add(new Attribute("Class",classes));
+                            Instances trainingData = new Instances("training data",attributes,0);
+                            int[] labels = LabelImages.findAllLabels(supImage);
+                            HashMap<Integer,Integer> labelIndices = LabelImages.mapLabelIndices(labels);
+
+                            for(int i=0;i<tags.size();++i){ //For each class in classRegions
+                                for(int j=0;j<tags.get(i).length;++j){
+                                    Instance inst = new DenseInstance(numFeatures+1);
+                                    for(int k=0;k<numFeatures;++k){
+                                        int classvalue = tags.get(i)[j];
+                                        inst.setValue(k,unlabeledTable.getValueAsDouble(k,
+                                                labelIndices.get(
+                                                        tags.get(i)[j]
+                                                )));
+                                    }
+                                    inst.setValue(numFeatures,i); // set class value
+                                    trainingData.add(inst);
+                                }
+                            }
+                            trainingData.setClassIndex(numFeatures); // set class index
+                            if(classBalance){
+                                try {
+                                    final Resample filter = new Resample();
+                                    filter.setBiasToUniformClass(1.0);
+                                    filter.setInputFormat(trainingData);
+                                    filter.setNoReplacement(false);
+                                    filter.setSampleSizePercent(100);
+                                    trainingData = Filter.useFilter(trainingData, filter);
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                            }
                             IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
                             trainingData = eus.ehu.tss.Utils.merge(trainingData, loadedTrainingData);
+                            trainableSuperpixelSegmentation.setTrainingData(trainingData);
+                            IJ.log("Training classifier");
+                            if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                                IJ.error("Error when training classifier");
+                            }
+                        }else {
+                            trainableSuperpixelSegmentation.trainClassifier(tags);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                         IJ.log("Error when merging loaded training data selected data");
-                    }
-                    IJ.log("Training classifier");
-                    trainableSuperpixelSegmentation.setTrainingData(trainingData);
-                    if (!trainableSuperpixelSegmentation.trainClassifier()) {
-                        IJ.error("Error when training classifier");
                     }
                     classifier = trainableSuperpixelSegmentation.getClassifier();
                     IJ.log("Classifier trained");

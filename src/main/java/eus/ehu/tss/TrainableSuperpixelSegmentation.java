@@ -20,6 +20,7 @@ import weka.filters.supervised.instance.Resample;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Main class of the library that will conduct the classification of the images.
@@ -30,8 +31,6 @@ public class TrainableSuperpixelSegmentation {
     private ImagePlus inputImage;
     private ImagePlus labelImage;
     private ImagePlus resultImage;
-    private Instances unlabeled;
-    private Instances labeled;
     private Instances trainingData;
     private AbstractClassifier abstractClassifier;
     private ResultsTable unlabeledTable=null;
@@ -78,13 +77,11 @@ public class TrainableSuperpixelSegmentation {
                     inputImage,
                     labelImage,
                     selectedFeatures);
-            unlabeled = RegionColorFeatures.calculateUnabeledInstances(unlabeledTable,classes);
         }else {
             unlabeledTable = RegionFeatures.calculateFeaturesTable(
                     inputImage,
                     labelImage,
                     selectedFeatures);
-            unlabeled = RegionFeatures.calculateUnabeledInstances(unlabeledTable,classes);
         }
         return unlabeledTable != null;
     }
@@ -95,6 +92,7 @@ public class TrainableSuperpixelSegmentation {
      * @return String in ARFF format
      */
     public String getFeaturesByRegion(){
+        Instances unlabeled = RegionFeatures.calculateUnabeledInstances(unlabeledTable,classes);
         return unlabeled.toString();
     }
 
@@ -106,22 +104,42 @@ public class TrainableSuperpixelSegmentation {
     public boolean trainClassifier(ArrayList<int[]> classRegions){
         // read attributes from unlabeled data
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-        if(unlabeled==null){
+        if(unlabeledTable==null){
             calculateRegionFeatures();
         }
-        int numFeatures = unlabeled.numAttributes()-1;
+        int numFeatures = unlabeledTable.getLastColumn()+ 1;
         for(int i=0;i<numFeatures;++i){
-            attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
+            attributes.add(new Attribute(unlabeledTable.getColumnHeading(i),i));
         }
+        unlabeledTable.show("unlabeled?");
         attributes.add(new Attribute("Class",classes));
         trainingData = new Instances("training data",attributes,0);
         // Fill training dataset with the feature vectors of the corresponding
         // regions given by classRegions
+        /*
         for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
             for(int j=0;j<classRegions.get(i).length;++j){
                 Instance inst = new DenseInstance(numFeatures+1);
                 for(int k=0;k<numFeatures;++k){
-                    inst.setValue(k,unlabeled.get(classRegions.get(i)[j]-1).value(k));
+                    inst.setValue(k,unlabeledTable.getValueAsDouble(j, i)
+                            unlabeled.get(classRegions.get(i)[j]-1).value(k));
+                }
+                inst.setValue(numFeatures,i); // set class value
+                trainingData.add(inst);
+            }
+        }*/
+        int[] labels = LabelImages.findAllLabels(labelImage);
+        HashMap<Integer,Integer> labelIndices = LabelImages.mapLabelIndices(labels);
+
+        for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
+            for(int j=0;j<classRegions.get(i).length;++j){
+                Instance inst = new DenseInstance(numFeatures+1);
+                for(int k=0;k<numFeatures;++k){
+                    int classvalue = classRegions.get(i)[j];
+                    inst.setValue(k,unlabeledTable.getValueAsDouble(k,
+                            labelIndices.get(
+                                    classRegions.get(i)[j]
+                            )));
                 }
                 inst.setValue(numFeatures,i); // set class value
                 trainingData.add(inst);
@@ -190,7 +208,7 @@ public class TrainableSuperpixelSegmentation {
      */
     public ImagePlus applyClassifier(){
         try {
-            if(unlabeled==null){
+            if(unlabeledTable==null){
                 calculateRegionFeatures();
             }
             if(!classifierTrained){
@@ -200,14 +218,14 @@ public class TrainableSuperpixelSegmentation {
                 }
             }
             int numAttributes = unlabeledTable.getLastColumn();
-            ResultsBuilder resultsBuilder = new ResultsBuilder(unlabeledTable);
+            ResultsBuilder resultsBuilder = new ResultsBuilder((ResultsTable) unlabeledTable.clone());
             ResultsTable classesTable = new ResultsTable();
             ArrayList<Attribute> attributes = new ArrayList<Attribute>();
             for(int i=0;i<numAttributes;++i){
                 attributes.add(new Attribute(unlabeledTable.getColumnHeading(i),i));
             }
             attributes.add(new Attribute("Class", classes));
-            labeled = new Instances("Labeled",attributes,0);
+            Instances labeled = new Instances("Labeled",attributes,0);
             labeled.setClassIndex(numAttributes);
             double[] values = new double[unlabeledTable.getCounter()];
             for(int i=0;i<unlabeledTable.getCounter();++i){
@@ -221,7 +239,6 @@ public class TrainableSuperpixelSegmentation {
                 classesTable.incrementCounter();
                 classesTable.addLabel(unlabeledTable.getLabel(i));
                 classesTable.addValue("Class",classLabel);
-                labeled.add(ins);
             }
             resultsBuilder.addResult(classesTable);
             ImageStack res = LabelImages.applyLut(labelImage.getImageStack(),values);
@@ -263,7 +280,7 @@ public class TrainableSuperpixelSegmentation {
      * @return
      */
     public ImagePlus getProbabilityMap(){
-        if(unlabeled==null){
+        if(unlabeledTable==null){
             calculateRegionFeatures();
         }
         if(!classifierTrained){
@@ -272,6 +289,7 @@ public class TrainableSuperpixelSegmentation {
                 return null;
             }
         }
+        Instances unlabeled = RegionFeatures.calculateUnabeledInstances(unlabeledTable,classes);
         final int numInstances = unlabeled.numInstances();
         final int numClasses = classes.size();
         final int width = labelImage.getWidth();
@@ -340,7 +358,7 @@ public class TrainableSuperpixelSegmentation {
      * @return
      */
     public Instances getInstances() {
-        return labeled;
+        return RegionFeatures.calculateUnabeledInstances(unlabeledTable,classes);
     }
 
     /**
@@ -472,7 +490,7 @@ public class TrainableSuperpixelSegmentation {
      * @return
      */
     public Instances getUnlabeled() {
-        return unlabeled;
+        return RegionFeatures.calculateUnabeledInstances(unlabeledTable,classes);
     }
 
     /**
@@ -484,20 +502,22 @@ public class TrainableSuperpixelSegmentation {
     }
 
     /**
-     * Sets unlabeled instances
-     * @param unlabeled
-     */
-    public void setUnlabeled(Instances unlabeled) {
-        this.unlabeled = unlabeled;
-    }
-
-    /**
      * Set balancing of classes
      * @param balanceClasses
      */
     public void setBalanceClasses(boolean balanceClasses) {
         this.balanceClasses = balanceClasses;
     }
+
+
+    public ResultsTable getUnlabeledTable() {
+        return unlabeledTable;
+    }
+
+    public void setUnlabeledTable(ResultsTable unlabeledTable) {
+        this.unlabeledTable = unlabeledTable;
+    }
+
 
 
 
