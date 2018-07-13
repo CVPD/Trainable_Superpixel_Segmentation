@@ -125,13 +125,11 @@ public class RegionColorFeatures {
             rb.addResult(resultsTables.get(1));
             rb.addResult(resultsTables.get(2));
             finalResultsTables.add(rb.getResultsTable());
-            rb.getResultsTable().show("Merged table "+l);
         }
         ResultsTable finalResult = finalResultsTables.get(0);
         for(int i=1;i<finalResultsTables.size();++i){
             finalResult = Utils.mergeResultsTables(finalResult,finalResultsTables.get(i));
         }
-        finalResult.show("Final result");
         return finalResult;
     }
 
