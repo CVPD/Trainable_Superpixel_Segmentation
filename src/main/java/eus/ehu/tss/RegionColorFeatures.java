@@ -16,6 +16,7 @@ import weka.core.converters.ConverterUtils;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -170,77 +171,34 @@ public class RegionColorFeatures {
                                                           ImagePlus labelImage,
                                                           ImagePlus gtImage,
                                                           ArrayList<RegionFeatures.Feature> selectedFeatures,
-                                                          ArrayList<String> classes)
-    {
-        ColorSpaceConverter converter = new ColorSpaceConverter();
-        ImagePlus lab = converter.RGBToLab(inputImage);
-        ImagePlus[] channels = ChannelSplitter.split(lab);
-        if(Thread.currentThread().isInterrupted()){
-            return null;
+                                                          ArrayList<String> classes) {
+        HashMap<Integer, int[]> labelCoord = Utils.calculateLabelCoordinates(labelImage);
+        ResultsTable mergedTable = calculateFeaturesTable(inputImage,labelImage,selectedFeatures);
+        //mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        int numFeatures = mergedTable.getLastColumn()+1; //Take into account it starts in index 0
+        for(int i=0;i<numFeatures;++i){
+            attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
         }
-        ArrayList<Instances> ins = new ArrayList<Instances>();
-        ExecutorService exe = Executors.newFixedThreadPool(3);
-        final ArrayList<Future< Instances > > futures = new ArrayList<Future<Instances>>();
-        try {
-            futures.add(exe.submit(getUnlabeledInstances(channels[0],labelImage,selectedFeatures,classes)));
-            futures.add(exe.submit(getUnlabeledInstances(channels[1],labelImage,selectedFeatures,classes)));
-            futures.add(exe.submit(getUnlabeledInstances(channels[2],labelImage,selectedFeatures,classes)));
-            int i=0;
-            for(Future<Instances> f : futures){
-                Instances res = f.get();
-                ins.add(res);
+        attributes.add(new Attribute("Class", classes));
+        Instances labeled = new Instances("training data",attributes,0);
+        for(int i=0;i<mergedTable.size();++i){
+            //numFeatures is the index, add 1 to get number of attributes needed plus class
+            Instance inst = new DenseInstance(numFeatures+1);
+            for(int j=0;j<numFeatures;++j){
+                inst.setValue(j,mergedTable.getValueAsDouble(j,i));
             }
-        }catch (Exception e){
-            e.printStackTrace();
-            return null;
+            int[] coord = labelCoord.get(i+1);
+            ImageProcessor gtProcessor = gtImage.getProcessor();
+            float value = (float) gtProcessor.getf(coord[0],coord[1]);
+            inst.setValue( numFeatures, (int) value );
+            labeled.add(inst);
         }
-        finally {
-            exe.shutdown();
-        }
-        Instances lIns = ins.get(0);
-        Instances aIns = ins.get(1);
-        Instances bIns = ins.get(2);
-        if(lIns==null||aIns==null||bIns==null){
+        labeled.setClassIndex( numFeatures );
+        //The number or instances should be the same as the size of the table
+        if(labeled.numInstances()!=(mergedTable.size())){
             return null;
-        }else {
-            for (int i = 0; i < lIns.numAttributes(); ++i) {//all channels should have the same number of attributes
-                lIns.renameAttribute(i, lIns.attribute(i).name() + "-L");
-                aIns.renameAttribute(i, aIns.attribute(i).name() + "-a");
-                bIns.renameAttribute(i, bIns.attribute(i).name() + "-b");
-            }
-            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-            int numAttributes = lIns.numAttributes() * 3 - 3;//-3 to remove the class attributes
-            for (int i = 0; i < lIns.numAttributes() - 1; ++i) {
-                attributes.add(lIns.attribute(i));
-            }
-            for (int i = 0; i < aIns.numAttributes() - 1; ++i) {
-                attributes.add(aIns.attribute(i));
-            }
-            for (int i = 0; i < bIns.numAttributes() - 1; ++i) {
-                attributes.add(bIns.attribute(i));
-            }
-            attributes.add(new Attribute("Class", classes));
-            Instances labeled = new Instances("training data", attributes, 0);
-            for (int i = 0; i < lIns.numInstances(); ++i) {
-                int k = 0;
-                Instance inst = new DenseInstance(numAttributes + 1);
-                for (int j = 0; j < lIns.numAttributes() - 1; ++j) {
-                    inst.setValue(j, lIns.get(i).value(j));
-                }
-                for (int j = lIns.numAttributes() - 1; j < aIns.numAttributes() * 2 - 2; ++j) {
-                    inst.setValue(j, aIns.get(i).value(k));
-                    k++;
-                }
-                k = 0;
-                for (int j = lIns.numAttributes() * 2 - 2; j < bIns.numAttributes() * 3 - 3; ++j) {
-                    inst.setValue(j, bIns.get(i).value(k));
-                    k++;
-                }
-                double classValue = lIns.get(i).value(lIns.classIndex());
-                inst.setValue(numAttributes,classValue);//Currently taking class of l channel
-                labeled.add(inst);
-            }
-            labeled.setClassIndex(numAttributes);
+        }else{
             return labeled;
         }
     }
