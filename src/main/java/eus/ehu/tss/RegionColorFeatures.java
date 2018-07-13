@@ -134,6 +134,11 @@ public class RegionColorFeatures {
     }
 
 
+    public static Instances calculateUnabeledInstances(ResultsTable resultsTable, ArrayList<String> classes){
+        Instances unlabeled = RegionFeatures.calculateUnabeledInstances(resultsTable,classes);
+        return unlabeled;
+    }
+
     /**
      * Creates Instances object based on the features of each color channel after converting the image to Lab
      * @param inputImage RGB input image
@@ -147,92 +152,9 @@ public class RegionColorFeatures {
                                                             ArrayList<RegionFeatures.Feature> selectedFeatures,
                                                             ArrayList<String> classes)
     {
-        ImageStack stack = inputImage.getStack();
-        ImageStack spStack = labelImage.getStack();
-        Instances[] unlabeled = new Instances[inputImage.getNSlices()];
-        for(int l=1;l<inputImage.getNSlices()+1;++l) {
-            ImageProcessor sliceProcessor = stack.getProcessor(l);
-            ImagePlus slice =  new ImagePlus("Slice"+l,sliceProcessor);
-            ImageProcessor spProcessor = spStack.getProcessor(l);
-            ImagePlus spSlice = new ImagePlus("Slice "+l,spProcessor);
-            ColorSpaceConverter converter = new ColorSpaceConverter();
-            ImagePlus lab = converter.RGBToLab(slice);
-            ImagePlus[] channels = ChannelSplitter.split(lab);
-            if (Thread.currentThread().isInterrupted()) {
-                return null;
-            }
-            ArrayList<Instances> ins = new ArrayList<Instances>();
-            ExecutorService exe = Executors.newFixedThreadPool(3);
-            final ArrayList<Future<Instances>> futures = new ArrayList<Future<Instances>>();
-            try {
-                futures.add(exe.submit(getUnlabeledInstances(channels[0], spSlice, selectedFeatures, classes)));
-                futures.add(exe.submit(getUnlabeledInstances(channels[1], spSlice, selectedFeatures, classes)));
-                futures.add(exe.submit(getUnlabeledInstances(channels[2], spSlice, selectedFeatures, classes)));
-                int i = 0;
-                for (Future<Instances> f : futures) {
-                    Instances res = f.get();
-                    ins.add(res);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            } finally {
-                exe.shutdown();
-            }
-            Instances lIns = ins.get(0);
-            Instances aIns = ins.get(1);
-            Instances bIns = ins.get(2);
-            if (lIns == null || aIns == null || bIns == null) {
-                return null;
-            } else {
-                for (int i = 0; i < lIns.numAttributes(); ++i) {//all channels should have the same number of attributes
-                    lIns.renameAttribute(i, lIns.attribute(i).name() + "-L");
-                    aIns.renameAttribute(i, aIns.attribute(i).name() + "-a");
-                    bIns.renameAttribute(i, bIns.attribute(i).name() + "-b");
-                }
-                ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-                int numAttributes = lIns.numAttributes() * 3 - 3;//-3 to remove the class attributes
-                for (int i = 0; i < lIns.numAttributes() - 1; ++i) {
-                    attributes.add(lIns.attribute(i));
-                }
-                for (int i = 0; i < aIns.numAttributes() - 1; ++i) {
-                    attributes.add(aIns.attribute(i));
-                }
-                for (int i = 0; i < bIns.numAttributes() - 1; ++i) {
-                    attributes.add(bIns.attribute(i));
-                }
-                attributes.add(new Attribute("Class", classes));
-                unlabeled[l-1] = new Instances("training data", attributes, 0);
-                for (int i = 0; i < lIns.numInstances(); ++i) {
-                    int k = 0;
-                    Instance inst = new DenseInstance(numAttributes + 1);
-                    for (int j = 0; j < lIns.numAttributes() - 1; ++j) {
-                        inst.setValue(j, lIns.get(i).value(j));
-                    }
-                    for (int j = lIns.numAttributes() - 1; j < aIns.numAttributes() * 2 - 2; ++j) {
-                        inst.setValue(j, aIns.get(i).value(k));
-                        k++;
-                    }
-                    k = 0;
-                    for (int j = lIns.numAttributes() * 2 - 2; j < bIns.numAttributes() * 3 - 3; ++j) {
-                        inst.setValue(j, bIns.get(i).value(k));
-                        k++;
-                    }
-                    inst.setValue(numAttributes, 0);//Set class as 0
-                    unlabeled[l-1].add(inst);
-                }
-                unlabeled[l-1].setClassIndex(numAttributes);
-            }
-        }
-        Instances fUnlabeled = unlabeled[0];
-        try{
-            for(int l=1;l<unlabeled.length;++l) {
-                fUnlabeled = Utils.merge(fUnlabeled,unlabeled[l]);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return fUnlabeled;
+        ResultsTable resultsTable = calculateFeaturesTable(inputImage,labelImage,selectedFeatures);
+        Instances unlabeled = calculateUnabeledInstances(resultsTable,classes);
+        return unlabeled;
     }
 
     /**
