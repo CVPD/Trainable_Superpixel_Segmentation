@@ -199,9 +199,7 @@ public class TrainableSuperpixelSegmentation {
                     return null;
                 }
             }
-            int numAttributes = unlabeledTable.getLastColumn();//Check if label is taken into account
-            System.out.println("Numattributes: "+numAttributes);
-            unlabeledTable.show("unlabeled");
+            int numAttributes = unlabeledTable.getLastColumn();
             ResultsBuilder resultsBuilder = new ResultsBuilder(unlabeledTable);
             ResultsTable classesTable = new ResultsTable();
             ArrayList<Attribute> attributes = new ArrayList<Attribute>();
@@ -225,12 +223,9 @@ public class TrainableSuperpixelSegmentation {
                 classesTable.addValue("Class",classLabel);
                 labeled.add(ins);
             }
-            classesTable.show("classes");
             resultsBuilder.addResult(classesTable);
-            resultsBuilder.getResultsTable().show("labeled");
             ImageStack res = LabelImages.applyLut(labelImage.getImageStack(),values);
             ImagePlus result = new ImagePlus(inputImage.getShortTitle()+"-classified",res);
-            result.show();
             return result;
         } catch (Exception e) {
             System.out.println("Error when applying classifier");
