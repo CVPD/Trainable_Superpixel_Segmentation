@@ -19,6 +19,7 @@ import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -330,6 +331,21 @@ public class TrainableSuperpixelSegmentation {
         ImagePlus result = new ImagePlus(inputImage.getShortTitle()+"-probMap",classificationResultImage);
         return result;
 
+    }
+
+    public ImagePlus getFeatureImage(ImagePlus labelImage, ResultsTable features){
+        int columns = features.getLastColumn();
+        ImageStack imageStack = new ImageStack(labelImage.getWidth(),labelImage.getHeight());
+        for(int i=0;i<columns;++i){
+            double[] values = new double[features.getCounter()];
+            for(int j=1;j<features.getCounter();++j){
+                values[j]=features.getValueAsDouble(i,j);
+            }
+            ImageStack stack = LabelImages.applyLut(labelImage.getImageStack(),values);
+            ImageProcessor ip = stack.getProcessor(1);
+            imageStack.addSlice(features.getColumnHeading(i),ip);
+        }
+        return new ImagePlus("Feature Image Stack",imageStack);
     }
 
     /**
