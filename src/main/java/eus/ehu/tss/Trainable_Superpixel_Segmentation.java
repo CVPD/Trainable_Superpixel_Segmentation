@@ -1,7 +1,5 @@
 package eus.ehu.tss;
 
-import com.sun.scenario.effect.impl.sw.java.JSWBlend_COLOR_BURNPeer;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -24,7 +22,6 @@ import ij.process.LUT;
 import ij.process.StackConverter;
 
 import inra.ijpb.label.LabelImages;
-import org.w3c.dom.Attr;
 
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
@@ -40,7 +37,6 @@ import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.core.OptionHandler;
 import weka.core.converters.ArffSaver;
-import weka.core.converters.ConverterUtils;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 import weka.gui.GenericObjectEditor;
@@ -993,7 +989,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                                 IJ.error("Error when training classifier");
                             }
                         }else {
-                            trainableSuperpixelSegmentation.trainClassifier(tags);
+                            trainableSuperpixelSegmentation.calculateTrainingData(tags);
+                            trainableSuperpixelSegmentation.trainClassifier();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

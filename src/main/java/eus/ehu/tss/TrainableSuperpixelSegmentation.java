@@ -1,9 +1,7 @@
 package eus.ehu.tss;
 
-import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.io.SaveDialog;
 import ij.measure.ResultsTable;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
@@ -14,12 +12,9 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.converters.ArffSaver;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
-import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -32,7 +27,7 @@ public class TrainableSuperpixelSegmentation {
     private ImagePlus inputImage;
     private ImagePlus labelImage;
     private ImagePlus resultImage;
-    private Instances trainingData;
+    private Instances trainingData = null;
     private AbstractClassifier abstractClassifier;
     private ResultsTable unlabeledTable=null;
     private boolean classifierTrained = false;
@@ -98,11 +93,11 @@ public class TrainableSuperpixelSegmentation {
     }
 
     /**
-     * Trains classifiers based on previously created features and a list of classes with their corresponding regions
+     * Calculates training data based on provided region list
      * @param classRegions ArrayList of int[] where each int[] represents the labels of superpixels that belong to the class indicated by their index in the ArrayList
      * @return boolean value false when training has had an error
      */
-    public boolean trainClassifier(ArrayList<int[]> classRegions){
+    public boolean calculateTrainingData(ArrayList<int[]> classRegions){
         // read attributes from unlabeled data
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         if(unlabeledTable==null){
@@ -114,21 +109,7 @@ public class TrainableSuperpixelSegmentation {
         }
         unlabeledTable.show("unlabeled?");
         attributes.add(new Attribute("Class",classes));
-        trainingData = new Instances("training data",attributes,0);
-        // Fill training dataset with the feature vectors of the corresponding
-        // regions given by classRegions
-        /*
-        for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
-            for(int j=0;j<classRegions.get(i).length;++j){
-                Instance inst = new DenseInstance(numFeatures+1);
-                for(int k=0;k<numFeatures;++k){
-                    inst.setValue(k,unlabeledTable.getValueAsDouble(j, i)
-                            unlabeled.get(classRegions.get(i)[j]-1).value(k));
-                }
-                inst.setValue(numFeatures,i); // set class value
-                trainingData.add(inst);
-            }
-        }*/
+        Instances newTrainingData = new Instances("training data",attributes,0);
         int[] labels = LabelImages.findAllLabels(labelImage);
         HashMap<Integer,Integer> labelIndices = LabelImages.mapLabelIndices(labels);
 
@@ -143,32 +124,21 @@ public class TrainableSuperpixelSegmentation {
                             )));
                 }
                 inst.setValue(numFeatures,i); // set class value
-                trainingData.add(inst);
+                newTrainingData.add(inst);
             }
         }
-        trainingData.setClassIndex(numFeatures); // set class index
-        if(balanceClasses){
+        newTrainingData.setClassIndex(numFeatures); // set class index
+        if(trainingData!=null){
             try {
-                final Resample filter = new Resample();
-                filter.setBiasToUniformClass(1.0);
-                filter.setInputFormat(trainingData);
-                filter.setNoReplacement(false);
-                filter.setSampleSizePercent(100);
-                trainingData = Filter.useFilter(trainingData, filter);
+                trainingData = Utils.merge(trainingData, newTrainingData);
             }catch (Exception e){
                 e.printStackTrace();
+                return false;
             }
+        }else {
+            trainingData = newTrainingData;
         }
-
-        try {
-            abstractClassifier.buildClassifier(trainingData);
-            classifierTrained = true;
-            return true;
-        } catch (Exception e) {
-            System.out.println("Error when building classifier");
-            e.printStackTrace();
-            return false;
-        }
+        return true;
     }
 
     /**
