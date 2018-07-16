@@ -107,7 +107,6 @@ public class TrainableSuperpixelSegmentation {
         for(int i=0;i<numFeatures;++i){
             attributes.add(new Attribute(unlabeledTable.getColumnHeading(i),i));
         }
-        unlabeledTable.show("unlabeled?");
         attributes.add(new Attribute("Class",classes));
         Instances newTrainingData = new Instances("training data",attributes,0);
         int[] labels = LabelImages.findAllLabels(labelImage);
