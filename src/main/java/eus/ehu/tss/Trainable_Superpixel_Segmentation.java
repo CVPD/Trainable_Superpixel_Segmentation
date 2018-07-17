@@ -107,7 +107,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private int numClasses = 2;
     private  java.awt.List[] exampleList = new java.awt.List[500];
     private ArrayList<int[]> tags = new ArrayList<>();
-    private ArrayList<HashMap<Integer,Roi>> rois = new ArrayList<>();
+    private HashMap<Integer,Roi> rois = new HashMap<>();
     private ArrayList<RegionFeatures.Feature> features;
     private AbstractClassifier classifier;
     private ArrayList<String> classes;
@@ -640,7 +640,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
             numClasses++;
             tags.add(new int[0]);
-            rois.add(new HashMap<>());
             // recalculate minimum size of scroll panel
             scrollPanel.setMinimumSize( labelsJPanel.getPreferredSize() );
 
@@ -1629,7 +1628,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         tags.set(i,b);
         try {
             exampleList[i].remove(Integer.toString(f));
-            rois.get(i).remove(f);
+            rois.remove(f);
         }catch (Exception e1){
             e1.printStackTrace();
         }
@@ -1641,14 +1640,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      */
     void addExamples(int i){
         final Roi r = inputImage.getRoi();
-        if(null == r){
-            IJ.log("Select a ROI before adding");
-            return;
-        }
-        inputImage.killRoi();
-        HashMap<Integer,Roi> selectedLabel = getSelectedLabels(supImage,r);
-        int y=0;
-        for(int key : selectedLabel.keySet()){
+        ArrayList<Float> labelList = LabelImages.getSelectedLabels(supImage,r);
+        for(float key : labelList){
             boolean dup = false;
             int[] a = tags.get(i);
             //Check if tag already exists on list
@@ -1661,10 +1654,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
             if(!dup) {
                 a = Arrays.copyOf(a, a.length + 1);
-                a[a.length - 1] = key;
+                a[a.length - 1] = (int) key;
                 tags.set(i, a);
-                exampleList[i].add(Integer.toString(key));
-                rois.get(i).put(key,selectedLabel.get(key));
+                exampleList[i].add(Integer.toString((int) key));
+                rois.put((int) key,r);
             }
         }
     }
@@ -1680,8 +1673,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             if(j==i){
                 int selectedIndex  = exampleList[i].getSelectedIndex();
                 int key = Integer.parseInt(exampleList[i].getItem(selectedIndex));
-                HashMap<Integer,Roi> a = rois.get(i);
-                final Roi newroi = a.get(key);
+                final Roi newroi = rois.get(key);
                 newroi.setImage(inputImage);
                 inputImage.setRoi(newroi);
             }else{
@@ -1831,7 +1823,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 exampleList[i] = new java.awt.List(5);
                 exampleList[i].setForeground(colors[i]);
                 tags.add(new int[0]);
-                rois.add(new HashMap<>());
             }
             features = new ArrayList<>();
             String[] selectedFs = RegionFeatures.Feature.getAllLabels();
