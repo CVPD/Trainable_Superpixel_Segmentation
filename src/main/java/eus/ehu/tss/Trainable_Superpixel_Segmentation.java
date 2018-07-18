@@ -100,7 +100,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
     private  java.awt.List[] exampleList = new java.awt.List[500];
-    private ArrayList<ArrayList<Roi>> aRoiList = new ArrayList<>();
+    private ArrayList<ArrayList<Roi>>[] aRoiList;
     private ArrayList<RegionFeatures.Feature> features;
     private AbstractClassifier classifier;
     private ArrayList<String> classes;
@@ -631,8 +631,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             // Add listener to the new button
             addExampleButton[classNum].addActionListener(listener);
 
-
-            aRoiList.add(new ArrayList<>());
+            for(int l=0;l<inputImage.getNSlices();++l) {
+                aRoiList[l].add(new ArrayList<>());
+            }
 
             numClasses++;
             // recalculate minimum size of scroll panel
@@ -856,18 +857,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         win.addClass();
         repaintWindow();
         trainableSuperpixelSegmentation.setClasses(classes);
-        /*if(!calculateFeatures){
-            Instances features = trainableSuperpixelSegmentation.getUnlabeled();
-            Attribute c = features.classAttribute();
-            ArrayList<String> newc = new ArrayList<>();
-            for(int i=0;i<c.numValues();++i){
-                newc.add(c.value(i));
-            }
-            newc.add(inputName);
-            Attribute newClass = new Attribute("class",newc);
-            features.replaceAttributeAt(newClass,c.index());
-            trainableSuperpixelSegmentation.setUnlabeled(features);
-        }*/
     }
 
     /**
@@ -903,18 +892,19 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     ArrayList<int[]> tags = new ArrayList<int[]>();
                     for(int i=0;i<numClasses;++i){
                         ArrayList<Integer> t = new ArrayList<>();
-                        for(int j=0;j<aRoiList.get(i).size();++j) {
-                            ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList.get(i).get(j));
-                            for(int k=0;k<floats.size();++k){
-                                t.add(floats.get(k).intValue());
+                        for(int l=0;l<inputImage.getNSlices();++l) {
+                            for (int j = 0; j < aRoiList[l].get(i).size(); ++j) {
+                                ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
+                                for (int k = 0; k < floats.size(); ++k) {
+                                    t.add(floats.get(k).intValue());
+                                }
                             }
                         }
-                        int[] tg =  new int[t.size()];
-                        for(int j=0;j<tg.length;++j){
+                        int[] tg = new int[t.size()];
+                        for (int j = 0; j < tg.length; ++j) {
                             tg[j] = t.get(j);
                         }
                         tags.add(tg);
-
                     }
 
                     if (!trainingDataLoaded) {
@@ -1492,19 +1482,21 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         try {
             win.disableAllButtons();
             ArrayList<int[]> tags = new ArrayList<int[]>();
-            for (int i = 0; i < numClasses; ++i) {
+            for(int i=0;i<numClasses;++i){
                 ArrayList<Integer> t = new ArrayList<>();
-                for (int j = 0; j < aRoiList.get(i).size(); ++j) {
-                    ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList.get(i).get(j));
-                    for (int k = 0; k < floats.size(); ++k) {
-                        t.add(floats.get(k).intValue());//??
+                for(int l=0;l<inputImage.getNSlices();++l) {
+                    for (int j = 0; j < aRoiList[l].get(i).size(); ++j) {
+                        ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
+                        for (int k = 0; k < floats.size(); ++k) {
+                            t.add(floats.get(k).intValue());
+                        }
                     }
+                    int[] tg = new int[t.size()];
+                    for (int j = 0; j < tg.length; ++j) {
+                        tg[j] = t.get(j);
+                    }
+                    tags.add(tg);
                 }
-                int[] tg = new int[t.size()];
-                for (int j = 0; j < tg.length; ++j) {
-                    tg[j] = t.get(j);
-                }
-                tags.add(tg);
 
             }
             trainableSuperpixelSegmentation.setClasses(classes);
@@ -1628,9 +1620,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     void deleteSelected(final ActionEvent e, final int i){
         String item = e.getActionCommand();
         String[] items = exampleList[i].getItems();
+        int slice=Integer.parseInt(Character.toString(item.charAt(item.length())));
         for(int j=0;j<items.length;++j){
             if(item.equals(items[j])) {
-                aRoiList.get(i).remove(j);
+                aRoiList[slice].get(i).remove(j);
+
             }
         }
         exampleList[i].remove(item);
@@ -1665,9 +1659,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param i identifier of class to add tags
      */
     void addExamples(int i){
-        final Roi r = inputImage.getRoi();
-        aRoiList.get(i).add(r);
-        exampleList[i].add("Trace "+aRoiList.get(i).size());
+        try {
+            final Roi r = inputImage.getRoi();
+            aRoiList[inputImage.getCurrentSlice()-1].get(i).add(r);
+            exampleList[i].add("Trace " + aRoiList[inputImage.getCurrentSlice()-1].get(i).size() + " z=" + inputImage.getCurrentSlice());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -1678,7 +1676,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     void listSelected(final ItemEvent e, final int i)
     {
         int selectedIndex = exampleList[i].getSelectedIndex();
-        final Roi newRoi = aRoiList.get(i).get(selectedIndex);
+        String item = exampleList[i].getSelectedItem();
+        int slice=Integer.parseInt(Character.toString(item.charAt(item.length())));
+        final Roi newRoi = aRoiList[slice].get(i).get(selectedIndex);
         newRoi.setImage(inputImage);
         inputImage.setRoi(newRoi);
         inputImage.updateAndDraw();
@@ -1760,11 +1760,18 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         if(inputImage == null || supImage == null){
             IJ.error("Error when opening image");
         }else {
+
+            aRoiList = new ArrayList[inputImage.getNSlices()];
+            for(int j=0;j<inputImage.getNSlices();++j) {
+                aRoiList[j] = new ArrayList<ArrayList<Roi>>();
+            }
             for(int i=0; i<numClasses; ++i){
                 classes.add("class "+i);
                 exampleList[i] = new java.awt.List(5);
                 exampleList[i].setForeground(colors[i]);
-                aRoiList.add(new ArrayList<>());
+                for(int j=0;j<inputImage.getNSlices();++j) {
+                    aRoiList[j].add(new ArrayList<>());
+                }
             }
             features = new ArrayList<>();
             String[] selectedFs = RegionFeatures.Feature.getAllLabels();
