@@ -399,7 +399,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             saveClassButton.setToolTipText("Save trained classifier into a file");
             optionsPanel.add(saveClassButton,optionsConstraints);
             optionsConstraints.gridy++;
-            saveInstButton = new JButton("Save instances");
+            saveInstButton = new JButton("Save training data");
             saveInstButton.setToolTipText("Save training data into a Weka file");
             optionsPanel.add(saveInstButton,optionsConstraints);
             optionsConstraints.gridy++;
