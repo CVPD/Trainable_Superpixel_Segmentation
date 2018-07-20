@@ -1782,7 +1782,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             classifier = new RandomForest();
             trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,features,classifier,classes);
             win = new CustomWindow(inputImage);
-            Toolbar.getInstance().setTool( Toolbar.POINT );
+            Toolbar.getInstance().setTool( Toolbar.FREELINE );
         }
         win.setButtonsEnabled(0);
 
