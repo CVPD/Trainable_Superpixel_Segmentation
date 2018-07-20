@@ -778,9 +778,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
             catch(IOException e){
                 IJ.showMessage("IOException: wrong file format!");
+                win.setButtonsEnabled(0);
+                return;
             }
         }
-        catch(FileNotFoundException e){IJ.showMessage("File not found!");}
+        catch(FileNotFoundException e){
+            IJ.showMessage("File not found!");
+            win.setButtonsEnabled(0);
+            return;
+        }
         try {
             if (null != data) {
                 Attribute classAttribute = data.classAttribute();
