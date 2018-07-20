@@ -1637,16 +1637,21 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param i identifier of class to remove tags
      */
     void deleteSelected(final ActionEvent e, final int i){
-        String item = e.getActionCommand();
-        String[] items = exampleList[i].getItems();
-        int slice=Integer.parseInt(Character.toString(item.charAt(item.length())));
-        for(int j=0;j<items.length;++j){
-            if(item.equals(items[j])) {
-                aRoiList[slice].get(i).remove(j);
+        try {
+            String item = e.getActionCommand();
+            String[] items = exampleList[i].getItems();
+            String c = Character.toString(item.charAt(item.length()-1));
+            int slice = Integer.parseInt(c);
+            for (int j = 0; j < items.length; ++j) {
+                if (item.equals(items[j])) {
+                    aRoiList[slice-1].get(i).remove(j);
 
+                }
             }
+            exampleList[i].remove(item);
+        }catch (Exception e1){
+            e1.printStackTrace();
         }
-        exampleList[i].remove(item);
         /*int f = Integer.parseInt(e.getActionCommand());
         int item = f;
         int[] a = tags.get(i);
@@ -1696,12 +1701,18 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     {
         int selectedIndex = exampleList[i].getSelectedIndex();
         String item = exampleList[i].getSelectedItem();
-        int slice=Integer.parseInt(Character.toString(item.charAt(item.length())));
-        final Roi newRoi = aRoiList[slice].get(i).get(selectedIndex);
+        int slice=Integer.parseInt(Character.toString(item.charAt(item.length()-1)));
+        final Roi newRoi = aRoiList[slice-1].get(i).get(selectedIndex);
         newRoi.setImage(inputImage);
         inputImage.setRoi(newRoi);
         inputImage.updateAndDraw();
-        exampleList[i].deselect(selectedIndex);
+        for(int j=0;j<numClasses;++j) {
+            if(j!=i) {
+                for (int k = 0; k < exampleList[j].getItemCount(); ++k) {
+                    exampleList[j].deselect(k);
+                }
+            }
+        }
     }
 
     /**
