@@ -912,6 +912,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         for (int i = 0; i < tags.size(); ++i) {
                             if (tags.get(i).length == 0) {
                                 IJ.showMessage("Add at least one region to class " + classes.get(i));
+                                win.trainClassButton.setText("Train classifier");
                                 win.setButtonsEnabled(0);
                                 return;
                             }
@@ -961,6 +962,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                                     trainingData = Filter.useFilter(trainingData, filter);
                                 }catch (Exception e){
                                     e.printStackTrace();
+                                    win.trainClassButton.setText("Train classifier");
+                                    win.setButtonsEnabled(0);
+                                    return;
                                 }
                             }
                             IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
@@ -979,6 +983,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     } catch (Exception e) {
                         e.printStackTrace();
                         IJ.log("Error when merging loaded training data selected data");
+                        win.trainClassButton.setText("Train classifier");
+                        win.setButtonsEnabled(0);
+                        return;
                     }
                     classifier = trainableSuperpixelSegmentation.getClassifier();
                     IJ.log("Classifier trained");
@@ -1008,10 +1015,16 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     calculateFeatures = true;
                 }else {
                     IJ.log("Error: interrupting training failed becaused the thread is null!");
+                    win.trainClassButton.setText("Train classifier");
+                    win.setButtonsEnabled(0);
+                    return;
                 }
 
             }catch(Exception ex){
                 ex.printStackTrace();
+                win.trainClassButton.setText("Train classifier");
+                win.setButtonsEnabled(0);
+                return;
             }
         }
     }
