@@ -1094,7 +1094,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 ins = trainableSuperpixelSegmentation.getUnlabeled();
             }
             saver.setInstances(ins);
-            SaveDialog sd = new SaveDialog("Save instances as...",inputImage.getShortTitle()+"-trainingData",".arff");
+            SaveDialog sd = new SaveDialog("Save instances as...",inputTitle+"-trainingData",".arff");
             if(sd.getFileName()==null){
                 win.setButtonsEnabled(0);
                 return;
@@ -1122,7 +1122,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             win.setButtonsEnabled(0);
             return;
         }
-        SaveDialog sd = new SaveDialog("Save model as...",inputImage.getShortTitle()+"-classifier",".model");
+        SaveDialog sd = new SaveDialog("Save model as...",inputTitle+"-classifier",".model");
         if(sd.getFileName()==null){
             win.setButtonsEnabled(0);
             return;
@@ -1737,7 +1737,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         {
             IJ.log("Open input image");
             inputImage = IJ.openImage();
-            inputTitle = inputImage.getTitle();
             IJ.log("Open superpixel image");
             supImage = IJ.openImage();
         }
@@ -1774,6 +1773,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 return;
         }
 
+        inputTitle = inputImage.getTitle();
         inputImage.setTitle("Trainable Superpixel Segmentation");
 
         if(inputImage == null || supImage == null){
