@@ -16,6 +16,13 @@ import java.util.HashMap;
 
 public class Utils {
 
+    /**
+     * Merge two instances
+     * @param data1
+     * @param data2
+     * @return Instances object containing instances of both datasets
+     * @throws Exception instances mismatch
+     */
     public static Instances merge(Instances data1, Instances data2) throws Exception {
         int asize = data1.numAttributes();
         boolean[] strings_pos = new boolean[asize];
@@ -94,6 +101,11 @@ public class Utils {
         return result;
     }
 
+    /**
+     * Remaps label image so that regions in different slices have different values
+     * @param labelImage label image
+     * @return label image with different regions each slice
+     */
     public static ImagePlus remapLabelImage(ImagePlus labelImage){
         ImageStack img = labelImage.getStack();
         double max = 0;
