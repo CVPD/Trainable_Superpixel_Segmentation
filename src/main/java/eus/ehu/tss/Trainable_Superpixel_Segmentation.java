@@ -827,8 +827,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             a.name().endsWith("-b")){
                         n = a.name().substring(0,a.name().length()-2);
                     }
-                    for(int i = 0 ; i < numFeatures; i++)
+                    if(!features.contains(RegionFeatures.Feature.fromLabel(n))) {
                         features.add(RegionFeatures.Feature.fromLabel(n));
+                    }
                 }
                 if(loadedTrainingData==null) {
                     loadedTrainingData = data;
@@ -837,6 +838,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     loadedTrainingData = eus.ehu.tss.Utils.merge(loadedTrainingData,data);
                 }
                 trainingDataLoaded = true;
+                trainableSuperpixelSegmentation.setSelectedFeatures(features);
                 IJ.log("Data loaded");
                 win.setButtonsEnabled(0);
             }
@@ -894,7 +896,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             Thread newTask = new Thread() {
 
                 public void run() {
-
+                    boolean regionSelected = false;
                     ArrayList<int[]> tags = new ArrayList<int[]>();
                     for(int i=0;i<numClasses;++i){
                         ArrayList<Integer> t = new ArrayList<>();
@@ -903,6 +905,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                                 ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
                                 for (int k = 0; k < floats.size(); ++k) {
                                     t.add(floats.get(k).intValue());
+                                    regionSelected = true;
                                 }
                             }
                         }
@@ -912,7 +915,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         }
                         tags.add(tg);
                     }
-
                     if (!trainingDataLoaded) {
 
                         for (int i = 0; i < tags.size(); ++i) {
@@ -932,53 +934,46 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     }
                     try {
                         if (trainingDataLoaded) {
-                            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-                            ResultsTable unlabeledTable = trainableSuperpixelSegmentation.getUnlabeledTable();
-                            int numFeatures = unlabeledTable.getLastColumn()+ 1;
-                            for(int i=0;i<numFeatures;++i){
-                                attributes.add(new Attribute(unlabeledTable.getColumnHeading(i),i));
-                            }
-                            attributes.add(new Attribute("Class",classes));
-                            Instances trainingData = new Instances("training data",attributes,0);
-                            int[] labels = LabelImages.findAllLabels(supImage);
-                            HashMap<Integer,Integer> labelIndices = LabelImages.mapLabelIndices(labels);
+                            if(regionSelected) {
+                                ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+                                ResultsTable unlabeledTable = trainableSuperpixelSegmentation.getUnlabeledTable();
+                                int numFeatures = unlabeledTable.getLastColumn() + 1;
+                                for (int i = 0; i < numFeatures; ++i) {
+                                    attributes.add(new Attribute(unlabeledTable.getColumnHeading(i), i));
+                                }
+                                attributes.add(new Attribute("Class", classes));
+                                Instances trainingData = new Instances("training data", attributes, 0);
+                                int[] labels = LabelImages.findAllLabels(supImage);
+                                HashMap<Integer, Integer> labelIndices = LabelImages.mapLabelIndices(labels);
 
-                            for(int i=0;i<tags.size();++i){ //For each class in classRegions
-                                for(int j=0;j<tags.get(i).length;++j){
-                                    Instance inst = new DenseInstance(numFeatures+1);
-                                    for(int k=0;k<numFeatures;++k){
-                                        int classvalue = tags.get(i)[j];
-                                        inst.setValue(k,unlabeledTable.getValueAsDouble(k,
-                                                labelIndices.get(
-                                                        tags.get(i)[j]
-                                                )));
+                                for (int i = 0; i < tags.size(); ++i) { //For each class in classRegions
+                                    for (int j = 0; j < tags.get(i).length; ++j) {
+                                        Instance inst = new DenseInstance(numFeatures + 1);
+                                        for (int k = 0; k < numFeatures; ++k) {
+                                            int classvalue = tags.get(i)[j];
+                                            inst.setValue(k, unlabeledTable.getValueAsDouble(k,
+                                                    labelIndices.get(
+                                                            tags.get(i)[j]
+                                                    )));
+                                        }
+                                        inst.setValue(numFeatures, i); // set class value
+                                        trainingData.add(inst);
                                     }
-                                    inst.setValue(numFeatures,i); // set class value
-                                    trainingData.add(inst);
                                 }
-                            }
-                            trainingData.setClassIndex(numFeatures); // set class index
-                            if(classBalance){
-                                try {
-                                    final Resample filter = new Resample();
-                                    filter.setBiasToUniformClass(1.0);
-                                    filter.setInputFormat(trainingData);
-                                    filter.setNoReplacement(false);
-                                    filter.setSampleSizePercent(100);
-                                    trainingData = Filter.useFilter(trainingData, filter);
-                                }catch (Exception e){
-                                    e.printStackTrace();
-                                    win.trainClassButton.setText("Train classifier");
-                                    win.setButtonsEnabled(0);
-                                    return;
+                                trainingData.setClassIndex(numFeatures); // set class index
+                                IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
+                                trainingData = eus.ehu.tss.Utils.merge(trainingData, loadedTrainingData);
+                                trainableSuperpixelSegmentation.setTrainingData(trainingData);
+                                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances");
+                                if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                                    IJ.error("Error when training classifier");
                                 }
-                            }
-                            IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
-                            trainingData = eus.ehu.tss.Utils.merge(trainingData, loadedTrainingData);
-                            trainableSuperpixelSegmentation.setTrainingData(trainingData);
-                            IJ.log("Training classifier with "+trainableSuperpixelSegmentation.getTrainingData().numInstances()+" instances");
-                            if (!trainableSuperpixelSegmentation.trainClassifier()) {
-                                IJ.error("Error when training classifier");
+                            }else {
+                                trainableSuperpixelSegmentation.setTrainingData(loadedTrainingData);
+                                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances");
+                                if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                                    IJ.error("Error when training classifier");
+                                }
                             }
                         }else {
                             trainableSuperpixelSegmentation.setTrainingData(null);
@@ -1811,6 +1806,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             // Define classifier
             classifier = new RandomForest();
             trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,features,classifier,classes);
+            supImage = trainableSuperpixelSegmentation.getLabelImage(); //Update after remaping
             win = new CustomWindow(inputImage);
             Toolbar.getInstance().setTool( Toolbar.FREELINE );
         }
