@@ -56,9 +56,10 @@ public class TrainableSuperpixelSegmentation {
     		AbstractClassifier classifier,
     		ArrayList<String> classes )
     {
+
         selectedFeatures = features;
         inputImage = originalImage;
-        labelImage = labels;
+        labelImage = Utils.remapLabelImage(labels);
         abstractClassifier  = classifier;
         this.classes = classes;
     }
