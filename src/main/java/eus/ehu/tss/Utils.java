@@ -2,6 +2,7 @@ package eus.ehu.tss;
 
 
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
 import inra.ijpb.label.LabelImages;
@@ -90,6 +91,30 @@ public class Utils {
                 result.addValue(j,rs2.getValueAsDouble(j,i));
             }
         }
+        return result;
+    }
+
+    public static ImagePlus remapLabelImage(ImagePlus labelImage){
+        ImageStack img = labelImage.getStack();
+        double max = 0;
+        double prevMax = 0;
+        for(int z=0;z<img.getSize();++z){
+            for(int y = 0; y < img.getHeight();++y){
+                for(int x = 0;x<img.getWidth();++x){
+                    double p = img.getVoxel(x,y,z);
+                    if(p!=0) {
+                        if (p > max) {
+                            max = p;
+                        }
+                        img.setVoxel(x, y, z, p + prevMax);
+                    }
+                }
+            }
+            prevMax+=max;
+            max=0;
+        }
+
+        ImagePlus result = new ImagePlus(labelImage.getShortTitle(),img);
         return result;
     }
 
