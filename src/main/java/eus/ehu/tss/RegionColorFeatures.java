@@ -82,56 +82,50 @@ public class RegionColorFeatures {
             ImagePlus labelImage,
             ArrayList<RegionFeatures.Feature> selectedFeatures) {
 
-        ArrayList<ResultsTable> finalResultsTables = new ArrayList<>();
+        ArrayList<ResultsTable> resultsTables = new ArrayList<>();
+        ImageStack lStack = new ImageStack(inputImage.getWidth(),inputImage.getHeight());
+        ImageStack aStack = new ImageStack(inputImage.getWidth(),inputImage.getHeight());
+        ImageStack bStack = new ImageStack(inputImage.getWidth(),inputImage.getHeight());
         ImageStack stack = inputImage.getStack();
-        ImageStack spStack = labelImage.getStack();
-        for (int l = 1; l < inputImage.getNSlices() + 1; ++l) {
-            ArrayList<ResultsTable> resultsTables = new ArrayList<>();
-            ImageProcessor sliceProcessor = stack.getProcessor(l);
-            ImagePlus slice = new ImagePlus("Slice" + l, sliceProcessor);
-            ImageProcessor spProcessor = spStack.getProcessor(l);
-            ImagePlus spSlice = new ImagePlus("Slice " + l, spProcessor);
+        for(int z=0;z<inputImage.getNSlices();++z){
+            ImageProcessor sliceProcessor = stack.getProcessor(z+1);
+            ImagePlus slice = new ImagePlus("Slice" + z, sliceProcessor);
             ColorSpaceConverter converter = new ColorSpaceConverter();
             ImagePlus lab = converter.RGBToLab(slice);
             ImagePlus[] channels = ChannelSplitter.split(lab);
-            if (Thread.currentThread().isInterrupted()) {
-                return null;
-            }
-            ExecutorService exe = Executors.newFixedThreadPool(3);
-            final ArrayList<Future<ResultsTable>> futures = new ArrayList<Future<ResultsTable>>();
-            try {
-                futures.add(exe.submit(getUnlabeledTables(channels[0], spSlice, selectedFeatures)));
-                futures.add(exe.submit(getUnlabeledTables(channels[1], spSlice, selectedFeatures)));
-                futures.add(exe.submit(getUnlabeledTables(channels[2], spSlice, selectedFeatures)));
-                int i = 0;
-                for (Future<ResultsTable> f : futures) {
-                    ResultsTable res = f.get();
-                    resultsTables.add(res);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            } finally {
-                exe.shutdown();
-            }
-            for(int i=0;i<resultsTables.get(0).getLastColumn();++i){
-                //Rename columns based on channel they belong to
-                resultsTables.get(0).renameColumn(resultsTables.get(0).getColumnHeading(i),resultsTables.get(0).getColumnHeading(i)+"-l");
-
-                resultsTables.get(1).renameColumn(resultsTables.get(1).getColumnHeading(i),resultsTables.get(1).getColumnHeading(i)+"-a");
-
-                resultsTables.get(2).renameColumn(resultsTables.get(2).getColumnHeading(i),resultsTables.get(2).getColumnHeading(i)+"-b");
-            }
-            ResultsBuilder rb = new ResultsBuilder(resultsTables.get(0));
-            rb.addResult(resultsTables.get(1));
-            rb.addResult(resultsTables.get(2));
-            finalResultsTables.add(rb.getResultsTable());
+            lStack.addSlice(channels[0].getProcessor());
+            aStack.addSlice(channels[1].getProcessor());
+            bStack.addSlice(channels[2].getProcessor());
         }
-        ResultsTable finalResult = finalResultsTables.get(0);
-        for(int i=1;i<finalResultsTables.size();++i){
-            finalResult = Utils.mergeResultsTables(finalResult,finalResultsTables.get(i));
+        ExecutorService exe = Executors.newFixedThreadPool(3);
+        final ArrayList<Future<ResultsTable>> futures = new ArrayList<Future<ResultsTable>>();
+        try {
+            futures.add(exe.submit(getUnlabeledTables(new ImagePlus(inputImage.getShortTitle()+"-l",lStack), labelImage, selectedFeatures)));
+            futures.add(exe.submit(getUnlabeledTables(new ImagePlus(inputImage.getShortTitle()+"-a",aStack), labelImage, selectedFeatures)));
+            futures.add(exe.submit(getUnlabeledTables(new ImagePlus(inputImage.getShortTitle()+"-b",bStack), labelImage, selectedFeatures)));
+            int i = 0;
+            for (Future<ResultsTable> f : futures) {
+                ResultsTable res = f.get();
+                resultsTables.add(res);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            exe.shutdown();
         }
-        return finalResult;
+        for(int i=0;i<resultsTables.get(0).getLastColumn();++i){
+            //Rename columns based on channel they belong to
+            resultsTables.get(0).renameColumn(resultsTables.get(0).getColumnHeading(i),resultsTables.get(0).getColumnHeading(i)+"-l");
+
+            resultsTables.get(1).renameColumn(resultsTables.get(1).getColumnHeading(i),resultsTables.get(1).getColumnHeading(i)+"-a");
+
+            resultsTables.get(2).renameColumn(resultsTables.get(2).getColumnHeading(i),resultsTables.get(2).getColumnHeading(i)+"-b");
+        }
+        ResultsBuilder rb = new ResultsBuilder(resultsTables.get(0));
+        rb.addResult(resultsTables.get(1));
+        rb.addResult(resultsTables.get(2));
+        return rb.getResultsTable();
     }
 
 
