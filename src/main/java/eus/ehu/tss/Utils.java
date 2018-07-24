@@ -5,6 +5,7 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
+import inra.ijpb.data.image.Images3D;
 import inra.ijpb.label.LabelImages;
 import inra.ijpb.measure.ResultsBuilder;
 import weka.core.Attribute;
@@ -125,8 +126,8 @@ public class Utils {
             prevMax+=max;
             max=0;
         }
-
         ImagePlus result = new ImagePlus(labelImage.getShortTitle(),img);
+        Images3D.optimizeDisplayRange(result);
         return result;
     }
 
