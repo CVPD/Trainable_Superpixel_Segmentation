@@ -902,6 +902,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         ArrayList<Integer> t = new ArrayList<>();
                         for(int l=0;l<inputImage.getNSlices();++l) {
                             for (int j = 0; j < aRoiList[l].get(i).size(); ++j) {
+                                supImage.setSlice(l+1);
                                 ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
                                 for (int k = 0; k < floats.size(); ++k) {
                                     t.add(floats.get(k).intValue());
