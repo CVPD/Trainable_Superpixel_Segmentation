@@ -2,7 +2,6 @@ package eus.ehu.tss;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
@@ -10,7 +9,6 @@ import ij.gui.Roi;
 import ij.gui.StackWindow;
 import ij.gui.ImageRoi;
 import ij.gui.Overlay;
-import ij.gui.PointRoi;
 import ij.gui.Toolbar;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
@@ -37,8 +35,6 @@ import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.core.OptionHandler;
 import weka.core.converters.ArffSaver;
-import weka.filters.Filter;
-import weka.filters.supervised.instance.Resample;
 import weka.gui.GenericObjectEditor;
 import weka.gui.PropertyPanel;
 import weka.gui.visualize.PlotData2D;
@@ -79,7 +75,6 @@ import java.io.InputStream;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -99,7 +94,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private ImagePlus resultImage;
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
-    private  java.awt.List[] exampleList = new java.awt.List[500];
+    private java.awt.List[] displayedLists = new java.awt.List[500];
     private ArrayList<ArrayList<Roi>>[] aRoiList;
     private ArrayList<RegionFeatures.Feature> features;
     private AbstractClassifier classifier;
@@ -114,7 +109,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private boolean trainingDataLoaded = false;
     private Instances loadedTrainingData = null;
     private Thread trainingTask = null;
-    private int currentSlice = 1;
 
     private class CustomWindow extends StackWindow
     {
@@ -192,7 +186,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         else{
                             for(int i = 0; i < numClasses; i++)
                             {
-                                if(e.getSource() == exampleList[i])
+                                if(e.getSource() == displayedLists[i])
                                 {
                                     deleteSelected(e,i);
                                     break;
@@ -217,7 +211,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     public void run() {
                         for(int i = 0; i < numClasses; i++)
                         {
-                            if(e.getSource() == exampleList[i])
+                            if(e.getSource() == displayedLists[i])
                                 listSelected(e, i);
                         }
                     }
@@ -417,22 +411,22 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             optionsConstraints.gridy++;
 
             //Annotations panel
-            for(int i=0; i<numClasses;++i){
-                exampleList[i].addActionListener(listener);
-                exampleList[i].addItemListener(itemListener);
-                addExampleButton[i] = new JButton("Add to class "+i);
-                addExampleButton[i].setToolTipText("Add markings of label 'class "+i+"'");
+            for (int i = 0; i < numClasses; ++i) {
+                displayedLists[i].addActionListener(listener);
+                displayedLists[i].addItemListener(itemListener);
+                addExampleButton[i] = new JButton("Add to class " + i);
+                addExampleButton[i].setToolTipText("Add markings of label 'class " + i + "'");
 
-                annotationsConstraints.insets = new Insets(5,5,6,6);
+                annotationsConstraints.insets = new Insets(5, 5, 6, 6);
 
-                annotationsPanel.add(addExampleButton[i],annotationsConstraints);
+                annotationsPanel.add(addExampleButton[i], annotationsConstraints);
                 annotationsConstraints.gridy++;
 
-                annotationsConstraints.insets = new Insets(0,0,0,0);
+                annotationsConstraints.insets = new Insets(0, 0, 0, 0);
 
-                annotationsPanel.add(exampleList[i], annotationsConstraints);
+                annotationsPanel.add(displayedLists[i], annotationsConstraints);
                 annotationsConstraints.gridy++;
-            }
+                }
 
             controlsPanel.add(trainingPanel,controlConstraints);
             controlConstraints.gridy++;
@@ -505,8 +499,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             public void run() {
                                 if (e.getSource() == sliceSelector) {
                                     inputImage.killRoi();
-                                    currentSlice = inputImage.getCurrentSlice();
                                     updateOverlay();
+                                    updateDisplayedLists();
                                 }
 
                             }
@@ -524,8 +518,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             {
                                 //IJ.log("moving scroll");
                                 inputImage.killRoi();
-                                currentSlice = inputImage.getCurrentSlice();
                                 updateOverlay();
+                                updateDisplayedLists();
                             }
                         });
 
@@ -553,8 +547,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                                 {
                                     //IJ.log("moving scroll");
                                     inputImage.killRoi();
-                                    currentSlice = inputImage.getCurrentSlice();
                                     updateOverlay();
+                                    updateDisplayedLists();
                                 }
                             }
                         });
@@ -579,8 +573,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             add( all, winc );
             pack();
             setMinimumSize(getPreferredSize());
-
-
         }
 
         public void updateOverlay(){
@@ -610,27 +602,25 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
          */
         public void addClass(){
             int classNum = numClasses;
+            displayedLists[classNum] = new java.awt.List(5);
+            displayedLists[classNum].setForeground(colors[classNum]);
 
-            exampleList[classNum] = new java.awt.List(5);
-            exampleList[classNum].setForeground(colors[classNum]);
-
-            exampleList[classNum].addActionListener(listener);
-            exampleList[classNum].addItemListener(itemListener);
+            displayedLists[classNum].addActionListener(listener);
+            displayedLists[classNum].addItemListener(itemListener);
             addExampleButton[classNum] = new JButton("Add to " + classes.get(classNum));
 
             annotationsConstraints.insets = new Insets(5, 5, 6, 6);
 
-            annotationsPanel.add(addExampleButton[classNum],annotationsConstraints);
+            annotationsPanel.add(addExampleButton[classNum], annotationsConstraints);
             annotationsConstraints.gridy++;
 
-            annotationsConstraints.insets = new Insets(0,0,0,0);
+            annotationsConstraints.insets = new Insets(0, 0, 0, 0);
 
-            annotationsPanel.add(exampleList[classNum],annotationsConstraints);
+            annotationsPanel.add(displayedLists[classNum], annotationsConstraints);
             annotationsConstraints.gridy++;
 
             // Add listener to the new button
             addExampleButton[classNum].addActionListener(listener);
-
             for(int l=0;l<inputImage.getNSlices();++l) {
                 aRoiList[l].add(new ArrayList<>());
             }
@@ -752,6 +742,22 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             this.controlsPanel.repaint();
             this.all.repaint();
         }
+
+        /**
+         * Update the example lists in the GUI
+         */
+        protected void updateDisplayedLists()
+        {
+            for(int i = 0; i < numClasses; i++)
+            {
+                displayedLists[i].removeAll();
+                for(int j=0;j<aRoiList[inputImage.getCurrentSlice()-1].get(i).size();++j){
+                    displayedLists[i].add(new String("Trace "+j+" -z= "+inputImage.getCurrentSlice()));
+                }
+            }
+
+        }
+
     }
 
     /**
@@ -1642,44 +1648,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      */
     void deleteSelected(final ActionEvent e, final int i){
         try {
-            String item = e.getActionCommand();
-            String[] items = exampleList[i].getItems();
-            String c = Character.toString(item.charAt(item.length()-1));
-            int slice = Integer.parseInt(c);
-            for (int j = 0; j < items.length; ++j) {
-                if (item.equals(items[j])) {
-                    aRoiList[slice-1].get(i).remove(j);
+            int index = displayedLists[i].getSelectedIndex();
+            aRoiList[inputImage.getCurrentSlice()-1].get(i).remove(index);
+            win.updateDisplayedLists();
 
-                }
-            }
-            exampleList[i].remove(item);
         }catch (Exception e1){
             e1.printStackTrace();
         }
-        /*int f = Integer.parseInt(e.getActionCommand());
-        int item = f;
-        int[] a = tags.get(i);
-        int[] b = new int[a.length-1];
-        boolean post=false;
-        for(int x=0;x<a.length;++x){
-            if(a[x]!=item){
-                if(post){
-                    b[x-1]=a[x];
-                }else {
-                    b[x]=a[x];
-                }
-            }else {
-                post=true;
-            }
-        }
-        tags.set(i,b);
-        try {
-            exampleList[i].remove(Integer.toString(f));
-            rois.remove(f);
-        }catch (Exception e1){
-            e1.printStackTrace();
-        }*/
-
     }
 
     /**
@@ -1691,7 +1666,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             final Roi r = inputImage.getRoi();
             r.setStrokeColor(colors[i]);
             aRoiList[inputImage.getCurrentSlice()-1].get(i).add(r);
-            exampleList[i].add("Trace " + aRoiList[inputImage.getCurrentSlice()-1].get(i).size() + " z=" + inputImage.getCurrentSlice());
+            win.updateDisplayedLists();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -1704,18 +1679,14 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      */
     void listSelected(final ItemEvent e, final int i)
     {
-        int selectedIndex = exampleList[i].getSelectedIndex();
-        String item = exampleList[i].getSelectedItem();
-        int slice=Integer.parseInt(Character.toString(item.charAt(item.length()-1)));
-        final Roi newRoi = aRoiList[slice-1].get(i).get(selectedIndex);
+        int selectedIndex = displayedLists[i].getSelectedIndex();
+        final Roi newRoi = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(selectedIndex);
         newRoi.setImage(inputImage);
         inputImage.setRoi(newRoi);
         inputImage.updateAndDraw();
-        for(int j=0;j<numClasses;++j) {
-            if(j!=i) {
-                for (int k = 0; k < exampleList[j].getItemCount(); ++k) {
-                    exampleList[j].deselect(k);
-                }
+        for(int j=0;j<displayedLists[i].getItemCount();++j) {
+            if(j!=selectedIndex) {
+                displayedLists[i].deselect(j);
             }
         }
     }
@@ -1798,14 +1769,18 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             for(int j=0;j<inputImage.getNSlices();++j) {
                 aRoiList[j] = new ArrayList<ArrayList<Roi>>();
             }
-            for(int i=0; i<numClasses; ++i){
-                classes.add("class "+i);
-                exampleList[i] = new java.awt.List(5);
-                exampleList[i].setForeground(colors[i]);
-                for(int j=0;j<inputImage.getNSlices();++j) {
+            for (int i = 0; i < numClasses; ++i) {
+                displayedLists[i] = new java.awt.List(5);
+                displayedLists[i].setForeground(colors[i]);
+            }
+
+            for (int i = 0; i < numClasses; ++i) {
+                classes.add("class " + i);
+                for (int j = 0; j < inputImage.getNSlices(); ++j) {
                     aRoiList[j].add(new ArrayList<>());
                 }
             }
+
             features = new ArrayList<>();
             String[] selectedFs = RegionFeatures.Feature.getAllLabels();
             for(int i=0;i<selectedFs.length;++i){
