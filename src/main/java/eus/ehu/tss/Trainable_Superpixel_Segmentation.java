@@ -1622,7 +1622,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
             }
         }
-        System.out.println(overlay);
     }
 
 
