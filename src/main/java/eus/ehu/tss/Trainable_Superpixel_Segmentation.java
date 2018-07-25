@@ -1689,6 +1689,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 displayedLists[i].deselect(j);
             }
         }
+        for(int c=0;c<numClasses;++c){
+            if(c!=i){
+               for(int j=0;j<displayedLists[c].getItemCount();++j) {
+                   displayedLists[c].deselect(j);
+               }
+            }
+        }
     }
 
     /**
