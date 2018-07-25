@@ -1765,20 +1765,18 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 int supIndex = gd.getNextChoiceIndex();
                 inputImage = WindowManager.getImage( inputIndex + 1 ).duplicate();
                 supImage = WindowManager.getImage( supIndex + 1 ).duplicate();
-
-                if( inputImage.getWidth() != supImage.getWidth() ||
-                        inputImage.getHeight() != supImage.getHeight() ||
-                        inputImage.getImageStackSize() != supImage.getImageStackSize() )
-                {
-                    IJ.error( "Trainable Superpixel Segmentation input error", "Error: input"
-                            + " and superpixel images must have the same size" );
-                    return;
-                }
             }
             else
                 return;
         }
-
+        if( inputImage.getWidth() != supImage.getWidth() ||
+                inputImage.getHeight() != supImage.getHeight() ||
+                inputImage.getImageStackSize() != supImage.getImageStackSize() )
+        {
+            IJ.error( "Trainable Superpixel Segmentation input error", "Error: input"
+                    + " and superpixel images must have the same size" );
+            return;
+        }
         inputTitle = inputImage.getTitle();
         inputImage.setTitle("Trainable Superpixel Segmentation");
 
