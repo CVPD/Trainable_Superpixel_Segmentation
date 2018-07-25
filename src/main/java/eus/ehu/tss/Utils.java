@@ -112,9 +112,11 @@ public class Utils {
         double max = 0;
         double prevMax = 0;
         for(int z=0;z<img.getSize();++z){
-            for(int y = 0; y < img.getHeight();++y){
-                for(int x = 0;x<img.getWidth();++x){
-                    double p = img.getVoxel(x,y,z);
+            ImageProcessor slice = img.getProcessor(z+1);
+            LabelImages.remapLabels(slice);
+            for(int y = 0; y < slice.getHeight();++y){
+                for(int x = 0;x<slice.getWidth();++x){
+                    double p = slice.getf(x,y);
                     if(p!=0) {
                         if (p > max) {
                             max = p;
