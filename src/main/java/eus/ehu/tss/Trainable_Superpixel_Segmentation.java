@@ -743,7 +743,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         public boolean ovCheckbox(){
             return overlayCheckbox.isSelected();
         }
-
+        public void uncheckOvCheckbox(){
+            overlayCheckbox.setSelected(false);
+        }
         public void repaintAll(){
             this.annotationsPanel.repaint();
             getCanvas().repaint();
@@ -1214,6 +1216,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         classifier = loadedClassifier;
         trainableSuperpixelSegmentation.setClasses(classes);
         calculateFeatures = true;
+        resultImage=null;
+        overlay=0;
+        if(win.ovCheckbox()){
+            win.uncheckOvCheckbox();
+        }
+        toggleOverlay();
         IJ.log(loadedClassifier.toString());
         trainableSuperpixelSegmentation.setClassifierTrained(true);
         win.setButtonsEnabled(1);
