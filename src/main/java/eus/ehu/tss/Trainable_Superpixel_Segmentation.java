@@ -1781,7 +1781,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     + " and superpixel images must have the same size" );
             return;
         }
-        inputTitle = inputImage.getTitle();
+        inputTitle = inputImage.getShortTitle();
         inputImage.setTitle("Trainable Superpixel Segmentation");
 
         if(inputImage == null || supImage == null){
