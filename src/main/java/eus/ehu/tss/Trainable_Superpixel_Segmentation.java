@@ -1359,6 +1359,21 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         for(int i = 0; i < numClasses; i++)
             gd.addStringField("Class "+i, classes.get(i), 15);
 
+        JButton createFeatureImage = new JButton("Create feature image");
+        createFeatureImage.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(calculateFeatures){
+                    IJ.log("Calculating region features");
+                    trainableSuperpixelSegmentation.calculateRegionFeatures();
+                    calculateFeatures = false;
+                }
+                ImagePlus featureImage = trainableSuperpixelSegmentation.getFeatureImage(supImage,trainableSuperpixelSegmentation.getUnlabeledTable());
+                featureImage.show();
+            }
+        });
+        gd.add(createFeatureImage);
+
         gd.showDialog();
 
         if(gd.wasCanceled()){
