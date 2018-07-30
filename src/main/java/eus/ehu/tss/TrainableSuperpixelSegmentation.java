@@ -303,6 +303,12 @@ public class TrainableSuperpixelSegmentation {
 
     }
 
+    /**
+     * Generate image stack where each slice represent the value of a feature
+     * @param labelImage region image
+     * @param features table with features
+     * @return result image
+     */
     public ImagePlus getFeatureImage(ImagePlus labelImage, ResultsTable features){
         int columns = features.getLastColumn();
         ImageStack imageStack = new ImageStack(labelImage.getWidth(),labelImage.getHeight());
@@ -495,11 +501,18 @@ public class TrainableSuperpixelSegmentation {
         this.balanceClasses = balanceClasses;
     }
 
-
+    /**
+     * Get unlabeled feature table
+     * @return
+     */
     public ResultsTable getUnlabeledTable() {
         return unlabeledTable;
     }
 
+    /**
+     * Set unlabeled table
+     * @param unlabeledTable
+     */
     public void setUnlabeledTable(ResultsTable unlabeledTable) {
         this.unlabeledTable = unlabeledTable;
     }

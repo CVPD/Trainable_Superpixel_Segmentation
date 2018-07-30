@@ -27,6 +27,14 @@ import java.util.concurrent.Future;
  */
 public class RegionColorFeatures {
 
+    /**
+     * Callable function to calculate unlabeled Instances
+     * @param inputImage input image
+     * @param labelImage corresponding label image
+     * @param selectedFeatures ArrayList of selected features
+     * @param classes ArrayList of posstible classes
+     * @return Callable with calculated instances
+     */
     private static Callable<Instances> getUnlabeledInstances(ImagePlus inputImage,
                                                              ImagePlus labelImage,
                                                              ArrayList<RegionFeatures.Feature> selectedFeatures,
@@ -43,6 +51,13 @@ public class RegionColorFeatures {
         };
     }
 
+    /**
+     * Callable function to calculate table with region features
+     * @param inputImage input image
+     * @param labelImage corresponding label image
+     * @param selectedFeatures ArrayList of selected features
+     * @return Callable with features in ResultsTable format
+     */
     private static Callable<ResultsTable> getUnlabeledTables(ImagePlus inputImage,
                                                              ImagePlus labelImage,
                                                              ArrayList<RegionFeatures.Feature> selectedFeatures){
@@ -58,7 +73,15 @@ public class RegionColorFeatures {
         };
     }
 
-
+    /**
+     * Callable function to calculate labeled instances
+     * @param inputImage input image
+     * @param labelImage corresponding label image
+     * @param groundtruth groundtruth image
+     * @param selectedFeatures ArrayList of selected features
+     * @param classes ArrayList of possible classes
+     * @return Callable with Instances
+     */
     private static Callable<Instances> getLabeledInstances(ImagePlus inputImage,
                                                              ImagePlus labelImage,
                                                              ImagePlus groundtruth,
@@ -76,7 +99,13 @@ public class RegionColorFeatures {
         };
     }
 
-
+    /**
+     * Calculates ResultsTable of features for each region in label image
+     * @param inputImage input image
+     * @param labelImage label image
+     * @param selectedFeatures ArrayList with selected features
+     * @return ResultsTable with features per region
+     */
     public static ResultsTable calculateFeaturesTable(
             ImagePlus inputImage,
             ImagePlus labelImage,
@@ -128,7 +157,12 @@ public class RegionColorFeatures {
         return rb.getResultsTable();
     }
 
-
+    /**
+     * Creates Instances based on resultsTable
+     * @param resultsTable table with features
+     * @param classes ArrayList with possible classes
+     * @return resulting Instances
+     */
     public static Instances calculateUnabeledInstances(ResultsTable resultsTable, ArrayList<String> classes){
         Instances unlabeled = RegionFeatures.calculateUnabeledInstances(resultsTable,classes);
         return unlabeled;

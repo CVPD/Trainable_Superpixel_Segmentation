@@ -109,6 +109,13 @@ public class RegionFeatures {
 
     };
 
+    /**
+     * Calculate Features for each region of label image
+     * @param inputImage input image
+     * @param labelImage corresponding label image
+     * @param selectedFeatures ArrayList of selected features
+     * @return table with features per region
+     */
     public static ResultsTable calculateFeaturesTable(
             ImagePlus inputImage,
             ImagePlus labelImage,
@@ -194,6 +201,12 @@ public class RegionFeatures {
 
     }
 
+    /**
+     * Calculate Instances based on provided table
+     * @param resultsTable table with features
+     * @param classes possible classes
+     * @return resulting Instances
+     */
     public static Instances calculateUnabeledInstances(ResultsTable resultsTable, ArrayList<String> classes){
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
         int numFeatures = resultsTable.getLastColumn() + 1; //Take into account it starts in index 0

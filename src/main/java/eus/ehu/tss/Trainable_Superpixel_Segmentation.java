@@ -709,6 +709,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
         }
 
+        /**
+         * Disable all buttons of GUI
+         */
         public void disableAllButtons(){
             trainClassButton.setEnabled(false);
             loadClassButton.setEnabled(false);
@@ -728,16 +731,31 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             loadTrainingDataButton.setEnabled(false);
         }
 
+        /**
+         * Enable checkbox to limit overlay to result image and no overlay
+         */
         public void enableOverlayCheckbox(){
             overlayCheckbox.setEnabled(true);
         }
 
+        /**
+         *
+         * @return true if overlay checkbox is selected
+         */
         public boolean ovCheckbox(){
             return overlayCheckbox.isSelected();
         }
+
+        /**
+         * unchecks overlay checkbox
+         */
         public void uncheckOvCheckbox(){
             overlayCheckbox.setSelected(false);
         }
+
+        /**
+         * Repatints all elemnts in GUI
+         */
         public void repaintAll(){
             this.annotationsPanel.repaint();
             getCanvas().repaint();
