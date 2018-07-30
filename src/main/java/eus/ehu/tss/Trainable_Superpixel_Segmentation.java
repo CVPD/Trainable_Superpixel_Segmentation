@@ -856,7 +856,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 final String[] availableFeatures = RegionFeatures.Feature.getAllLabels();
                 final int numFeatures = availableFeatures.length;
                 boolean[] usedFeatures = new boolean[numFeatures];
-                features = new ArrayList<RegionFeatures.Feature>();
+                ArrayList<RegionFeatures.Feature> loadedFeatures = new ArrayList<>();
                 while(attributes.hasMoreElements())
                 {
                     final Attribute a = attributes.nextElement();
@@ -866,8 +866,17 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             a.name().endsWith("-b")){
                         n = a.name().substring(0,a.name().length()-2);
                     }
-                    if(!features.contains(RegionFeatures.Feature.fromLabel(n))) {
-                        features.add(RegionFeatures.Feature.fromLabel(n));
+                    if(!loadedFeatures.contains(RegionFeatures.Feature.fromLabel(n))) {
+                        loadedFeatures.add(RegionFeatures.Feature.fromLabel(n));
+                    }
+                }
+                if(features.size()==loadedFeatures.size()){
+                    for(int i=0;i<features.size();++i){
+                        if(0!=features.get(i).toString().compareTo(loadedFeatures.get(i).toString())){
+                            calculateFeatures=true; //Calculate features for new selected features
+                            features=loadedFeatures;
+                            break;
+                        }
                     }
                 }
                 if(loadedTrainingData==null) {
@@ -878,7 +887,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
                 trainingDataLoaded = true;
                 trainableSuperpixelSegmentation.setSelectedFeatures(features);
-                calculateFeatures=true; //Calculate features for new selected features
                 IJ.log("Data loaded");
                 win.setButtonsEnabled(0);
             }
