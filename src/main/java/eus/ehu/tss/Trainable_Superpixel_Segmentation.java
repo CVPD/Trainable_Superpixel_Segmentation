@@ -879,6 +879,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
                 trainingDataLoaded = true;
                 trainableSuperpixelSegmentation.setSelectedFeatures(features);
+                calculateFeatures=true; //Calculate features for new selected features
                 IJ.log("Data loaded");
                 win.setButtonsEnabled(0);
             }
