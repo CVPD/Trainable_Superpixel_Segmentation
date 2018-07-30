@@ -13,6 +13,7 @@ import ij.gui.Toolbar;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.measure.ResultsTable;
+import ij.plugin.Duplicator;
 import ij.plugin.PlugIn;
 import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
@@ -92,6 +93,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private ImagePlus inputImage;
     private ImagePlus supImage;
     private ImagePlus resultImage;
+    private ImagePlus traceImage;
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
     private java.awt.List[] displayedLists = new java.awt.List[500];
@@ -748,14 +750,27 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
          */
         protected void updateDisplayedLists()
         {
+            traceImage = inputImage.duplicate();
+            traceImage.setSlice(inputImage.getCurrentSlice());
             for(int i = 0; i < numClasses; i++)
             {
                 displayedLists[i].removeAll();
                 for(int j=0;j<aRoiList[inputImage.getCurrentSlice()-1].get(i).size();++j){
+                    Roi r = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(j);
+                    r.setStrokeColor(colors[i]);
+                    r.setFillColor(colors[i]);
+                    r.setImage(traceImage);
+                    traceImage.getProcessor().setColor(colors[i]);
+                    r.drawPixels(traceImage.getProcessor());
                     displayedLists[i].add(new String("Trace "+j+" -z= "+inputImage.getCurrentSlice()));
                 }
             }
-
+            if(overlay==1){
+                ImageProcessor ip = traceImage.getStack().getProcessor(inputImage.getCurrentSlice());
+                ImageRoi imageRoi = new ImageRoi(0,0,ip);
+                imageRoi.setOpacity(overlayOpacity);
+                inputImage.setOverlay(new Overlay(imageRoi));
+            }
         }
 
     }
@@ -1604,6 +1619,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         if(overlay==0){
             overlay++;
             inputImage.setOverlay(null);
+            win.updateDisplayedLists();
         }else {
             if(win.ovCheckbox()) {
                 overlay = 0;
