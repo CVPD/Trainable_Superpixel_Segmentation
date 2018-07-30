@@ -1225,7 +1225,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 ArrayList<String> loadedClassNames = new ArrayList<String>();
                 if (classAttribute.numValues() != numClasses) {
                     IJ.error("ERROR: Loaded number of classes and current number do not match!\n\tExpected number of classes: "+classAttribute.numValues()+"\n\tCurrent number of classes: "+numClasses);
-                    trainingDataLoaded = false;
                     win.setButtonsEnabled(0);
                     return;
                 }
@@ -1237,7 +1236,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     IJ.log("Read class name: " + className);
                     if (!className.equals(classes.get(j))) {
                         IJ.error("ERROR: Loaded classes and current classes do not match!\n\tExpected: " + className + "\n\tFound: " + classes.get(j));
-                        trainingDataLoaded = false;
                         win.setButtonsEnabled(0);
                         return;
                     }
