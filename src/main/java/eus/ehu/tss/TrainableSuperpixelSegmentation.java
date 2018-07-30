@@ -281,8 +281,8 @@ public class TrainableSuperpixelSegmentation {
         }
         ImageStack stackLabels = labelImage.getStack();
         double tags[] = new double[height*width];
-        for(int k = 0;k<numClasses;++k) {
-            for (int slice = 1; slice <= inputImage.getNSlices(); ++slice) {
+        for (int slice = 1; slice <= inputImage.getNSlices(); ++slice) {
+            for(int k = 0;k<numClasses;++k) {
                 ImageProcessor ip = stackLabels.getProcessor(slice);
                 for (int x = 0; x < width; ++x) {
                     for (int y = 0; y < height; ++y) {
