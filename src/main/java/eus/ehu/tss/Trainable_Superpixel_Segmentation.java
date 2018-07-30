@@ -777,7 +777,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     Roi r = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(j);
                     r.setStrokeColor(colors[i]);
                     r.setFillColor(colors[i]);
-                    r.setImage(traceImage);
                     traceImage.getProcessor().setColor(colors[i]);
                     r.drawPixels(traceImage.getProcessor());
                     displayedLists[i].add(new String("Trace "+j+" -z= "+inputImage.getCurrentSlice()));
