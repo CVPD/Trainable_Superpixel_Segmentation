@@ -19,6 +19,8 @@ import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
 import ij.process.StackConverter;
+import ij.process.ColorProcessor;
+
 
 import inra.ijpb.label.LabelImages;
 
@@ -93,7 +95,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private ImagePlus inputImage;
     private ImagePlus supImage;
     private ImagePlus resultImage;
-    private ImagePlus traceImage;
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
     private java.awt.List[] displayedLists = new java.awt.List[500];
@@ -768,8 +769,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
          */
         protected void updateDisplayedLists()
         {
-            traceImage = inputImage.duplicate();
-            traceImage.setSlice(inputImage.getCurrentSlice());
+            ColorProcessor cp = new ColorProcessor(inputImage.getWidth(),inputImage.getHeight());
             for(int i = 0; i < numClasses; i++)
             {
                 displayedLists[i].removeAll();
@@ -777,16 +777,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     Roi r = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(j);
                     r.setStrokeColor(colors[i]);
                     r.setFillColor(colors[i]);
-                    traceImage.getProcessor().setColor(colors[i]);
-                    r.drawPixels(traceImage.getProcessor());
+                    cp.drawRoi(r);
                     displayedLists[i].add(new String("Trace "+j+" -z= "+inputImage.getCurrentSlice()));
                 }
             }
             if(overlay==1){
-                ImageProcessor ip = traceImage.getStack().getProcessor(inputImage.getCurrentSlice());
-                ImageRoi imageRoi = new ImageRoi(0,0,ip);
-                imageRoi.setOpacity(overlayOpacity);
-                inputImage.setOverlay(new Overlay(imageRoi));
+                ImageRoi imgRoi = new ImageRoi(0,0,cp);
+                imgRoi.setZeroTransparent(true);
+                imgRoi.setOpacity(overlayOpacity);
+                inputImage.setOverlay(new Overlay(imgRoi));
             }
         }
 
@@ -857,7 +856,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 final String[] availableFeatures = RegionFeatures.Feature.getAllLabels();
                 final int numFeatures = availableFeatures.length;
                 boolean[] usedFeatures = new boolean[numFeatures];
-                features = new ArrayList<RegionFeatures.Feature>();
+                ArrayList<RegionFeatures.Feature> loadedFeatures = new ArrayList<>();
                 while(attributes.hasMoreElements())
                 {
                     final Attribute a = attributes.nextElement();
@@ -867,8 +866,17 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             a.name().endsWith("-b")){
                         n = a.name().substring(0,a.name().length()-2);
                     }
-                    if(!features.contains(RegionFeatures.Feature.fromLabel(n))) {
-                        features.add(RegionFeatures.Feature.fromLabel(n));
+                    if(!loadedFeatures.contains(RegionFeatures.Feature.fromLabel(n))) {
+                        loadedFeatures.add(RegionFeatures.Feature.fromLabel(n));
+                    }
+                }
+                if(features.size()==loadedFeatures.size()){
+                    for(int i=0;i<features.size();++i){
+                        if(0!=features.get(i).toString().compareTo(loadedFeatures.get(i).toString())){
+                            calculateFeatures=true; //Calculate features for new selected features
+                            features=loadedFeatures;
+                            break;
+                        }
                     }
                 }
                 if(loadedTrainingData==null) {
@@ -1224,7 +1232,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 ArrayList<String> loadedClassNames = new ArrayList<String>();
                 if (classAttribute.numValues() != numClasses) {
                     IJ.error("ERROR: Loaded number of classes and current number do not match!\n\tExpected number of classes: "+classAttribute.numValues()+"\n\tCurrent number of classes: "+numClasses);
-                    trainingDataLoaded = false;
                     win.setButtonsEnabled(0);
                     return;
                 }
@@ -1236,7 +1243,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     IJ.log("Read class name: " + className);
                     if (!className.equals(classes.get(j))) {
                         IJ.error("ERROR: Loaded classes and current classes do not match!\n\tExpected: " + className + "\n\tFound: " + classes.get(j));
-                        trainingDataLoaded = false;
                         win.setButtonsEnabled(0);
                         return;
                     }

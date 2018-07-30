@@ -143,7 +143,7 @@ public class RegionColorFeatures {
         } finally {
             exe.shutdown();
         }
-        for(int i=0;i<resultsTables.get(0).getLastColumn();++i){
+        for(int i=0;i<resultsTables.get(0).getLastColumn()+1;++i){
             //Rename columns based on channel they belong to
             resultsTables.get(0).renameColumn(resultsTables.get(0).getColumnHeading(i),resultsTables.get(0).getColumnHeading(i)+"-l");
 
