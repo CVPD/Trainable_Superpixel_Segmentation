@@ -1,10 +1,7 @@
 package eus.ehu.tss;
 
-import com.sun.scenario.effect.impl.sw.java.JSWBlend_COLOR_BURNPeer;
-
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
@@ -12,17 +9,18 @@ import ij.gui.Roi;
 import ij.gui.StackWindow;
 import ij.gui.ImageRoi;
 import ij.gui.Overlay;
-import ij.gui.PointRoi;
 import ij.gui.Toolbar;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
+import ij.measure.ResultsTable;
+import ij.plugin.Duplicator;
 import ij.plugin.PlugIn;
 import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
 import ij.process.StackConverter;
 
-import org.w3c.dom.Attr;
+import inra.ijpb.label.LabelImages;
 
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
@@ -38,7 +36,6 @@ import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.core.OptionHandler;
 import weka.core.converters.ArffSaver;
-import weka.core.converters.ConverterUtils;
 import weka.gui.GenericObjectEditor;
 import weka.gui.PropertyPanel;
 import weka.gui.visualize.PlotData2D;
@@ -53,13 +50,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import java.awt.Color;
-import java.awt.Panel;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.Checkbox;
-import java.awt.BorderLayout;
+import java.awt.*;
 
 import java.awt.event.AdjustmentListener;
 import java.awt.event.AdjustmentEvent;
@@ -85,7 +76,6 @@ import java.io.InputStream;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -103,11 +93,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private ImagePlus inputImage;
     private ImagePlus supImage;
     private ImagePlus resultImage;
+    private ImagePlus traceImage;
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
-    private  java.awt.List[] exampleList = new java.awt.List[500];
-    private ArrayList<int[]> tags = new ArrayList<>();
-    private ArrayList<HashMap<Integer,Roi>> rois = new ArrayList<>();
+    private java.awt.List[] displayedLists = new java.awt.List[500];
+    private ArrayList<ArrayList<Roi>>[] aRoiList;
     private ArrayList<RegionFeatures.Feature> features;
     private AbstractClassifier classifier;
     private ArrayList<String> classes;
@@ -121,7 +111,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private boolean trainingDataLoaded = false;
     private Instances loadedTrainingData = null;
     private Thread trainingTask = null;
-    private int currentSlice = 1;
 
     private class CustomWindow extends StackWindow
     {
@@ -199,7 +188,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         else{
                             for(int i = 0; i < numClasses; i++)
                             {
-                                if(e.getSource() == exampleList[i])
+                                if(e.getSource() == displayedLists[i])
                                 {
                                     deleteSelected(e,i);
                                     break;
@@ -224,7 +213,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     public void run() {
                         for(int i = 0; i < numClasses; i++)
                         {
-                            if(e.getSource() == exampleList[i])
+                            if(e.getSource() == displayedLists[i])
                                 listSelected(e, i);
                         }
                     }
@@ -406,7 +395,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             saveClassButton.setToolTipText("Save trained classifier into a file");
             optionsPanel.add(saveClassButton,optionsConstraints);
             optionsConstraints.gridy++;
-            saveInstButton = new JButton("Save instances");
+            saveInstButton = new JButton("Save training data");
             saveInstButton.setToolTipText("Save training data into a Weka file");
             optionsPanel.add(saveInstButton,optionsConstraints);
             optionsConstraints.gridy++;
@@ -424,22 +413,22 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             optionsConstraints.gridy++;
 
             //Annotations panel
-            for(int i=0; i<numClasses;++i){
-                exampleList[i].addActionListener(listener);
-                exampleList[i].addItemListener(itemListener);
-                addExampleButton[i] = new JButton("Add to class "+i);
-                addExampleButton[i].setToolTipText("Add markings of label 'class "+i+"'");
+            for (int i = 0; i < numClasses; ++i) {
+                displayedLists[i].addActionListener(listener);
+                displayedLists[i].addItemListener(itemListener);
+                addExampleButton[i] = new JButton("Add to class " + i);
+                addExampleButton[i].setToolTipText("Add markings of label 'class " + i + "'");
 
-                annotationsConstraints.insets = new Insets(5,5,6,6);
+                annotationsConstraints.insets = new Insets(5, 5, 6, 6);
 
-                annotationsPanel.add(addExampleButton[i],annotationsConstraints);
+                annotationsPanel.add(addExampleButton[i], annotationsConstraints);
                 annotationsConstraints.gridy++;
 
-                annotationsConstraints.insets = new Insets(0,0,0,0);
+                annotationsConstraints.insets = new Insets(0, 0, 0, 0);
 
-                annotationsPanel.add(exampleList[i], annotationsConstraints);
+                annotationsPanel.add(displayedLists[i], annotationsConstraints);
                 annotationsConstraints.gridy++;
-            }
+                }
 
             controlsPanel.add(trainingPanel,controlConstraints);
             controlConstraints.gridy++;
@@ -512,8 +501,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             public void run() {
                                 if (e.getSource() == sliceSelector) {
                                     inputImage.killRoi();
-                                    currentSlice = inputImage.getCurrentSlice();
                                     updateOverlay();
+                                    updateDisplayedLists();
                                 }
 
                             }
@@ -531,8 +520,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             {
                                 //IJ.log("moving scroll");
                                 inputImage.killRoi();
-                                currentSlice = inputImage.getCurrentSlice();
                                 updateOverlay();
+                                updateDisplayedLists();
                             }
                         });
 
@@ -560,8 +549,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                                 {
                                     //IJ.log("moving scroll");
                                     inputImage.killRoi();
-                                    currentSlice = inputImage.getCurrentSlice();
                                     updateOverlay();
+                                    updateDisplayedLists();
                                 }
                             }
                         });
@@ -586,8 +575,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             add( all, winc );
             pack();
             setMinimumSize(getPreferredSize());
-
-
         }
 
         public void updateOverlay(){
@@ -617,32 +604,34 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
          */
         public void addClass(){
             int classNum = numClasses;
+            displayedLists[classNum] = new java.awt.List(5);
+            displayedLists[classNum].setForeground(colors[classNum]);
 
-            exampleList[classNum] = new java.awt.List(5);
-            exampleList[classNum].setForeground(colors[classNum]);
-
-            exampleList[classNum].addActionListener(listener);
-            exampleList[classNum].addItemListener(itemListener);
+            displayedLists[classNum].addActionListener(listener);
+            displayedLists[classNum].addItemListener(itemListener);
             addExampleButton[classNum] = new JButton("Add to " + classes.get(classNum));
 
             annotationsConstraints.insets = new Insets(5, 5, 6, 6);
 
-            annotationsPanel.add(addExampleButton[classNum],annotationsConstraints);
+            annotationsPanel.add(addExampleButton[classNum], annotationsConstraints);
             annotationsConstraints.gridy++;
 
-            annotationsConstraints.insets = new Insets(0,0,0,0);
+            annotationsConstraints.insets = new Insets(0, 0, 0, 0);
 
-            annotationsPanel.add(exampleList[classNum],annotationsConstraints);
+            annotationsPanel.add(displayedLists[classNum], annotationsConstraints);
             annotationsConstraints.gridy++;
 
             // Add listener to the new button
             addExampleButton[classNum].addActionListener(listener);
+            for(int l=0;l<inputImage.getNSlices();++l) {
+                aRoiList[l].add(new ArrayList<>());
+            }
 
             numClasses++;
-            tags.add(new int[0]);
-            rois.add(new HashMap<>());
             // recalculate minimum size of scroll panel
             scrollPanel.setMinimumSize( labelsJPanel.getPreferredSize() );
+
+
 
             repaintAll();
 
@@ -720,6 +709,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
         }
 
+        /**
+         * Disable all buttons of GUI
+         */
         public void disableAllButtons(){
             trainClassButton.setEnabled(false);
             loadClassButton.setEnabled(false);
@@ -739,20 +731,65 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             loadTrainingDataButton.setEnabled(false);
         }
 
+        /**
+         * Enable checkbox to limit overlay to result image and no overlay
+         */
         public void enableOverlayCheckbox(){
             overlayCheckbox.setEnabled(true);
         }
 
+        /**
+         *
+         * @return true if overlay checkbox is selected
+         */
         public boolean ovCheckbox(){
             return overlayCheckbox.isSelected();
         }
 
+        /**
+         * unchecks overlay checkbox
+         */
+        public void uncheckOvCheckbox(){
+            overlayCheckbox.setSelected(false);
+        }
+
+        /**
+         * Repatints all elemnts in GUI
+         */
         public void repaintAll(){
             this.annotationsPanel.repaint();
             getCanvas().repaint();
             this.controlsPanel.repaint();
             this.all.repaint();
         }
+
+        /**
+         * Update the example lists in the GUI
+         */
+        protected void updateDisplayedLists()
+        {
+            traceImage = inputImage.duplicate();
+            traceImage.setSlice(inputImage.getCurrentSlice());
+            for(int i = 0; i < numClasses; i++)
+            {
+                displayedLists[i].removeAll();
+                for(int j=0;j<aRoiList[inputImage.getCurrentSlice()-1].get(i).size();++j){
+                    Roi r = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(j);
+                    r.setStrokeColor(colors[i]);
+                    r.setFillColor(colors[i]);
+                    traceImage.getProcessor().setColor(colors[i]);
+                    r.drawPixels(traceImage.getProcessor());
+                    displayedLists[i].add(new String("Trace "+j+" -z= "+inputImage.getCurrentSlice()));
+                }
+            }
+            if(overlay==1){
+                ImageProcessor ip = traceImage.getStack().getProcessor(inputImage.getCurrentSlice());
+                ImageRoi imageRoi = new ImageRoi(0,0,ip);
+                imageRoi.setOpacity(overlayOpacity);
+                inputImage.setOverlay(new Overlay(imageRoi));
+            }
+        }
+
     }
 
     /**
@@ -781,9 +818,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
             catch(IOException e){
                 IJ.showMessage("IOException: wrong file format!");
+                win.setButtonsEnabled(0);
+                return;
             }
         }
-        catch(FileNotFoundException e){IJ.showMessage("File not found!");}
+        catch(FileNotFoundException e){
+            IJ.showMessage("File not found!");
+            win.setButtonsEnabled(0);
+            return;
+        }
         try {
             if (null != data) {
                 Attribute classAttribute = data.classAttribute();
@@ -819,21 +862,23 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 {
                     final Attribute a = attributes.nextElement();
                     String n = a.name();
-                    if(a.name().endsWith("-L")||
+                    if(a.name().endsWith("-l")||
                             a.name().endsWith("-a")||
                             a.name().endsWith("-b")){
                         n = a.name().substring(0,a.name().length()-2);
                     }
-                    for(int i = 0 ; i < numFeatures; i++)
+                    if(!features.contains(RegionFeatures.Feature.fromLabel(n))) {
                         features.add(RegionFeatures.Feature.fromLabel(n));
+                    }
                 }
                 if(loadedTrainingData==null) {
                     loadedTrainingData = data;
                 }else {
                     IJ.log("Merging previously loaded data -"+loadedTrainingData.numInstances()+" instances- with new data -"+data.numInstances()+" instances-");
-                    loadedTrainingData = merge(loadedTrainingData,data);
+                    loadedTrainingData = eus.ehu.tss.Utils.merge(loadedTrainingData,data);
                 }
                 trainingDataLoaded = true;
+                trainableSuperpixelSegmentation.setSelectedFeatures(features);
                 IJ.log("Data loaded");
                 win.setButtonsEnabled(0);
             }
@@ -859,18 +904,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         classes.add(inputName);
         win.addClass();
         repaintWindow();
-        if(!calculateFeatures){
-            Instances features = trainableSuperpixelSegmentation.getUnlabeled();
-            Attribute c = features.classAttribute();
-            ArrayList<String> newc = new ArrayList<>();
-            for(int i=0;i<c.numValues();++i){
-                newc.add(c.value(i));
-            }
-            newc.add(inputName);
-            Attribute newClass = new Attribute("class",newc);
-            features.replaceAttributeAt(newClass,c.index());
-            trainableSuperpixelSegmentation.setUnlabeled(features);
-        }
+        trainableSuperpixelSegmentation.setClasses(classes);
     }
 
     /**
@@ -902,11 +936,32 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             Thread newTask = new Thread() {
 
                 public void run() {
-
+                    boolean regionSelected = false;
+                    ArrayList<int[]> tags = new ArrayList<int[]>();
+                    for(int i=0;i<numClasses;++i){
+                        ArrayList<Integer> t = new ArrayList<>();
+                        for(int l=0;l<inputImage.getNSlices();++l) {
+                            for (int j = 0; j < aRoiList[l].get(i).size(); ++j) {
+                                supImage.setSlice(l+1);
+                                ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
+                                for (int k = 0; k < floats.size(); ++k) {
+                                    t.add(floats.get(k).intValue());
+                                    regionSelected = true;
+                                }
+                            }
+                        }
+                        int[] tg = new int[t.size()];
+                        for (int j = 0; j < tg.length; ++j) {
+                            tg[j] = t.get(j);
+                        }
+                        tags.add(tg);
+                    }
                     if (!trainingDataLoaded) {
+
                         for (int i = 0; i < tags.size(); ++i) {
                             if (tags.get(i).length == 0) {
                                 IJ.showMessage("Add at least one region to class " + classes.get(i));
+                                win.trainClassButton.setText("Train classifier");
                                 win.setButtonsEnabled(0);
                                 return;
                             }
@@ -918,40 +973,61 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         trainableSuperpixelSegmentation.calculateRegionFeatures();
                         calculateFeatures = false;
                     }
-                    Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
-                    ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-                    int numFeatures = unlabeled.numAttributes() - 1;
-                    for (int i = 0; i < numFeatures; ++i) {
-                        attributes.add(new Attribute(unlabeled.attribute(i).name(), i));
-                    }
-                    attributes.add(new Attribute("Class", classes));
-                    Instances trainingData = new Instances("training data", attributes, 0);
-                    // Fill training dataset with the feature vectors of the corresponding
-                    // regions given by classRegions
-                    for (int i = 0; i < tags.size(); ++i) { //For each class in classRegions
-                        for (int j = 0; j < tags.get(i).length; ++j) {
-                            Instance inst = new DenseInstance(numFeatures + 1);
-                            for (int k = 0; k < numFeatures; ++k) {
-                                inst.setValue(k, unlabeled.get(tags.get(i)[j] - 1).value(k));
-                            }
-                            inst.setValue(numFeatures, i); // set class value
-                            trainingData.add(inst);
-                        }
-                    }
-                    trainingData.setClassIndex(numFeatures); // set class index
                     try {
                         if (trainingDataLoaded) {
-                            IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
-                            trainingData = merge(trainingData, loadedTrainingData);
+                            if(regionSelected) {
+                                ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+                                ResultsTable unlabeledTable = trainableSuperpixelSegmentation.getUnlabeledTable();
+                                int numFeatures = unlabeledTable.getLastColumn() + 1;
+                                for (int i = 0; i < numFeatures; ++i) {
+                                    attributes.add(new Attribute(unlabeledTable.getColumnHeading(i), i));
+                                }
+                                attributes.add(new Attribute("Class", classes));
+                                Instances trainingData = new Instances("training data", attributes, 0);
+                                int[] labels = LabelImages.findAllLabels(supImage);
+                                HashMap<Integer, Integer> labelIndices = LabelImages.mapLabelIndices(labels);
+
+                                for (int i = 0; i < tags.size(); ++i) { //For each class in classRegions
+                                    for (int j = 0; j < tags.get(i).length; ++j) {
+                                        Instance inst = new DenseInstance(numFeatures + 1);
+                                        for (int k = 0; k < numFeatures; ++k) {
+                                            int classvalue = tags.get(i)[j];
+                                            inst.setValue(k, unlabeledTable.getValueAsDouble(k,
+                                                    labelIndices.get(
+                                                            tags.get(i)[j]
+                                                    )));
+                                        }
+                                        inst.setValue(numFeatures, i); // set class value
+                                        trainingData.add(inst);
+                                    }
+                                }
+                                trainingData.setClassIndex(numFeatures); // set class index
+                                IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
+                                trainingData = eus.ehu.tss.Utils.merge(trainingData, loadedTrainingData);
+                                trainableSuperpixelSegmentation.setTrainingData(trainingData);
+                                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances");
+                                if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                                    IJ.error("Error when training classifier");
+                                }
+                            }else {
+                                trainableSuperpixelSegmentation.setTrainingData(loadedTrainingData);
+                                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances");
+                                if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                                    IJ.error("Error when training classifier");
+                                }
+                            }
+                        }else {
+                            trainableSuperpixelSegmentation.setTrainingData(null);
+                            trainableSuperpixelSegmentation.calculateTrainingData(tags);
+                            IJ.log("Training classifier with "+trainableSuperpixelSegmentation.getTrainingData().numInstances()+" instances");
+                            trainableSuperpixelSegmentation.trainClassifier();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                         IJ.log("Error when merging loaded training data selected data");
-                    }
-                    IJ.log("Training classifier");
-                    trainableSuperpixelSegmentation.setTrainingData(trainingData);
-                    if (!trainableSuperpixelSegmentation.trainClassifier()) {
-                        IJ.error("Error when training classifier");
+                        win.trainClassButton.setText("Train classifier");
+                        win.setButtonsEnabled(0);
+                        return;
                     }
                     classifier = trainableSuperpixelSegmentation.getClassifier();
                     IJ.log("Classifier trained");
@@ -981,10 +1057,16 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     calculateFeatures = true;
                 }else {
                     IJ.log("Error: interrupting training failed becaused the thread is null!");
+                    win.trainClassButton.setText("Train classifier");
+                    win.setButtonsEnabled(0);
+                    return;
                 }
 
             }catch(Exception ex){
                 ex.printStackTrace();
+                win.trainClassButton.setText("Train classifier");
+                win.setButtonsEnabled(0);
+                return;
             }
         }
     }
@@ -1048,7 +1130,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 ins = trainableSuperpixelSegmentation.getUnlabeled();
             }
             saver.setInstances(ins);
-            SaveDialog sd = new SaveDialog("Save instances as...",inputImage.getShortTitle()+"-trainingData",".arff");
+            SaveDialog sd = new SaveDialog("Save instances as...",inputTitle+"-trainingData",".arff");
             if(sd.getFileName()==null){
                 win.setButtonsEnabled(0);
                 return;
@@ -1076,7 +1158,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             win.setButtonsEnabled(0);
             return;
         }
-        SaveDialog sd = new SaveDialog("Save model as...",inputImage.getShortTitle()+"-classifier",".model");
+        SaveDialog sd = new SaveDialog("Save model as...",inputTitle+"-classifier",".model");
         if(sd.getFileName()==null){
             win.setButtonsEnabled(0);
             return;
@@ -1108,7 +1190,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         if (saveOK)
             win.setButtonsEnabled(0);
-            IJ.log("Saved model into " + filename );
+        IJ.log("Saved model into " + filename );
 
 
     }
@@ -1172,6 +1254,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         classifier = loadedClassifier;
         trainableSuperpixelSegmentation.setClasses(classes);
         calculateFeatures = true;
+        resultImage=null;
+        overlay=0;
+        if(win.ovCheckbox()){
+            win.uncheckOvCheckbox();
+        }
+        toggleOverlay();
         IJ.log(loadedClassifier.toString());
         trainableSuperpixelSegmentation.setClassifierTrained(true);
         win.setButtonsEnabled(1);
@@ -1263,12 +1351,27 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         String originalOptions = "";
         String originalClassifierName = c.getClass().getName();
         if (c instanceof OptionHandler)
-        	originalOptions = Utils.joinOptions(((OptionHandler)c).getOptions());
+            originalOptions = Utils.joinOptions(((OptionHandler)c).getOptions());
 
 
         gd.addMessage("Class names:");
         for(int i = 0; i < numClasses; i++)
             gd.addStringField("Class "+i, classes.get(i), 15);
+
+        JButton createFeatureImage = new JButton("Create feature image");
+        createFeatureImage.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(calculateFeatures){
+                    IJ.log("Calculating region features");
+                    trainableSuperpixelSegmentation.calculateRegionFeatures();
+                    calculateFeatures = false;
+                }
+                ImagePlus featureImage = trainableSuperpixelSegmentation.getFeatureImage(supImage,trainableSuperpixelSegmentation.getUnlabeledTable());
+                featureImage.show();
+            }
+        });
+        gd.add(createFeatureImage);
 
         gd.showDialog();
 
@@ -1340,20 +1443,20 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             int slice = inputImage.getCurrentSlice();
             ImageRoi roi = null;
             if(inputImage.getOverlay()!=null){
-               if(overlay==0&&resultImage!=null){
-                   ImagePlus resultImg = resultImage.duplicate();
-                   convertTo8bitNoScaling( resultImg );
-                   resultImg.getProcessor().setColorModel( overlayLUT );
-                   resultImg.getImageStack().setColorModel( overlayLUT );
-                   ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
-                   roi = new ImageRoi(0, 0, processor);
-                   roi.setOpacity(win.overlayOpacity);
-                   inputImage.setOverlay(new Overlay(roi));
-               }else{
-                   roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
-                   roi.setOpacity(win.overlayOpacity);
-                   inputImage.setOverlay(new Overlay(roi));
-               }
+                if(overlay==0&&resultImage!=null){
+                    ImagePlus resultImg = resultImage.duplicate();
+                    convertTo8bitNoScaling( resultImg );
+                    resultImg.getProcessor().setColorModel( overlayLUT );
+                    resultImg.getImageStack().setColorModel( overlayLUT );
+                    ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
+                    roi = new ImageRoi(0, 0, processor);
+                    roi.setOpacity(win.overlayOpacity);
+                    inputImage.setOverlay(new Overlay(roi));
+                }else{
+                    roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
+                    roi.setOpacity(win.overlayOpacity);
+                    inputImage.setOverlay(new Overlay(roi));
+                }
             }else{
                 roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
                 roi.setOpacity(win.overlayOpacity);
@@ -1462,65 +1565,90 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * Creates and displays probability maps, calculates features if they haven't been calculated
      */
     void showProbability(){
-        win.disableAllButtons();
-        trainableSuperpixelSegmentation.setClasses(classes);
-        if(calculateFeatures) {
-            IJ.log("Calculating region features");
-            trainableSuperpixelSegmentation.calculateRegionFeatures();
-            calculateFeatures = false;
-        }
-        if(!trainableSuperpixelSegmentation.isClassifierTrained()){
-            if(!trainingDataLoaded) {
-                for (int i = 0; i < tags.size(); ++i) {
-                    if (tags.get(i).length == 0) {
-                        IJ.showMessage("Add at least one region to class " + classes.get(i));
-                        win.setButtonsEnabled(0);
-                        return;
+        try {
+            win.disableAllButtons();
+            ArrayList<int[]> tags = new ArrayList<int[]>();
+            for(int i=0;i<numClasses;++i){
+                ArrayList<Integer> t = new ArrayList<>();
+                for(int l=0;l<inputImage.getNSlices();++l) {
+                    for (int j = 0; j < aRoiList[l].get(i).size(); ++j) {
+                        supImage.setSlice(l+1);
+                        ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
+                        for (int k = 0; k < floats.size(); ++k) {
+                            t.add(floats.get(k).intValue());
+                        }
+                    }
+                    int[] tg = new int[t.size()];
+                    for (int j = 0; j < tg.length; ++j) {
+                        tg[j] = t.get(j);
+                    }
+                    tags.add(tg);
+                }
+
+            }
+            trainableSuperpixelSegmentation.setClasses(classes);
+            if (calculateFeatures) {
+                IJ.log("Calculating region features");
+                trainableSuperpixelSegmentation.calculateRegionFeatures();
+                calculateFeatures = false;
+            }
+            if (!trainableSuperpixelSegmentation.isClassifierTrained()) {
+                if (!trainingDataLoaded) {
+                    for (int i = 0; i < tags.size(); ++i) {
+                        if (tags.get(i).length == 0) {
+                            IJ.showMessage("Add at least one region to class " + classes.get(i));
+                            win.setButtonsEnabled(0);
+                            return;
+                        }
                     }
                 }
-            }
-            Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
-            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-            int numFeatures = unlabeled.numAttributes()-1;
-            for(int i=0;i<numFeatures;++i){
-                attributes.add(new Attribute(unlabeled.attribute(i).name(),i));
-            }
-            attributes.add(new Attribute("Class",classes));
-            Instances trainingData = new Instances("training data",attributes,0);
-            // Fill training dataset with the feature vectors of the corresponding
-            // regions given by classRegions
-            for(int i=0;i<tags.size();++i){ //For each class in classRegions
-                for(int j=0;j<tags.get(i).length;++j){
-                    Instance inst = new DenseInstance(numFeatures+1);
-                    for(int k=0;k<numFeatures;++k){
-                        inst.setValue(k,unlabeled.get(tags.get(i)[j]-1).value(k));
+                Instances unlabeled = trainableSuperpixelSegmentation.getUnlabeled();
+                ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+                int numFeatures = unlabeled.numAttributes() - 1;
+                for (int i = 0; i < numFeatures; ++i) {
+                    attributes.add(new Attribute(unlabeled.attribute(i).name(), i));
+                }
+                attributes.add(new Attribute("Class", classes));
+                Instances trainingData = new Instances("training data", attributes, 0);
+                // Fill training dataset with the feature vectors of the corresponding
+                // regions given by classRegions
+                for (int i = 0; i < tags.size(); ++i) { //For each class in classRegions
+                    for (int j = 0; j < tags.get(i).length; ++j) {
+                        Instance inst = new DenseInstance(numFeatures + 1);
+                        for (int k = 0; k < numFeatures; ++k) {
+                            inst.setValue(k, unlabeled.get(tags.get(i)[j] - 1).value(k));
+                        }
+                        inst.setValue(numFeatures, i); // set class value
+                        trainingData.add(inst);
                     }
-                    inst.setValue(numFeatures,i); // set class value
-                    trainingData.add(inst);
                 }
-            }
-            trainingData.setClassIndex(numFeatures); // set class index
-            try {
-                if (trainingDataLoaded) {
-                    IJ.log("Merging previously loaded data -"+loadedTrainingData.numInstances()+" instances- with selected regions -"+trainingData.numInstances()+" instances-");
-                    trainingData = merge(trainingData,loadedTrainingData);
+                trainingData.setClassIndex(numFeatures); // set class index
+                try {
+                    if (trainingDataLoaded) {
+                        IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
+                        trainingData = eus.ehu.tss.Utils.merge(trainingData, loadedTrainingData);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    IJ.log("Error when merging loaded training data selected data");
                 }
-            }catch (Exception e){
-                e.printStackTrace();
-                IJ.log("Error when merging loaded training data selected data");
+                trainableSuperpixelSegmentation.setTrainingData(trainingData);
+                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances");
+                if (!trainableSuperpixelSegmentation.trainClassifier()) {
+                    IJ.error("Error when training classifier");
+                    win.setButtonsEnabled(0);
+                    return;
+                }
+                classifier = trainableSuperpixelSegmentation.getClassifier();
             }
-            trainableSuperpixelSegmentation.setTrainingData(trainingData);
-            if (!trainableSuperpixelSegmentation.trainClassifier()) {
-                IJ.error("Error when training classifier");
-                win.setButtonsEnabled(0);
-                return;
-            }
-            classifier = trainableSuperpixelSegmentation.getClassifier();
+            ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
+            probabilityImage.setTitle(inputTitle + "-prob");
+            probabilityImage.show();
+            win.setButtonsEnabled(0);
+        }catch (Exception e){
+            e.printStackTrace();
+            return;
         }
-        ImagePlus probabilityImage = trainableSuperpixelSegmentation.getProbabilityMap();
-        probabilityImage.setTitle(inputTitle+"-prob");
-        probabilityImage.show();
-        win.setButtonsEnabled(0);
 
     }
 
@@ -1533,6 +1661,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         if(overlay==0){
             overlay++;
             inputImage.setOverlay(null);
+            win.updateDisplayedLists();
         }else {
             if(win.ovCheckbox()) {
                 overlay = 0;
@@ -1567,7 +1696,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
             }
         }
-        System.out.println(overlay);
     }
 
 
@@ -1577,26 +1705,11 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param i identifier of class to remove tags
      */
     void deleteSelected(final ActionEvent e, final int i){
-        int f = Integer.parseInt(e.getActionCommand());
-        int item = f;
-        int[] a = tags.get(i);
-        int[] b = new int[a.length-1];
-        boolean post=false;
-        for(int x=0;x<a.length;++x){
-            if(a[x]!=item){
-                if(post){
-                    b[x-1]=a[x];
-                }else {
-                    b[x]=a[x];
-                }
-            }else {
-                post=true;
-            }
-        }
-        tags.set(i,b);
         try {
-            exampleList[i].remove(Integer.toString(f));
-            rois.get(i).remove(f);
+            int index = displayedLists[i].getSelectedIndex();
+            aRoiList[inputImage.getCurrentSlice()-1].get(i).remove(index);
+            win.updateDisplayedLists();
+            inputImage.killRoi();
         }catch (Exception e1){
             e1.printStackTrace();
         }
@@ -1607,32 +1720,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param i identifier of class to add tags
      */
     void addExamples(int i){
-        final Roi r = inputImage.getRoi();
-        if(null == r){
-            IJ.log("Select a ROI before adding");
-            return;
-        }
-        inputImage.killRoi();
-        HashMap<Integer,Roi> selectedLabel = getSelectedLabels(supImage,r);
-        int y=0;
-        for(int key : selectedLabel.keySet()){
-            boolean dup = false;
-            int[] a = tags.get(i);
-            //Check if tag already exists on list
-            for(int x = 0;x<a.length;++x){
-                if(a[x]==key){
-                    IJ.log("Tag already on list");
-                    dup = true;
-                    break;
-                }
-            }
-            if(!dup) {
-                a = Arrays.copyOf(a, a.length + 1);
-                a[a.length - 1] = key;
-                tags.set(i, a);
-                exampleList[i].add(Integer.toString(key));
-                rois.get(i).put(key,selectedLabel.get(key));
-            }
+        try {
+            final Roi r = inputImage.getRoi();
+            r.setStrokeColor(colors[i]);
+            aRoiList[inputImage.getCurrentSlice()-1].get(i).add(r);
+            win.updateDisplayedLists();
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
@@ -1643,80 +1737,24 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      */
     void listSelected(final ItemEvent e, final int i)
     {
-        for(int j=0;j<numClasses;++j){
-            if(j==i){
-                int selectedIndex  = exampleList[i].getSelectedIndex();
-                int key = Integer.parseInt(exampleList[i].getItem(selectedIndex));
-                HashMap<Integer,Roi> a = rois.get(i);
-                final Roi newroi = a.get(key);
-                newroi.setImage(inputImage);
-                inputImage.setRoi(newroi);
-            }else{
-                exampleList[j].deselect(exampleList[j].getSelectedIndex());
-            }
-        }
+        int selectedIndex = displayedLists[i].getSelectedIndex();
+        final Roi newRoi = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(selectedIndex);
+        newRoi.setImage(inputImage);
+        inputImage.setRoi(newRoi);
         inputImage.updateAndDraw();
-    }
-
-    /**
-     * Modified method taken from MorphoLibJ, LabelImages class
-     *
-     * Get list of selected labels in label image. Labels are selected by
-     * either a freehand ROI or point ROIs. Zero-value label is skipped.
-     *
-     * @param labelImage  label image
-     * @param roi  FreehandRoi or PointRoi with selected labels
-     * @return list of selected labels
-     */
-    public HashMap<Integer,Roi> getSelectedLabels(
-            final ImagePlus labelImage,
-            final Roi roi )
-    {
-        final HashMap<Integer,Roi> list = new HashMap<>();
-
-        // if the user makes point selections
-        if( roi instanceof PointRoi)
-        {
-            int[] xpoints = roi.getPolygon().xpoints;
-            int[] ypoints = roi.getPolygon().ypoints;
-            int zpoint = currentSlice;
-            // read label values at those positions
-            if( labelImage.getImageStackSize() > 1 )
-            {
-                final ImageStack labelStack = labelImage.getImageStack();
-                for ( int i = 0; i<xpoints.length; i ++ )
-                {
-                    float value = (float) labelStack.getVoxel(
-                            xpoints[ i ],
-                            ypoints[ i ],zpoint-1);
-                    if(Float.compare( 0f, value ) == 0){
-                        IJ.log("Tag with value 0 not added");
-                    }
-                    if( Float.compare( 0f, value ) != 0) {
-                        list.putIfAbsent((int) value, new Roi(xpoints[i],ypoints[i],0,0));
-                    }
-                }
+        for(int j=0;j<displayedLists[i].getItemCount();++j) {
+            if(j!=selectedIndex) {
+                displayedLists[i].deselect(j);
             }
-            else
-            {
-                final ImageProcessor ip = labelImage.getProcessor();
-                for ( int i = 0; i<xpoints.length; i ++ )
-                {
-                    float value = ip.getf( xpoints[ i ], ypoints[ i ]);
-                    if(Float.compare( 0f, value ) == 0){
-                        IJ.log("Tag with value 0 not added");
-                    }
-                    if( Float.compare( 0f, value ) != 0)
-                        list.putIfAbsent((int) value, new Roi(xpoints[i],ypoints[i],0,0));
-                }
-            }
-        }else {
-            IJ.error("Please use multipoint selection");
-            Toolbar.getInstance().setTool( Toolbar.POINT );
         }
-        return list;
+        for(int c=0;c<numClasses;++c){
+            if(c!=i){
+               for(int j=0;j<displayedLists[c].getItemCount();++j) {
+                   displayedLists[c].deselect(j);
+               }
+            }
+        }
     }
-
 
     /**
      * Taken from Weka_Segmentation
@@ -1743,63 +1781,71 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     @Override
     public void run(String s) {
 
-    	classes = new ArrayList<String>();
-    	// Check number of open images
-    	int nbima = WindowManager.getImageCount();
-    	// If less than 2 images opened, ask user
-    	if( nbima < 2 )
-    	{
-    		IJ.log("Open input image");
-    		inputImage = IJ.openImage();
-    		inputTitle = inputImage.getTitle();
-    		IJ.log("Open superpixel image");
-    		supImage = IJ.openImage();
-    	}
-    	else // otherwise read currently opened image titles
-    	{
-    		String[] names = new String[ nbima ];
+        classes = new ArrayList<String>();
+        // Check number of open images
+        int nbima = WindowManager.getImageCount();
+        // If less than 2 images opened, ask user
+        if( nbima < 2 )
+        {
+            IJ.log("Open input image");
+            inputImage = IJ.openImage();
+            IJ.log("Open superpixel image");
+            supImage = IJ.openImage();
+        }
+        else // otherwise read currently opened image titles
+        {
+            String[] names = new String[ nbima ];
 
-    		for (int i = 0; i < nbima; i++)
-    			names[ i ] = WindowManager.getImage(i + 1).getShortTitle();
+            for (int i = 0; i < nbima; i++)
+                names[ i ] = WindowManager.getImage(i + 1).getShortTitle();
 
-    		GenericDialog gd = new GenericDialog( "Trainable Superpixel Segmentation" );
-    		gd.addChoice( "Input image", names, names[ 0 ] );
-    		gd.addChoice( "Superpixel image", names, names[ 1 ] );
+            GenericDialog gd = new GenericDialog( "Trainable Superpixel Segmentation" );
+            gd.addChoice( "Input image", names, names[ 0 ] );
+            gd.addChoice( "Superpixel image", names, names[ 1 ] );
 
-    		gd.showDialog();
+            gd.showDialog();
 
-    		if( gd.wasOKed() )
-    		{
-    			int inputIndex = gd.getNextChoiceIndex();
-    			int supIndex = gd.getNextChoiceIndex();
-    			inputImage = WindowManager.getImage( inputIndex + 1 ).duplicate();
-    			supImage = WindowManager.getImage( supIndex + 1 ).duplicate();
-
-    			if( inputImage.getWidth() != supImage.getWidth() ||
-    					inputImage.getHeight() != supImage.getHeight() ||
-    					inputImage.getImageStackSize() != supImage.getImageStackSize() )
-    			{
-    				IJ.error( "Trainable Superpixel Segmentation input error", "Error: input"
-    						+ " and superpixel images must have the same size" );
-    				return;
-    			}
-    		}
-    		else
-    			return;
-    	}
-
-    	inputImage.setTitle("Trainable Superpixel Segmentation");
+            if( gd.wasOKed() )
+            {
+                int inputIndex = gd.getNextChoiceIndex();
+                int supIndex = gd.getNextChoiceIndex();
+                inputImage = WindowManager.getImage( inputIndex + 1 ).duplicate();
+                supImage = WindowManager.getImage( supIndex + 1 ).duplicate();
+            }
+            else
+                return;
+        }
+        if( inputImage.getWidth() != supImage.getWidth() ||
+                inputImage.getHeight() != supImage.getHeight() ||
+                inputImage.getImageStackSize() != supImage.getImageStackSize() )
+        {
+            IJ.error( "Trainable Superpixel Segmentation input error", "Error: input"
+                    + " and superpixel images must have the same size" );
+            return;
+        }
+        inputTitle = inputImage.getShortTitle();
+        inputImage.setTitle("Trainable Superpixel Segmentation");
 
         if(inputImage == null || supImage == null){
             IJ.error("Error when opening image");
         }else {
-            for(int i=0; i<numClasses; ++i){
-                classes.add("class "+i);
-                exampleList[i] = new java.awt.List(5);
-                exampleList[i].setForeground(colors[i]);
-                tags.add(new int[0]);
-                rois.add(new HashMap<>());
+
+            aRoiList = new ArrayList[inputImage.getNSlices()];
+            for(int j=0;j<inputImage.getNSlices();++j) {
+                aRoiList[j] = new ArrayList<ArrayList<Roi>>();
             }
+            for (int i = 0; i < numClasses; ++i) {
+                displayedLists[i] = new java.awt.List(5);
+                displayedLists[i].setForeground(colors[i]);
+            }
+
+            for (int i = 0; i < numClasses; ++i) {
+                classes.add("class " + i);
+                for (int j = 0; j < inputImage.getNSlices(); ++j) {
+                    aRoiList[j].add(new ArrayList<>());
+                }
+            }
+
             features = new ArrayList<>();
             String[] selectedFs = RegionFeatures.Feature.getAllLabels();
             for(int i=0;i<selectedFs.length;++i){
@@ -1808,8 +1854,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             // Define classifier
             classifier = new RandomForest();
             trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,features,classifier,classes);
+            supImage = trainableSuperpixelSegmentation.getLabelImage(); //Update after remaping
             win = new CustomWindow(inputImage);
-            Toolbar.getInstance().setTool( Toolbar.POINT );
+            Toolbar.getInstance().setTool( Toolbar.FREELINE );
         }
         win.setButtonsEnabled(0);
 
@@ -1821,35 +1868,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         System.setProperty("plugins.dir", pluginsDir);
         IJ.runPlugIn(clazz.getName(),"");
 
-    }
-
-    public static Instances merge(Instances data1, Instances data2) throws Exception {
-        int asize = data1.numAttributes();
-        boolean[] strings_pos = new boolean[asize];
-
-        for(int i = 0; i < asize; ++i) {
-            Attribute att = data1.attribute(i);
-            strings_pos[i] = att.type() == 2 || att.type() == 1;
-        }
-
-        Instances dest = new Instances(data1);
-        dest.setRelationName(data1.relationName() + "+" + data2.relationName());
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource(data2);
-        Instances instances = source.getStructure();
-        Instance instance = null;
-
-        while(source.hasMoreElements(instances)) {
-            instance = source.nextElement(instances);
-            dest.add(instance);
-
-            for(int i = 0; i < asize; ++i) {
-                if(strings_pos[i]) {
-                    dest.instance(dest.numInstances() - 1).setValue(i, instance.stringValue(i));
-                }
-            }
-        }
-
-        return dest;
     }
 
 

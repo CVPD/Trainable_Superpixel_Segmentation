@@ -3,16 +3,20 @@ package eus.ehu.tss;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.measure.ResultsTable;
 import ij.plugin.ChannelSplitter;
 import ij.process.ColorSpaceConverter;
 import ij.process.ImageProcessor;
+import inra.ijpb.measure.ResultsBuilder;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,6 +27,14 @@ import java.util.concurrent.Future;
  */
 public class RegionColorFeatures {
 
+    /**
+     * Callable function to calculate unlabeled Instances
+     * @param inputImage input image
+     * @param labelImage corresponding label image
+     * @param selectedFeatures ArrayList of selected features
+     * @param classes ArrayList of posstible classes
+     * @return Callable with calculated instances
+     */
     private static Callable<Instances> getUnlabeledInstances(ImagePlus inputImage,
                                                              ImagePlus labelImage,
                                                              ArrayList<RegionFeatures.Feature> selectedFeatures,
@@ -38,6 +50,38 @@ public class RegionColorFeatures {
             }
         };
     }
+
+    /**
+     * Callable function to calculate table with region features
+     * @param inputImage input image
+     * @param labelImage corresponding label image
+     * @param selectedFeatures ArrayList of selected features
+     * @return Callable with features in ResultsTable format
+     */
+    private static Callable<ResultsTable> getUnlabeledTables(ImagePlus inputImage,
+                                                             ImagePlus labelImage,
+                                                             ArrayList<RegionFeatures.Feature> selectedFeatures){
+        if(Thread.currentThread().isInterrupted()){
+            return null;
+        }
+        return new Callable<ResultsTable>() {
+            @Override
+            public ResultsTable call() throws Exception {
+                ResultsTable result =  RegionFeatures.calculateFeaturesTable(inputImage,labelImage,selectedFeatures);
+                return result;
+            }
+        };
+    }
+
+    /**
+     * Callable function to calculate labeled instances
+     * @param inputImage input image
+     * @param labelImage corresponding label image
+     * @param groundtruth groundtruth image
+     * @param selectedFeatures ArrayList of selected features
+     * @param classes ArrayList of possible classes
+     * @return Callable with Instances
+     */
     private static Callable<Instances> getLabeledInstances(ImagePlus inputImage,
                                                              ImagePlus labelImage,
                                                              ImagePlus groundtruth,
@@ -56,6 +100,75 @@ public class RegionColorFeatures {
     }
 
     /**
+     * Calculates ResultsTable of features for each region in label image
+     * @param inputImage input image
+     * @param labelImage label image
+     * @param selectedFeatures ArrayList with selected features
+     * @return ResultsTable with features per region
+     */
+    public static ResultsTable calculateFeaturesTable(
+            ImagePlus inputImage,
+            ImagePlus labelImage,
+            ArrayList<RegionFeatures.Feature> selectedFeatures) {
+
+        ArrayList<ResultsTable> resultsTables = new ArrayList<>();
+        ImageStack lStack = new ImageStack(inputImage.getWidth(),inputImage.getHeight());
+        ImageStack aStack = new ImageStack(inputImage.getWidth(),inputImage.getHeight());
+        ImageStack bStack = new ImageStack(inputImage.getWidth(),inputImage.getHeight());
+        ImageStack stack = inputImage.getStack();
+        for(int z=0;z<inputImage.getNSlices();++z){
+            ImageProcessor sliceProcessor = stack.getProcessor(z+1);
+            ImagePlus slice = new ImagePlus("Slice" + z, sliceProcessor);
+            ColorSpaceConverter converter = new ColorSpaceConverter();
+            ImagePlus lab = converter.RGBToLab(slice);
+            ImagePlus[] channels = ChannelSplitter.split(lab);
+            lStack.addSlice(channels[0].getProcessor());
+            aStack.addSlice(channels[1].getProcessor());
+            bStack.addSlice(channels[2].getProcessor());
+        }
+        ExecutorService exe = Executors.newFixedThreadPool(3);
+        final ArrayList<Future<ResultsTable>> futures = new ArrayList<Future<ResultsTable>>();
+        try {
+            futures.add(exe.submit(getUnlabeledTables(new ImagePlus(inputImage.getShortTitle()+"-l",lStack), labelImage, selectedFeatures)));
+            futures.add(exe.submit(getUnlabeledTables(new ImagePlus(inputImage.getShortTitle()+"-a",aStack), labelImage, selectedFeatures)));
+            futures.add(exe.submit(getUnlabeledTables(new ImagePlus(inputImage.getShortTitle()+"-b",bStack), labelImage, selectedFeatures)));
+            int i = 0;
+            for (Future<ResultsTable> f : futures) {
+                ResultsTable res = f.get();
+                resultsTables.add(res);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            exe.shutdown();
+        }
+        for(int i=0;i<resultsTables.get(0).getLastColumn();++i){
+            //Rename columns based on channel they belong to
+            resultsTables.get(0).renameColumn(resultsTables.get(0).getColumnHeading(i),resultsTables.get(0).getColumnHeading(i)+"-l");
+
+            resultsTables.get(1).renameColumn(resultsTables.get(1).getColumnHeading(i),resultsTables.get(1).getColumnHeading(i)+"-a");
+
+            resultsTables.get(2).renameColumn(resultsTables.get(2).getColumnHeading(i),resultsTables.get(2).getColumnHeading(i)+"-b");
+        }
+        ResultsBuilder rb = new ResultsBuilder(resultsTables.get(0));
+        rb.addResult(resultsTables.get(1));
+        rb.addResult(resultsTables.get(2));
+        return rb.getResultsTable();
+    }
+
+    /**
+     * Creates Instances based on resultsTable
+     * @param resultsTable table with features
+     * @param classes ArrayList with possible classes
+     * @return resulting Instances
+     */
+    public static Instances calculateUnabeledInstances(ResultsTable resultsTable, ArrayList<String> classes){
+        Instances unlabeled = RegionFeatures.calculateUnabeledInstances(resultsTable,classes);
+        return unlabeled;
+    }
+
+    /**
      * Creates Instances object based on the features of each color channel after converting the image to Lab
      * @param inputImage RGB input image
      * @param labelImage Label image
@@ -68,92 +181,9 @@ public class RegionColorFeatures {
                                                             ArrayList<RegionFeatures.Feature> selectedFeatures,
                                                             ArrayList<String> classes)
     {
-        ImageStack stack = inputImage.getStack();
-        ImageStack spStack = labelImage.getStack();
-        Instances[] unlabeled = new Instances[inputImage.getNSlices()];
-        for(int l=1;l<inputImage.getNSlices()+1;++l) {
-            ImageProcessor sliceProcessor = stack.getProcessor(l);
-            ImagePlus slice =  new ImagePlus("Slice"+l,sliceProcessor);
-            ImageProcessor spProcessor = spStack.getProcessor(l);
-            ImagePlus spSlice = new ImagePlus("Slice "+l,spProcessor);
-            ColorSpaceConverter converter = new ColorSpaceConverter();
-            ImagePlus lab = converter.RGBToLab(slice);
-            ImagePlus[] channels = ChannelSplitter.split(lab);
-            if (Thread.currentThread().isInterrupted()) {
-                return null;
-            }
-            ArrayList<Instances> ins = new ArrayList<Instances>();
-            ExecutorService exe = Executors.newFixedThreadPool(3);
-            final ArrayList<Future<Instances>> futures = new ArrayList<Future<Instances>>();
-            try {
-                futures.add(exe.submit(getUnlabeledInstances(channels[0], spSlice, selectedFeatures, classes)));
-                futures.add(exe.submit(getUnlabeledInstances(channels[1], spSlice, selectedFeatures, classes)));
-                futures.add(exe.submit(getUnlabeledInstances(channels[2], spSlice, selectedFeatures, classes)));
-                int i = 0;
-                for (Future<Instances> f : futures) {
-                    Instances res = f.get();
-                    ins.add(res);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            } finally {
-                exe.shutdown();
-            }
-            Instances lIns = ins.get(0);
-            Instances aIns = ins.get(1);
-            Instances bIns = ins.get(2);
-            if (lIns == null || aIns == null || bIns == null) {
-                return null;
-            } else {
-                for (int i = 0; i < lIns.numAttributes(); ++i) {//all channels should have the same number of attributes
-                    lIns.renameAttribute(i, lIns.attribute(i).name() + "-L");
-                    aIns.renameAttribute(i, aIns.attribute(i).name() + "-a");
-                    bIns.renameAttribute(i, bIns.attribute(i).name() + "-b");
-                }
-                ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-                int numAttributes = lIns.numAttributes() * 3 - 3;//-3 to remove the class attributes
-                for (int i = 0; i < lIns.numAttributes() - 1; ++i) {
-                    attributes.add(lIns.attribute(i));
-                }
-                for (int i = 0; i < aIns.numAttributes() - 1; ++i) {
-                    attributes.add(aIns.attribute(i));
-                }
-                for (int i = 0; i < bIns.numAttributes() - 1; ++i) {
-                    attributes.add(bIns.attribute(i));
-                }
-                attributes.add(new Attribute("Class", classes));
-                unlabeled[l-1] = new Instances("training data", attributes, 0);
-                for (int i = 0; i < lIns.numInstances(); ++i) {
-                    int k = 0;
-                    Instance inst = new DenseInstance(numAttributes + 1);
-                    for (int j = 0; j < lIns.numAttributes() - 1; ++j) {
-                        inst.setValue(j, lIns.get(i).value(j));
-                    }
-                    for (int j = lIns.numAttributes() - 1; j < aIns.numAttributes() * 2 - 2; ++j) {
-                        inst.setValue(j, aIns.get(i).value(k));
-                        k++;
-                    }
-                    k = 0;
-                    for (int j = lIns.numAttributes() * 2 - 2; j < bIns.numAttributes() * 3 - 3; ++j) {
-                        inst.setValue(j, bIns.get(i).value(k));
-                        k++;
-                    }
-                    inst.setValue(numAttributes, 0);//Set class as 0
-                    unlabeled[l-1].add(inst);
-                }
-                unlabeled[l-1].setClassIndex(numAttributes);
-            }
-        }
-        Instances fUnlabeled = unlabeled[0];
-        try{
-            for(int l=1;l<unlabeled.length;++l) {
-                fUnlabeled = merge(fUnlabeled,unlabeled[l]);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return fUnlabeled;
+        ResultsTable resultsTable = calculateFeaturesTable(inputImage,labelImage,selectedFeatures);
+        Instances unlabeled = calculateUnabeledInstances(resultsTable,classes);
+        return unlabeled;
     }
 
     /**
@@ -169,109 +199,35 @@ public class RegionColorFeatures {
                                                           ImagePlus labelImage,
                                                           ImagePlus gtImage,
                                                           ArrayList<RegionFeatures.Feature> selectedFeatures,
-                                                          ArrayList<String> classes)
-    {
-        ColorSpaceConverter converter = new ColorSpaceConverter();
-        ImagePlus lab = converter.RGBToLab(inputImage);
-        ImagePlus[] channels = ChannelSplitter.split(lab);
-        if(Thread.currentThread().isInterrupted()){
-            return null;
+                                                          ArrayList<String> classes) {
+        HashMap<Integer, int[]> labelCoord = Utils.calculateLabelCoordinates(labelImage);
+        ResultsTable mergedTable = calculateFeaturesTable(inputImage,labelImage,selectedFeatures);
+        //mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        int numFeatures = mergedTable.getLastColumn()+1; //Take into account it starts in index 0
+        for(int i=0;i<numFeatures;++i){
+            attributes.add(new Attribute(mergedTable.getColumnHeading(i),i));
         }
-        ArrayList<Instances> ins = new ArrayList<Instances>();
-        ExecutorService exe = Executors.newFixedThreadPool(3);
-        final ArrayList<Future< Instances > > futures = new ArrayList<Future<Instances>>();
-        try {
-            futures.add(exe.submit(getUnlabeledInstances(channels[0],labelImage,selectedFeatures,classes)));
-            futures.add(exe.submit(getUnlabeledInstances(channels[1],labelImage,selectedFeatures,classes)));
-            futures.add(exe.submit(getUnlabeledInstances(channels[2],labelImage,selectedFeatures,classes)));
-            int i=0;
-            for(Future<Instances> f : futures){
-                Instances res = f.get();
-                ins.add(res);
+        attributes.add(new Attribute("Class", classes));
+        Instances labeled = new Instances("training data",attributes,0);
+        for(int i=0;i<mergedTable.size();++i){
+            //numFeatures is the index, add 1 to get number of attributes needed plus class
+            Instance inst = new DenseInstance(numFeatures+1);
+            for(int j=0;j<numFeatures;++j){
+                inst.setValue(j,mergedTable.getValueAsDouble(j,i));
             }
-        }catch (Exception e){
-            e.printStackTrace();
-            return null;
+            int[] coord = labelCoord.get(i+1);
+            ImageProcessor gtProcessor = gtImage.getProcessor();
+            float value = (float) gtProcessor.getf(coord[0],coord[1]);
+            inst.setValue( numFeatures, (int) value );
+            labeled.add(inst);
         }
-        finally {
-            exe.shutdown();
-        }
-        Instances lIns = ins.get(0);
-        Instances aIns = ins.get(1);
-        Instances bIns = ins.get(2);
-        if(lIns==null||aIns==null||bIns==null){
+        labeled.setClassIndex( numFeatures );
+        //The number or instances should be the same as the size of the table
+        if(labeled.numInstances()!=(mergedTable.size())){
             return null;
-        }else {
-            for (int i = 0; i < lIns.numAttributes(); ++i) {//all channels should have the same number of attributes
-                lIns.renameAttribute(i, lIns.attribute(i).name() + "-L");
-                aIns.renameAttribute(i, aIns.attribute(i).name() + "-a");
-                bIns.renameAttribute(i, bIns.attribute(i).name() + "-b");
-            }
-            ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-            int numAttributes = lIns.numAttributes() * 3 - 3;//-3 to remove the class attributes
-            for (int i = 0; i < lIns.numAttributes() - 1; ++i) {
-                attributes.add(lIns.attribute(i));
-            }
-            for (int i = 0; i < aIns.numAttributes() - 1; ++i) {
-                attributes.add(aIns.attribute(i));
-            }
-            for (int i = 0; i < bIns.numAttributes() - 1; ++i) {
-                attributes.add(bIns.attribute(i));
-            }
-            attributes.add(new Attribute("Class", classes));
-            Instances labeled = new Instances("training data", attributes, 0);
-            for (int i = 0; i < lIns.numInstances(); ++i) {
-                int k = 0;
-                Instance inst = new DenseInstance(numAttributes + 1);
-                for (int j = 0; j < lIns.numAttributes() - 1; ++j) {
-                    inst.setValue(j, lIns.get(i).value(j));
-                }
-                for (int j = lIns.numAttributes() - 1; j < aIns.numAttributes() * 2 - 2; ++j) {
-                    inst.setValue(j, aIns.get(i).value(k));
-                    k++;
-                }
-                k = 0;
-                for (int j = lIns.numAttributes() * 2 - 2; j < bIns.numAttributes() * 3 - 3; ++j) {
-                    inst.setValue(j, bIns.get(i).value(k));
-                    k++;
-                }
-                double classValue = lIns.get(i).value(lIns.classIndex());
-                inst.setValue(numAttributes,classValue);//Currently taking class of l channel
-                labeled.add(inst);
-            }
-            labeled.setClassIndex(numAttributes);
+        }else{
             return labeled;
         }
-    }
-
-
-
-    public static Instances merge(Instances data1, Instances data2) throws Exception {
-        int asize = data1.numAttributes();
-        boolean[] strings_pos = new boolean[asize];
-
-        for(int i = 0; i < asize; ++i) {
-            Attribute att = data1.attribute(i);
-            strings_pos[i] = att.type() == 2 || att.type() == 1;
-        }
-
-        Instances dest = new Instances(data1);
-        dest.setRelationName(data1.relationName() + "+" + data2.relationName());
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource(data2);
-        Instances instances = source.getStructure();
-        Instance instance = null;
-
-        while(source.hasMoreElements(instances)) {
-            instance = source.nextElement(instances);
-            dest.add(instance);
-
-            for(int i = 0; i < asize; ++i) {
-                if(strings_pos[i]) {
-                    dest.instance(dest.numInstances() - 1).setValue(i, instance.stringValue(i));
-                }
-            }
-        }
-
-        return dest;
     }
 }
