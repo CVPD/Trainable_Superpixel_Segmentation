@@ -19,6 +19,8 @@ import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
 import ij.process.StackConverter;
+import ij.process.ColorProcessor;
+
 
 import inra.ijpb.label.LabelImages;
 
@@ -93,7 +95,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private ImagePlus inputImage;
     private ImagePlus supImage;
     private ImagePlus resultImage;
-    private ImagePlus traceImage;
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
     private java.awt.List[] displayedLists = new java.awt.List[500];
@@ -768,8 +769,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
          */
         protected void updateDisplayedLists()
         {
-            traceImage = inputImage.duplicate();
-            traceImage.setSlice(inputImage.getCurrentSlice());
+            ColorProcessor cp = new ColorProcessor(inputImage.getWidth(),inputImage.getHeight());
             for(int i = 0; i < numClasses; i++)
             {
                 displayedLists[i].removeAll();
@@ -777,16 +777,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     Roi r = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(j);
                     r.setStrokeColor(colors[i]);
                     r.setFillColor(colors[i]);
-                    traceImage.getProcessor().setColor(colors[i]);
-                    r.drawPixels(traceImage.getProcessor());
+                    cp.drawRoi(r);
                     displayedLists[i].add(new String("Trace "+j+" -z= "+inputImage.getCurrentSlice()));
                 }
             }
             if(overlay==1){
-                ImageProcessor ip = traceImage.getStack().getProcessor(inputImage.getCurrentSlice());
-                ImageRoi imageRoi = new ImageRoi(0,0,ip);
-                imageRoi.setOpacity(overlayOpacity);
-                inputImage.setOverlay(new Overlay(imageRoi));
+                ImageRoi imgRoi = new ImageRoi(0,0,cp);
+                imgRoi.setZeroTransparent(true);
+                imgRoi.setOpacity(overlayOpacity);
+                inputImage.setOverlay(new Overlay(imgRoi));
             }
         }
 
