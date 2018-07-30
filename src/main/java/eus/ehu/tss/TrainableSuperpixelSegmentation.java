@@ -299,6 +299,10 @@ public class TrainableSuperpixelSegmentation {
             }
         }
         ImagePlus result = new ImagePlus(inputImage.getShortTitle()+"-probMap",classificationResultImage);
+        result.setDimensions(numClasses,inputImage.getNSlices(),inputImage.getNFrames());
+        if(inputImage.getNSlices()*inputImage.getNFrames()>1) {
+            result.setOpenAsHyperStack(true);
+        }
         return result;
 
     }
