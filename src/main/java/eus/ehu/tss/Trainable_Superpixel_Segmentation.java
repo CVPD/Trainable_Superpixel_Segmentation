@@ -879,6 +879,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         }
                     }
                 }
+                else
+                {
+                	calculateFeatures = true;
+                	features = loadedFeatures;
+                }
+
                 if(loadedTrainingData==null) {
                     loadedTrainingData = data;
                 }else {
