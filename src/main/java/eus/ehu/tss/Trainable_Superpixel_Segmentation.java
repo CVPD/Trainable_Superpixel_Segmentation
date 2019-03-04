@@ -97,12 +97,16 @@ import java.util.zip.GZIPOutputStream;
 public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     private CustomWindow win;
+    /** input image (2D or stack) */
     private ImagePlus inputImage;
+    /** superpixel image associated to input image */
     private ImagePlus supImage;
+    /** result image */
     private ImagePlus resultImage;
     private final ExecutorService exec = Executors.newFixedThreadPool(1);
     private int numClasses = 2;
     private java.awt.List[] displayedLists = new java.awt.List[500];
+    /** list of lists of annotations (ROIs) */
     private ArrayList<ArrayList<Roi>>[] aRoiList;
     private ArrayList<RegionFeatures.Feature> features;
     private AbstractClassifier classifier;
@@ -118,6 +122,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private Instances loadedTrainingData = null;
     private Thread trainingTask = null;
 
+    /**
+     * Custom window to define GUI.
+     *
+     */
     private class CustomWindow extends StackWindow
     {
         /** Serial version UID */
@@ -228,7 +236,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 });
             }
         };
-
+        /**
+         * GUI constructor.
+         */
         CustomWindow(ImagePlus imp)
         {
             super(imp, new ImageCanvas(imp));
@@ -747,7 +757,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
 
         /**
-         *
+         * Check if overlay checkbox is selected.
          * @return true if overlay checkbox is selected
          */
         public boolean ovCheckbox(){
