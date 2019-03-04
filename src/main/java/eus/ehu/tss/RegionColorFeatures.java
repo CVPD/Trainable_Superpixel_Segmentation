@@ -29,7 +29,7 @@ public class RegionColorFeatures {
      * @param inputImage input image
      * @param labelImage corresponding label image
      * @param selectedFeatures ArrayList of selected features
-     * @param classes ArrayList of posstible classes
+     * @param classes ArrayList of possible classes
      * @return Callable with calculated instances
      */
     private static Callable<Instances> getUnlabeledInstances(ImagePlus inputImage,
