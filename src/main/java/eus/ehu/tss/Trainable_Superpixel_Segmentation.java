@@ -14,10 +14,8 @@ import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
-import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
-import ij.process.StackConverter;
 import ij.process.ColorProcessor;
 
 
@@ -590,7 +588,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             ImageRoi roi = null;
             if(overlay==0&&resultImage!=null){
                 ImagePlus resultImg = resultImage.duplicate();
-                convertTo8bitNoScaling(resultImg);
+                eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
                 resultImg.getProcessor().setColorModel(overlayLUT);
                 resultImg.getImageStack().setColorModel(overlayLUT);
                 ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
@@ -1116,7 +1114,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         trainableSuperpixelSegmentation.calculateRegionFeatures();
         IJ.log("Applying classifier");
         ImagePlus resultImg = trainableSuperpixelSegmentation.applyClassifier();
-        convertTo8bitNoScaling(resultImg);
+        eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
         resultImg.getProcessor().setColorModel(overlayLUT);
         resultImg.getImageStack().setColorModel(overlayLUT);
         resultImg.updateAndDraw();
@@ -1302,7 +1300,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
                 resultImg.setTitle(inputTitle + "-classified");
 
-                convertTo8bitNoScaling(resultImg);
+                eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
                 resultImg.getProcessor().setColorModel(overlayLUT);
                 resultImg.getImageStack().setColorModel(overlayLUT);
                 resultImg.updateAndDraw();
@@ -1457,7 +1455,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             if(inputImage.getOverlay()!=null){
                 if(overlay==0&&resultImage!=null){
                     ImagePlus resultImg = resultImage.duplicate();
-                    convertTo8bitNoScaling( resultImg );
+                    eus.ehu.tss.Utils.convertTo8bitNoScaling( resultImg );
                     resultImg.getProcessor().setColorModel( overlayLUT );
                     resultImg.getImageStack().setColorModel( overlayLUT );
                     ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
@@ -1678,7 +1676,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             if(win.ovCheckbox()) {
                 overlay = 0;
                 ImagePlus resultImg = resultImage.duplicate();
-                convertTo8bitNoScaling(resultImg);
+                eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
                 resultImg.getProcessor().setColorModel(overlayLUT);
                 resultImg.getImageStack().setColorModel(overlayLUT);
                 ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
@@ -1698,7 +1696,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 } else {
                     overlay = 0;
                     ImagePlus resultImg = resultImage.duplicate();
-                    convertTo8bitNoScaling(resultImg);
+                    eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
                     resultImg.getProcessor().setColorModel(overlayLUT);
                     resultImg.getImageStack().setColorModel(overlayLUT);
                     ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
@@ -1766,27 +1764,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                }
             }
         }
-    }
-
-    /**
-     * Taken from Weka_Segmentation
-     *
-     * Convert image to 8 bit in place without scaling it
-     *
-     * @param image input image
-     */
-    static void convertTo8bitNoScaling( ImagePlus image )
-    {
-        boolean aux = ImageConverter.getDoScaling();
-
-        ImageConverter.setDoScaling( false );
-
-        if( image.getImageStackSize() > 1)
-            (new StackConverter( image )).convertToGray8();
-        else
-            (new ImageConverter( image )).convertToGray8();
-
-        ImageConverter.setDoScaling( aux );
     }
 
 

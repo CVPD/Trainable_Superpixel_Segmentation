@@ -4,7 +4,9 @@ package eus.ehu.tss;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.ResultsTable;
+import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
+import ij.process.StackConverter;
 import inra.ijpb.data.image.Images3D;
 import inra.ijpb.label.LabelImages;
 import inra.ijpb.measure.ResultsBuilder;
@@ -131,6 +133,25 @@ public class Utils {
         ImagePlus result = new ImagePlus(labelImage.getShortTitle(),img);
         Images3D.optimizeDisplayRange(result);
         return result;
+    }
+
+    /**
+     * Convert image to 8 bit in place without scaling it. (Taken from Weka_Segmentation.)
+     *
+     * @param image input image
+     */
+    public static void convertTo8bitNoScaling( ImagePlus image )
+    {
+        boolean aux = ImageConverter.getDoScaling();
+
+        ImageConverter.setDoScaling( false );
+
+        if( image.getImageStackSize() > 1)
+            (new StackConverter( image )).convertToGray8();
+        else
+            (new ImageConverter( image )).convertToGray8();
+
+        ImageConverter.setDoScaling( aux );
     }
 
 }
