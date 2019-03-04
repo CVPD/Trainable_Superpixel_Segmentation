@@ -129,7 +129,6 @@ public class RegionColorFeatures {
             futures.add(exe.submit(getUnlabeledTables(new ImagePlus(inputImage.getShortTitle()+"-l",lStack), labelImage, selectedFeatures)));
             futures.add(exe.submit(getUnlabeledTables(new ImagePlus(inputImage.getShortTitle()+"-a",aStack), labelImage, selectedFeatures)));
             futures.add(exe.submit(getUnlabeledTables(new ImagePlus(inputImage.getShortTitle()+"-b",bStack), labelImage, selectedFeatures)));
-            int i = 0;
             for (Future<ResultsTable> f : futures) {
                 ResultsTable res = f.get();
                 resultsTables.add(res);
