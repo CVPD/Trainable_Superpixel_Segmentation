@@ -48,6 +48,7 @@ public class TrainableSuperpixelSegmentation {
      * @param labels ImagePlus labeled image of the originalImage
      * @param features ArrayList of Features (from RegionFeatures.Feature) that represent the features that will be calculated
      * @param classifier AbstractClassifier that will be used to classify the images
+     * @param classes list with the class names
      */
     public TrainableSuperpixelSegmentation(
     		ImagePlus originalImage,
@@ -248,7 +249,7 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Returns a probability map image
-     * @return
+     * @return probability map image
      */
     public ImagePlus getProbabilityMap(){
         if(unlabeledTable==null){
@@ -350,8 +351,8 @@ public class TrainableSuperpixelSegmentation {
     }
 
     /**
-     * Returns labeled instances
-     * @return
+     * Returns unlabeled instances
+     * @return unlabled instances
      */
     public Instances getInstances() {
         return RegionFeatures.calculateUnabeledInstances(unlabeledTable,classes);
@@ -451,7 +452,7 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Returns superpixel image with labels
-     * @return
+     * @return superpixel (label) image
      */
     public ImagePlus getLabelImage() {
         return labelImage;
@@ -466,8 +467,8 @@ public class TrainableSuperpixelSegmentation {
     }
 
     /**
-     * Returns wether a classifier has been trained
-     * @return
+     * Returns whether a classifier has been trained
+     * @return true if the classifier has been trained, false otherwise
      */
     public boolean isClassifierTrained() {
         return classifierTrained;
@@ -483,15 +484,15 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Returns unlabeled instances
-     * @return
+     * @return unlabled instances
      */
     public Instances getUnlabeled() {
         return RegionFeatures.calculateUnabeledInstances(unlabeledTable,classes);
     }
 
     /**
-     * Returns selected feature ArrayList
-     * @return
+     * Returns selected feature list
+     * @return list with the selected features
      */
     public ArrayList<RegionFeatures.Feature> getSelectedFeatures() {
         return selectedFeatures;
@@ -507,7 +508,7 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Get unlabeled feature table
-     * @return
+     * @return unlabeled feature table
      */
     public ResultsTable getUnlabeledTable() {
         return unlabeledTable;
