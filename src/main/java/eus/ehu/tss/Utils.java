@@ -63,14 +63,10 @@ public class Utils {
      * @return a HashMap where the key is the label and the values are the coordinates of the label
      */
     public static HashMap<Integer,int[]> calculateLabelCoordinates(ImagePlus labelImage){
-        HashMap<Integer, Integer> labelIndices = null;
         HashMap<Integer, int[]> result = new HashMap<>();
         final int width = labelImage.getWidth();
         final int height = labelImage.getHeight();
 
-        int[] labels = LabelImages.findAllLabels(labelImage.getImageStack());
-        int numLabels = labels.length;
-        labelIndices = LabelImages.mapLabelIndices(labels);
         final int numSlices = labelImage.getImageStackSize();
         for( int z=1; z <= numSlices; z++ )
         {
