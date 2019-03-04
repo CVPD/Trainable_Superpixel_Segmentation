@@ -1,6 +1,5 @@
 package eus.ehu.tss;
 
-import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.ResultsTable;
@@ -12,9 +11,7 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.converters.ConverterUtils;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
