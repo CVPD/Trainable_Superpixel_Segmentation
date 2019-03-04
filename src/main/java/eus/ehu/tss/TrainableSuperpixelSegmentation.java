@@ -118,7 +118,6 @@ public class TrainableSuperpixelSegmentation {
             for(int j=0;j<classRegions.get(i).length;++j){
                 Instance inst = new DenseInstance(numFeatures+1);
                 for(int k=0;k<numFeatures;++k){
-                    int classvalue = classRegions.get(i)[j];
                     inst.setValue(k,unlabeledTable.getValueAsDouble(k,
                             labelIndices.get(
                                     classRegions.get(i)[j]
