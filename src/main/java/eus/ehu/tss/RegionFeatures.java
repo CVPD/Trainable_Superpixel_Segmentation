@@ -21,6 +21,10 @@ import java.util.HashMap;
  */
 public class RegionFeatures {
 
+    /**
+     * Get total number of features.
+     * @return total number of features.
+     */
     public static int totalFeatures() {
         return Feature.numFeatures();
     }
@@ -29,23 +33,38 @@ public class RegionFeatures {
      * enum that lists the Features that can be obtained from the MorphoLibJ Intensity Measures
      */
     public enum Feature{
+        /** Mean intensity value in the region */
         Mean("Mean"),
+        /** Median intensity value in the region */
         Median("Median"),
+        /** Mode of the intensity in the region */
         Mode("Mode"),
+        /** Skewness of the intensity in the region */
         Skewness("Skewness"),
+        /** Kurtosis of the intensity in the region */
         Kurtosis("Kurtosis"),
+        /** Standard deviation of the intensity in the region */
         StdDev("StdDev"),
+        /** Maximum value of intensity in the region */
         Max("Max"),
+        /** Minimum value of intensity in the region */
         Min("Min"),
+        /** Mean intensity value in the neighbor regions */
         NeighborsMean("NeighborsMean"),
+        /** Median intensity value in the neighbor regions */
         NeighborsMedian("NeighborsMedian"),
+        /** Mode of the intensity value in the neighbor regions */
         NeighborsMode("NeighborsMode"),
+        /** Skewness of the intensity in the neighbor regions */
         NeighborsSkewness("NeighborsSkewness"),
+        /** Kurtosis of the intensity in the neighbor regions */
         NeighborsKurtosis("NeighborsKurtosis"),
+        /** Standard deviation of the intensity in the neighbor regions */
         NeighborsStdDev("NeighborsStdDev"),
+        /** Maximum value of the intensity in the neighbor regions */
         NeighborsMax("NeighborsMax"),
+        /** Minimum value of the intensity in the neighbor regions */
         NeighborsMin("NeighborsMin");
-
 
 
         private final String label;
