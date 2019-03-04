@@ -857,9 +857,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
                 //Select only loaded features
                 Enumeration<Attribute> attributes = data.enumerateAttributes();
-                final String[] availableFeatures = RegionFeatures.Feature.getAllLabels();
-                final int numFeatures = availableFeatures.length;
-                boolean[] usedFeatures = new boolean[numFeatures];
                 ArrayList<RegionFeatures.Feature> loadedFeatures = new ArrayList<>();
                 while(attributes.hasMoreElements())
                 {
@@ -1009,7 +1006,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                                     for (int j = 0; j < tags.get(i).length; ++j) {
                                         Instance inst = new DenseInstance(numFeatures + 1);
                                         for (int k = 0; k < numFeatures; ++k) {
-                                            int classvalue = tags.get(i)[j];
                                             inst.setValue(k, unlabeledTable.getValueAsDouble(k,
                                                     labelIndices.get(
                                                             tags.get(i)[j]
