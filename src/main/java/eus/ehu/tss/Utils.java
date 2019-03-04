@@ -9,7 +9,6 @@ import ij.process.ImageProcessor;
 import ij.process.StackConverter;
 import inra.ijpb.data.image.Images3D;
 import inra.ijpb.label.LabelImages;
-import inra.ijpb.measure.ResultsBuilder;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
