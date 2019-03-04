@@ -16,6 +16,9 @@ import weka.core.converters.ConverterUtils;
 
 import java.util.HashMap;
 
+/**
+ * Class with utility methods.
+ */
 public class Utils {
 
     /**
