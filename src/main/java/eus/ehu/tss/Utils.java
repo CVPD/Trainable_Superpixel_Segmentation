@@ -86,9 +86,9 @@ public class Utils {
 
     /**
      * Merge two Results Tables assuming both have the same columns
-     * @param rs1
-     * @param rs2
-     * @return resulting resultstable
+     * @param rs1 first results table to merge
+     * @param rs2 second results table to merge
+     * @return resulting results table
      */
     public static ResultsTable mergeResultsTables(ResultsTable rs1, ResultsTable rs2){
         ResultsTable result = (ResultsTable) rs1.clone();
