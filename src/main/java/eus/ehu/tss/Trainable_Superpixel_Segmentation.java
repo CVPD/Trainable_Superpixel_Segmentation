@@ -49,14 +49,19 @@ import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import java.awt.*;
-
 import java.awt.event.AdjustmentListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.BorderLayout;
+import java.awt.Checkbox;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
