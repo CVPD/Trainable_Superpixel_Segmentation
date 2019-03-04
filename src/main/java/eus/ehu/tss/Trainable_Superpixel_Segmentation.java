@@ -88,6 +88,9 @@ import java.util.zip.GZIPOutputStream;
 
 
 
+/**
+ * Main class of the Trainable Superpixel Segmentation plugin.
+ */
 public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     private CustomWindow win;
@@ -1872,6 +1875,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         win.setButtonsEnabled(0);
 
     }
+    /**
+     * Main static method.
+     * @param args main arguments
+     */
     public static void main(String[] args){
         Class<?> clazz = Trainable_Superpixel_Segmentation.class;
         String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
