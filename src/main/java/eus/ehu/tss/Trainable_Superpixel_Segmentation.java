@@ -13,7 +13,6 @@ import ij.gui.Toolbar;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.measure.ResultsTable;
-import ij.plugin.Duplicator;
 import ij.plugin.PlugIn;
 import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
