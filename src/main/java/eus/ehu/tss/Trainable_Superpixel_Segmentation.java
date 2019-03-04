@@ -117,7 +117,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     private class CustomWindow extends StackWindow
     {
-        private Panel all = new Panel();
+        /** Serial version UID */
+		private static final long serialVersionUID = -3132204621292464332L;
+		private Panel all = new Panel();
         private JPanel controlsPanel = new JPanel();
         private JPanel optionsPanel = new JPanel();
         private JPanel trainingPanel = new JPanel();
