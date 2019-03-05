@@ -632,6 +632,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         		default:
         			break;
         	}
+        	// Overlay traces of the current slice
+        	win.overlayTraces();
         }
 
         /**
@@ -803,26 +805,42 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
          */
         protected void updateDisplayedLists()
         {
-            ColorProcessor cp = new ColorProcessor(inputImage.getWidth(),inputImage.getHeight());
             for(int i = 0; i < numClasses; i++)
             {
                 displayedLists[i].removeAll();
+                for(int j=0;j<aRoiList[inputImage.getCurrentSlice()-1].get(i).size();++j){
+                    displayedLists[i].add(new String("Trace "+j+" -z= "+inputImage.getCurrentSlice()));
+                }
+            }
+        }
+        /**
+         * Overlay current traces on display image with 50% opacity.
+         */
+        void overlayTraces()
+        {
+        	boolean noTraces = true;
+        	ColorProcessor cp = new ColorProcessor(inputImage.getWidth(),inputImage.getHeight());
+            for(int i = 0; i < numClasses; i++)
+            {
                 for(int j=0;j<aRoiList[inputImage.getCurrentSlice()-1].get(i).size();++j){
                     Roi r = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(j);
                     r.setStrokeColor(colors[i]);
                     r.setFillColor(colors[i]);
                     cp.drawRoi(r);
-                    displayedLists[i].add(new String("Trace "+j+" -z= "+inputImage.getCurrentSlice()));
+                    noTraces = false;
                 }
             }
-            if( currentOverlay == OverlayMode.INPUT_IMAGE ){
-                ImageRoi imgRoi = new ImageRoi(0,0,cp);
-                imgRoi.setZeroTransparent(true);
-                imgRoi.setOpacity(overlayOpacity);
-                inputImage.setOverlay(new Overlay(imgRoi));
-            }
+            if( noTraces )
+            	return;
+        	ImageRoi imgRoi = new ImageRoi(0,0,cp);
+            imgRoi.setZeroTransparent(true);
+            imgRoi.setOpacity( 0.5 );
+            Overlay overlayList = inputImage.getOverlay();
+            if( null == overlayList )
+            	overlayList = new Overlay();
+            overlayList.add(imgRoi);
+            inputImage.setOverlay( overlayList );
         }
-
     }
 
     /**
@@ -1743,6 +1761,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             int index = displayedLists[i].getSelectedIndex();
             aRoiList[inputImage.getCurrentSlice()-1].get(i).remove(index);
             win.updateDisplayedLists();
+            win.overlayTraces();
             inputImage.killRoi();
         }catch (Exception e1){
             e1.printStackTrace();
@@ -1759,6 +1778,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             r.setStrokeColor(colors[i]);
             aRoiList[inputImage.getCurrentSlice()-1].get(i).add(r);
             win.updateDisplayedLists();
+            win.overlayTraces();
+            inputImage.killRoi();
         }catch (Exception e){
             e.printStackTrace();
         }
