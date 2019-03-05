@@ -112,7 +112,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private AbstractClassifier classifier;
     private ArrayList<String> classes;
     private TrainableSuperpixelSegmentation trainableSuperpixelSegmentation;
-    private int overlay = 1;
     private Color[] colors = new Color[]{Color.red, Color.green, Color.blue, Color.cyan, Color.magenta};
     private LUT overlayLUT = null;
     private boolean calculateFeatures = true;
@@ -122,6 +121,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     private Instances loadedTrainingData = null;
     private Thread trainingTask = null;
 
+    /** enumeration of overlay modes */
+	public static enum OverlayMode {
+		/**	display mode with transparent color traces on top of original image */
+		INPUT_IMAGE,
+		/** display mode with segmentation result on top of original image */
+		RESULT_IMAGE,
+		/** display mode with transparent superpixel image on top of original image */
+		SUPERPIXEL_IMAGE };
+	OverlayMode currentOverlay = OverlayMode.INPUT_IMAGE;
     /**
      * Custom window to define GUI.
      *
@@ -601,7 +609,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 return;
             }
             ImageRoi roi = null;
-            if(overlay==0&&resultImage!=null){
+            if( currentOverlay == OverlayMode.RESULT_IMAGE &&resultImage!=null){
                 ImagePlus resultImg = resultImage.duplicate();
                 eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
                 resultImg.getProcessor().setColorModel(overlayLUT);
@@ -798,7 +806,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     displayedLists[i].add(new String("Trace "+j+" -z= "+inputImage.getCurrentSlice()));
                 }
             }
-            if(overlay==1){
+            if( currentOverlay == OverlayMode.INPUT_IMAGE ){
                 ImageRoi imgRoi = new ImageRoi(0,0,cp);
                 imgRoi.setZeroTransparent(true);
                 imgRoi.setOpacity(overlayOpacity);
@@ -1060,7 +1068,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     IJ.log("Classifier trained");
                     IJ.log("Applying classifier");
                     resultImage = trainableSuperpixelSegmentation.applyClassifier();
-                    overlay = 2;
+                    currentOverlay = OverlayMode.SUPERPIXEL_IMAGE;
                     toggleOverlay();
                     IJ.log("Classifier applied");
                     win.enableOverlayCheckbox();
@@ -1280,7 +1288,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         trainableSuperpixelSegmentation.setClasses(classes);
         calculateFeatures = true;
         resultImage=null;
-        overlay=0;
+        currentOverlay = OverlayMode.RESULT_IMAGE;
         if(win.ovCheckbox()){
             win.uncheckOvCheckbox();
         }
@@ -1468,7 +1476,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             int slice = inputImage.getCurrentSlice();
             ImageRoi roi = null;
             if(inputImage.getOverlay()!=null){
-                if(overlay==0&&resultImage!=null){
+                if( currentOverlay == OverlayMode.RESULT_IMAGE &&resultImage!=null){
                     ImagePlus resultImg = resultImage.duplicate();
                     eus.ehu.tss.Utils.convertTo8bitNoScaling( resultImg );
                     resultImg.getProcessor().setColorModel( overlayLUT );
@@ -1487,9 +1495,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 roi.setOpacity(win.overlayOpacity);
                 inputImage.setOverlay(new Overlay(roi));
                 if(resultImage!=null) {
-                    overlay++;
+                    if( currentOverlay == OverlayMode.RESULT_IMAGE )
+                    	currentOverlay = OverlayMode.INPUT_IMAGE;
+                    else
+                    	currentOverlay = OverlayMode.SUPERPIXEL_IMAGE;
                 }else {
-                    overlay=0;
+                    currentOverlay = OverlayMode.RESULT_IMAGE;
                 }
             }
         }
@@ -1683,13 +1694,14 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     void toggleOverlay(){
         int slice = inputImage.getCurrentSlice();
         ImageRoi roi = null;
-        if(overlay==0){
-            overlay++;
+
+        if( currentOverlay == OverlayMode.RESULT_IMAGE ){
+            currentOverlay = OverlayMode.INPUT_IMAGE;
             inputImage.setOverlay(null);
             win.updateDisplayedLists();
         }else {
             if(win.ovCheckbox()) {
-                overlay = 0;
+                currentOverlay = OverlayMode.RESULT_IMAGE;
                 ImagePlus resultImg = resultImage.duplicate();
                 eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
                 resultImg.getProcessor().setColorModel(overlayLUT);
@@ -1699,17 +1711,17 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 roi.setOpacity(win.overlayOpacity);
                 inputImage.setOverlay(new Overlay(roi));
             }else {
-                if (overlay == 1) {
+                if (currentOverlay == OverlayMode.INPUT_IMAGE) {
                     if (resultImage != null) {
-                        overlay++;
+                    	currentOverlay = OverlayMode.SUPERPIXEL_IMAGE;
                     } else {
-                        overlay = 0;
+                    	currentOverlay = OverlayMode.RESULT_IMAGE;
                     }
                     roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
                     roi.setOpacity(win.overlayOpacity);
                     inputImage.setOverlay(new Overlay(roi));
                 } else {
-                    overlay = 0;
+                	currentOverlay = OverlayMode.RESULT_IMAGE;
                     ImagePlus resultImg = resultImage.duplicate();
                     eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
                     resultImg.getProcessor().setColorModel(overlayLUT);
