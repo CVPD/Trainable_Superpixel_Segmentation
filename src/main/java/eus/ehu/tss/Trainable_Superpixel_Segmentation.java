@@ -602,27 +602,36 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             pack();
             setMinimumSize(getPreferredSize());
         }
-
+    	/**
+    	 * Update the current overlay on the displayed image.
+    	 */
         public void updateOverlay(){
-            int slice = inputImage.getCurrentSlice();
-            if(inputImage.getOverlay()==null){
-                return;
-            }
+        	int slice = inputImage.getCurrentSlice();
             ImageRoi roi = null;
-            if( currentOverlay == OverlayMode.RESULT_IMAGE &&resultImage!=null){
-                ImagePlus resultImg = resultImage.duplicate();
-                eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
-                resultImg.getProcessor().setColorModel(overlayLUT);
-                resultImg.getImageStack().setColorModel(overlayLUT);
-                ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
-                roi = new ImageRoi(0, 0, processor);
-                roi.setOpacity(win.overlayOpacity);
-                inputImage.setOverlay(new Overlay(roi));
-            }else{
-                roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
-                roi.setOpacity(win.overlayOpacity);
-                inputImage.setOverlay(new Overlay(roi));
-            }
+            inputImage.setOverlay(null);
+        	switch( currentOverlay )
+        	{
+        		case INPUT_IMAGE:
+        			win.updateDisplayedLists();
+        			break;
+        		case RESULT_IMAGE:
+        			ImagePlus resultImg = resultImage.duplicate();
+                    eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
+                    resultImg.getProcessor().setColorModel(overlayLUT);
+                    resultImg.getImageStack().setColorModel(overlayLUT);
+                    ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
+                    roi = new ImageRoi(0, 0, processor);
+                    roi.setOpacity(win.overlayOpacity);
+                    inputImage.setOverlay(new Overlay(roi));
+                    break;
+        		case SUPERPIXEL_IMAGE:
+        			roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
+                    roi.setOpacity(win.overlayOpacity);
+                    inputImage.setOverlay(new Overlay(roi));
+                    break;
+        		default:
+        			break;
+        	}
         }
 
         /**
@@ -1691,51 +1700,39 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     /**
      * Changes displayed overlay, between no overlay, superpixel overlay and result overlay
      */
-    void toggleOverlay(){
-        int slice = inputImage.getCurrentSlice();
-        ImageRoi roi = null;
-
-        if( currentOverlay == OverlayMode.RESULT_IMAGE ){
-            currentOverlay = OverlayMode.INPUT_IMAGE;
-            inputImage.setOverlay(null);
-            win.updateDisplayedLists();
-        }else {
-            if(win.ovCheckbox()) {
-                currentOverlay = OverlayMode.RESULT_IMAGE;
-                ImagePlus resultImg = resultImage.duplicate();
-                eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
-                resultImg.getProcessor().setColorModel(overlayLUT);
-                resultImg.getImageStack().setColorModel(overlayLUT);
-                ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
-                roi = new ImageRoi(0, 0, processor);
-                roi.setOpacity(win.overlayOpacity);
-                inputImage.setOverlay(new Overlay(roi));
-            }else {
-                if (currentOverlay == OverlayMode.INPUT_IMAGE) {
-                    if (resultImage != null) {
-                    	currentOverlay = OverlayMode.SUPERPIXEL_IMAGE;
-                    } else {
-                    	currentOverlay = OverlayMode.RESULT_IMAGE;
-                    }
-                    roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
-                    roi.setOpacity(win.overlayOpacity);
-                    inputImage.setOverlay(new Overlay(roi));
-                } else {
-                	currentOverlay = OverlayMode.RESULT_IMAGE;
-                    ImagePlus resultImg = resultImage.duplicate();
-                    eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
-                    resultImg.getProcessor().setColorModel(overlayLUT);
-                    resultImg.getImageStack().setColorModel(overlayLUT);
-                    ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
-                    roi = new ImageRoi(0, 0, processor);
-                    roi.setOpacity(win.overlayOpacity);
-                    inputImage.setOverlay(new Overlay(roi));
+    void toggleOverlay()
+    {
+    	// Take action based on current overlay
+    	switch( currentOverlay )
+    	{
+	    	case INPUT_IMAGE:
+	    		if( resultImage == null )
+	    		{
+                	currentOverlay = OverlayMode.SUPERPIXEL_IMAGE;
                 }
-            }
-        }
+	    		else
+	    		{
+                	if( win.ovCheckbox() )
+    	    			currentOverlay = OverlayMode.RESULT_IMAGE;
+    	            else
+    	            	currentOverlay = OverlayMode.SUPERPIXEL_IMAGE;
+                }
+	    		break;
+	    	case RESULT_IMAGE:
+	    		currentOverlay = OverlayMode.INPUT_IMAGE;
+	    		break;
+	    	case SUPERPIXEL_IMAGE:
+	    		if( resultImage != null )
+	    			currentOverlay = OverlayMode.RESULT_IMAGE;
+	    		else
+	    			currentOverlay = OverlayMode.INPUT_IMAGE;
+	    		break;
+	    	default:
+	    		break;
+    	}
+    	// Display new overlay
+    	win.updateOverlay();
     }
-
-
     /**
      * Delete selected tag
      * @param e action command with information about item to be deleted
