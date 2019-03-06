@@ -942,13 +942,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
                 trainingDataLoaded = true;
                 trainableSuperpixelSegmentation.setSelectedFeatures(features);
-                IJ.log("Data loaded");
+                IJ.log("Data loaded.");
                 win.setButtonsEnabled(0);
             }
 
         }catch (Exception e){
             win.setButtonsEnabled(0);
-            IJ.log("Error when loading training data");
+            IJ.log("Error when loading training data!");
             e.printStackTrace();
         }
 
@@ -1032,7 +1032,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     }
                     trainableSuperpixelSegmentation.setClasses(classes);
                     if (calculateFeatures) {
-                        IJ.log("Calculating region features");
+                        IJ.log("Calculating region features...");
                         trainableSuperpixelSegmentation.calculateRegionFeatures();
                         calculateFeatures = false;
                     }
@@ -1067,13 +1067,13 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                                 IJ.log("Merging previously loaded data -" + loadedTrainingData.numInstances() + " instances- with selected regions -" + trainingData.numInstances() + " instances-");
                                 trainingData = eus.ehu.tss.Utils.merge(trainingData, loadedTrainingData);
                                 trainableSuperpixelSegmentation.setTrainingData(trainingData);
-                                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances");
+                                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances...");
                                 if (!trainableSuperpixelSegmentation.trainClassifier()) {
                                     IJ.error("Error when training classifier");
                                 }
                             }else {
                                 trainableSuperpixelSegmentation.setTrainingData(loadedTrainingData);
-                                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances");
+                                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances...");
                                 if (!trainableSuperpixelSegmentation.trainClassifier()) {
                                     IJ.error("Error when training classifier");
                                 }
@@ -1081,23 +1081,23 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         }else {
                             trainableSuperpixelSegmentation.setTrainingData(null);
                             trainableSuperpixelSegmentation.calculateTrainingData(tags);
-                            IJ.log("Training classifier with "+trainableSuperpixelSegmentation.getTrainingData().numInstances()+" instances");
+                            IJ.log("Training classifier with "+trainableSuperpixelSegmentation.getTrainingData().numInstances()+" instances...");
                             trainableSuperpixelSegmentation.trainClassifier();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        IJ.log("Error when merging loaded training data selected data");
+                        IJ.log("Error when merging loaded training data selected data!");
                         win.trainClassButton.setText("Train classifier");
                         win.setButtonsEnabled(0);
                         return;
                     }
                     classifier = trainableSuperpixelSegmentation.getClassifier();
-                    IJ.log("Classifier trained");
-                    IJ.log("Applying classifier");
+                    IJ.log("Classifier trained.");
+                    IJ.log("Applying classifier...");
                     resultImage = trainableSuperpixelSegmentation.applyClassifier();
                     currentOverlay = OverlayMode.SUPERPIXEL_IMAGE;
                     toggleOverlay();
-                    IJ.log("Classifier applied");
+                    IJ.log("Classifier applied.");
                     win.enableOverlayCheckbox();
                     win.setButtonsEnabled(2);
                     win.trainClassButton.setText("Train classifier");
@@ -1148,28 +1148,28 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         ImagePlus input = IJ.openImage();
         if(input==null){
             win.setButtonsEnabled(0);
-            IJ.log("Classifier applying was cancelled");
+            IJ.log("Classifier applying was cancelled.");
             return;
         }
         IJ.showMessage("Select corresponding label image");
         ImagePlus sup = IJ.openImage();
         if(sup==null){
             win.setButtonsEnabled(0);
-            IJ.log("Classifier applying was cancelled");
+            IJ.log("Classifier applying was cancelled.");
             return;
         }
         trainableSuperpixelSegmentation.setInputImage(input);
         trainableSuperpixelSegmentation.setLabelImage(sup);
-        IJ.log("Calculating region features");
+        IJ.log("Calculating region features...");
         trainableSuperpixelSegmentation.calculateRegionFeatures();
-        IJ.log("Applying classifier");
+        IJ.log("Applying classifier...");
         ImagePlus resultImg = trainableSuperpixelSegmentation.applyClassifier();
         eus.ehu.tss.Utils.convertTo8bitNoScaling(resultImg);
         resultImg.getProcessor().setColorModel(overlayLUT);
         resultImg.getImageStack().setColorModel(overlayLUT);
         resultImg.updateAndDraw();
         resultImg.show();
-        IJ.log("Classifier applied");
+        IJ.log("Classifier applied.");
         win.setButtonsEnabled(1);
     }
 
@@ -1181,7 +1181,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         win.disableAllButtons();
         try {
             if(calculateFeatures){
-                IJ.log("Calculating region features");
+                IJ.log("Calculating region features...");
                 trainableSuperpixelSegmentation.calculateRegionFeatures();
                 calculateFeatures = false;
             }
@@ -1360,7 +1360,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             win.setButtonsEnabled(2);
         }catch (Exception e){
             e.printStackTrace();
-            IJ.log("Error when creating result");
+            IJ.log("Error when creating result!");
             win.setButtonsEnabled(0);
         }
     }
@@ -1386,7 +1386,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         gd.addCheckboxGroup(rows,2,avFeatures,enabledFeatures);
 
         if(trainingDataLoaded) {
-            IJ.log("Feature selection disabled because training data has been loaded");
+            IJ.log("Feature selection disabled because training data has been loaded.");
             Vector<Checkbox> v = gd.getCheckboxes();
             for (int i = 0; i < v.size(); i++) {
                 v.get(i).setEnabled(false);
@@ -1423,7 +1423,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(calculateFeatures){
-                    IJ.log("Calculating region features");
+                    IJ.log("Calculating region features...");
                     trainableSuperpixelSegmentation.calculateRegionFeatures();
                     calculateFeatures = false;
                 }
@@ -1450,7 +1450,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
         if(numSelectedFeatures==0){
             IJ.error("Select at least one training feature");
-            IJ.log("Default features selected");
+            IJ.log("Default features selected.");
             for(int i=0;i<RegionFeatures.totalFeatures();++i){
                 newFeatures.add(RegionFeatures.Feature.fromLabel(avFeatures[i]));
                 numSelectedFeatures++;
@@ -1574,12 +1574,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         {
             IJ.error( "Error in plot result",
                     "No data available yet to plot results: you need to train a classifier" );
-            IJ.log("Failed to display plot");
+            IJ.log("Failed to display plot!");
             return;
         }
         displayGraphs(data,trainableSuperpixelSegmentation.getClassifier());
         IJ.showStatus("Done.");
-        IJ.log("Done");
+        IJ.log("Done.");
     }
 
     /**
@@ -1651,7 +1651,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             }
             trainableSuperpixelSegmentation.setClasses(classes);
             if (calculateFeatures) {
-                IJ.log("Calculating region features");
+                IJ.log("Calculating region features...");
                 trainableSuperpixelSegmentation.calculateRegionFeatures();
                 calculateFeatures = false;
             }
@@ -1693,10 +1693,10 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    IJ.log("Error when merging loaded training data selected data");
+                    IJ.log("Error when merging loaded training data selected data!");
                 }
                 trainableSuperpixelSegmentation.setTrainingData(trainingData);
-                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances");
+                IJ.log("Training classifier with " + trainableSuperpixelSegmentation.getTrainingData().numInstances() + " instances...");
                 if (!trainableSuperpixelSegmentation.trainClassifier()) {
                     IJ.error("Error when training classifier");
                     win.setButtonsEnabled(0);
@@ -1821,9 +1821,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         // If less than 2 images opened, ask user
         if( nbima < 2 )
         {
-            IJ.log("Open input image");
+            IJ.log("Opening input image...");
             inputImage = IJ.openImage();
-            IJ.log("Open superpixel image");
+            IJ.log("Opening superpixel image...");
             supImage = IJ.openImage();
         }
         else // otherwise read currently opened image titles
