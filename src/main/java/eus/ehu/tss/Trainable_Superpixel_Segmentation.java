@@ -1792,11 +1792,15 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      */
     void listSelected(final ItemEvent e, final int i)
     {
+    	// Index of the selected trace in the specific list
         int selectedIndex = displayedLists[i].getSelectedIndex();
+        // Selected ROI
         final Roi newRoi = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(selectedIndex);
+        // Display ROI in image
         newRoi.setImage(inputImage);
         inputImage.setRoi(newRoi);
         inputImage.updateAndDraw();
+        // Deselect rest of list and traces
         for(int j=0;j<displayedLists[i].getItemCount();++j) {
             if(j!=selectedIndex) {
                 displayedLists[i].deselect(j);
