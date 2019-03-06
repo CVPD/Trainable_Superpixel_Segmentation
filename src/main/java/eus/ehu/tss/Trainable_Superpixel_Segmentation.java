@@ -1500,36 +1500,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         if( newOpacity != win.overlayOpacity )
         {
             win.overlayOpacity = newOpacity;
-            int slice = inputImage.getCurrentSlice();
-            ImageRoi roi = null;
-            if(inputImage.getOverlay()!=null){
-                if( currentOverlay == OverlayMode.RESULT_IMAGE &&resultImage!=null){
-                    ImagePlus resultImg = resultImage.duplicate();
-                    eus.ehu.tss.Utils.convertTo8bitNoScaling( resultImg );
-                    resultImg.getProcessor().setColorModel( overlayLUT );
-                    resultImg.getImageStack().setColorModel( overlayLUT );
-                    ImageProcessor processor = resultImg.getImageStack().getProcessor(slice);
-                    roi = new ImageRoi(0, 0, processor);
-                    roi.setOpacity(win.overlayOpacity);
-                    inputImage.setOverlay(new Overlay(roi));
-                }else{
-                    roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
-                    roi.setOpacity(win.overlayOpacity);
-                    inputImage.setOverlay(new Overlay(roi));
-                }
-            }else{
-                roi = new ImageRoi(0, 0, supImage.getImageStack().getProcessor(slice));
-                roi.setOpacity(win.overlayOpacity);
-                inputImage.setOverlay(new Overlay(roi));
-                if(resultImage!=null) {
-                    if( currentOverlay == OverlayMode.RESULT_IMAGE )
-                    	currentOverlay = OverlayMode.INPUT_IMAGE;
-                    else
-                    	currentOverlay = OverlayMode.SUPERPIXEL_IMAGE;
-                }else {
-                    currentOverlay = OverlayMode.RESULT_IMAGE;
-                }
-            }
+            win.updateOverlay();
         }
         boolean classNameChanged = false;
         for(int i = 0; i < numClasses; i++)
