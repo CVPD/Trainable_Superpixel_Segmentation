@@ -55,6 +55,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.BorderLayout;
 import java.awt.Checkbox;
 import java.awt.Color;
@@ -214,7 +216,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                             {
                                 if(e.getSource() == displayedLists[i])
                                 {
-                                    deleteSelected(e,i);
+                                    deleteSelected( i );
                                     break;
                                 }
                                 if(e.getSource() == addExampleButton[i])
@@ -244,6 +246,40 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 });
             }
         };
+        /**
+         * Mouse listener to allow deleting selected traces by right-clicking.
+         */
+        private MouseListener listMouseListener = new MouseListener() {
+			@Override
+			public void mouseReleased(MouseEvent e) {}
+			@Override
+			public void mousePressed(MouseEvent e) {}
+			@Override
+			public void mouseExited(MouseEvent e) {}
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+			@Override
+			public void mouseClicked(MouseEvent me) {
+				// Right click
+				if(me.getButton() == MouseEvent.BUTTON3) {
+					java.awt.List list = (java.awt.List) me.getSource();
+					if( list.getSelectedIndex() != -1 )
+					{
+						int answer = JOptionPane.showConfirmDialog(
+								list, "Delete selected trace?", "Delete trace", JOptionPane.YES_NO_OPTION );
+						if( answer == JOptionPane.YES_OPTION )
+							for(int i = 0; i < numClasses; i++)
+							{
+								if( list == displayedLists[i])
+								{
+									deleteSelected( i );
+									break;
+								}
+							}
+					}
+				}
+			}
+		};
         /**
          * GUI constructor.
          */
@@ -440,6 +476,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
             //Annotations panel
             for (int i = 0; i < numClasses; ++i) {
+            	displayedLists[i].addMouseListener(listMouseListener);
                 displayedLists[i].addActionListener(listener);
                 displayedLists[i].addItemListener(itemListener);
                 addExampleButton[i] = new JButton("Add to class " + i);
@@ -1724,10 +1761,9 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
     }
     /**
      * Delete selected tag
-     * @param e action command with information about item to be deleted
      * @param i identifier of class to remove tags
      */
-    void deleteSelected(final ActionEvent e, final int i){
+    void deleteSelected(final int i){
         try {
             int index = displayedLists[i].getSelectedIndex();
             aRoiList[inputImage.getCurrentSlice()-1].get(i).remove(index);
@@ -1738,7 +1774,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             e1.printStackTrace();
         }
     }
-
     /**
      * Adds tags based on the ROIs selected by the user
      * @param i identifier of class to add tags
