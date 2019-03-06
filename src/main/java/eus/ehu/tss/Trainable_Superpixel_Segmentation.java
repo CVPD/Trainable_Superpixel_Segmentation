@@ -791,7 +791,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         }
 
         /**
-         * Repatints all elemnts in GUI
+         * Repaints all elements in GUI
          */
         public void repaintAll(){
             this.annotationsPanel.repaint();
