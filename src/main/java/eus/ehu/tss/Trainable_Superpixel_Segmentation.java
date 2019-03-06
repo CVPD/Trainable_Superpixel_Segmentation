@@ -1732,7 +1732,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             int index = displayedLists[i].getSelectedIndex();
             aRoiList[inputImage.getCurrentSlice()-1].get(i).remove(index);
             win.updateDisplayedLists();
-            win.overlayTraces();
+            win.updateOverlay();
             inputImage.killRoi();
         }catch (Exception e1){
             e1.printStackTrace();
