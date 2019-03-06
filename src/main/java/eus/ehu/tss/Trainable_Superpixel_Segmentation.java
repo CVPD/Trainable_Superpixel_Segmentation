@@ -1778,7 +1778,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             r.setStrokeColor(colors[i]);
             aRoiList[inputImage.getCurrentSlice()-1].get(i).add(r);
             win.updateDisplayedLists();
-            win.overlayTraces();
+            win.updateOverlay();
             inputImage.killRoi();
         }catch (Exception e){
             e.printStackTrace();
