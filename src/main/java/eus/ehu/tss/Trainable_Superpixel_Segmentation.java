@@ -1787,8 +1787,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
     /**
      * Displays selected Roi
-     * @param e
-     * @param i
+     * @param e event associated to the list
+     * @param i index of the selected list
      */
     void listSelected(final ItemEvent e, final int i)
     {
