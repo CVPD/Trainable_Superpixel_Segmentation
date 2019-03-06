@@ -251,7 +251,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         /**
          * Mouse listener to allow deleting selected traces by right-clicking.
          */
-        private MouseListener listMouseListener = new MouseListener() {
+        private MouseListener mouseListener = new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent e) {}
 			@Override
@@ -513,7 +513,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
 
             //Annotations panel
             for (int i = 0; i < numClasses; ++i) {
-            	displayedLists[i].addMouseListener(listMouseListener);
+            	displayedLists[i].addMouseListener(mouseListener);
                 displayedLists[i].addActionListener(listener);
                 displayedLists[i].addItemListener(itemListener);
                 addExampleButton[i] = new JButton("Add to class " + i);
