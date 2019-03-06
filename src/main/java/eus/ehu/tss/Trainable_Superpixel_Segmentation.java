@@ -60,10 +60,12 @@ import java.awt.event.MouseListener;
 import java.awt.BorderLayout;
 import java.awt.Checkbox;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Panel;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -286,6 +288,41 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         CustomWindow(ImagePlus imp)
         {
             super(imp, new ImageCanvas(imp));
+
+            // Check image dimensions to avoid a GUI larger than the
+            // screen dimensions
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            double screenWidth = screenSize.getWidth();
+            double screenHeight = screenSize.getHeight();
+
+            // Zoom in if image is too small
+            while( ( ic.getWidth() < screenWidth/2 ||
+            		ic.getHeight() < screenHeight/2 ) &&
+            		ic.getMagnification() < 32.0 )
+            {
+            	final int canvasWidth = ic.getWidth();
+            	ic.zoomIn( 0, 0 );
+            	// check if canvas size changed (otherwise stop zooming)
+            	if( canvasWidth == ic.getWidth() )
+            	{
+            		ic.zoomOut(0, 0);
+            		break;
+            	}
+            }
+            // Zoom out if canvas is too large
+            while( ( ic.getWidth() > 0.75 * screenWidth ||
+            		ic.getHeight() > 0.75 * screenHeight ) &&
+            		ic.getMagnification() > 1/72.0 )
+            {
+            	final int canvasWidth = ic.getWidth();
+            	ic.zoomOut( 0, 0 );
+            	// check if canvas size changed (otherwise stop zooming)
+            	if( canvasWidth == ic.getWidth() )
+            	{
+            		ic.zoomIn(0, 0);
+            		break;
+            	}
+            }
 
             // Create overlay LUT
             final byte[] red = new byte[ 256 ];
