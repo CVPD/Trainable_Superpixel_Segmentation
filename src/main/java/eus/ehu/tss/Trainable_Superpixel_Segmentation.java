@@ -20,7 +20,6 @@ import ij.process.ColorProcessor;
 
 
 import inra.ijpb.label.LabelImages;
-
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
 import weka.classifiers.evaluation.Prediction;
@@ -398,14 +397,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             controlsPanel.setLayout(controlLayout);
             controlsPanel.setBorder(BorderFactory.createTitledBorder("Controls"));
             GridBagConstraints controlConstraints = new GridBagConstraints();
-            controlConstraints.anchor = GridBagConstraints.CENTER;
-            controlConstraints.fill = GridBagConstraints.VERTICAL;
+            controlConstraints.anchor = GridBagConstraints.NORTHWEST;
+            controlConstraints.fill = GridBagConstraints.HORIZONTAL;
             controlConstraints.gridwidth = 1;
             controlConstraints.gridheight = 1;
             controlConstraints.gridx = 0;
             controlConstraints.gridy = 0;
-            controlConstraints.weightx = 0;
-            controlConstraints.weighty = 0;
             controlConstraints.insets = new Insets(5, 5, 6, 6);
 
 
@@ -420,6 +417,25 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             annotationsConstraints.gridheight = 1;
             annotationsConstraints.gridx = 0;
             annotationsConstraints.gridy = 0;
+
+            // Fill annotation panel
+            for (int i = 0; i < numClasses; ++i) {
+            	displayedLists[i].addMouseListener(mouseListener);
+            	displayedLists[i].addActionListener(listener);
+            	displayedLists[i].addItemListener(itemListener);
+            	addExampleButton[i] = new JButton("Add to class " + i);
+            	addExampleButton[i].setToolTipText("Add markings of label 'class " + i + "'");
+
+            	annotationsConstraints.insets = new Insets(5, 5, 6, 6);
+
+            	annotationsPanel.add(addExampleButton[i], annotationsConstraints);
+            	annotationsConstraints.gridy++;
+
+            	annotationsConstraints.insets = new Insets(0, 0, 0, 0);
+
+            	annotationsPanel.add(displayedLists[i], annotationsConstraints);
+            	annotationsConstraints.gridy++;
+            }
 
             //Labels panel (includes annotations panel)
             GridBagLayout labelsLayout = new GridBagLayout();
@@ -450,7 +466,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             allConstraints.gridy = 0;
             allConstraints.weightx = 0;
             allConstraints.weighty = 0;
-            allConstraints.insets = new Insets(5, 5, 6, 6);
 
             //Training panel buttons
             trainClassButton = new JButton("Train classifier");
@@ -511,38 +526,20 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             optionsPanel.add(settButton,optionsConstraints);
             optionsConstraints.gridy++;
 
-            //Annotations panel
-            for (int i = 0; i < numClasses; ++i) {
-            	displayedLists[i].addMouseListener(mouseListener);
-                displayedLists[i].addActionListener(listener);
-                displayedLists[i].addItemListener(itemListener);
-                addExampleButton[i] = new JButton("Add to class " + i);
-                addExampleButton[i].setToolTipText("Add markings of label 'class " + i + "'");
-
-                annotationsConstraints.insets = new Insets(5, 5, 6, 6);
-
-                annotationsPanel.add(addExampleButton[i], annotationsConstraints);
-                annotationsConstraints.gridy++;
-
-                annotationsConstraints.insets = new Insets(0, 0, 0, 0);
-
-                annotationsPanel.add(displayedLists[i], annotationsConstraints);
-                annotationsConstraints.gridy++;
-                }
-
             controlsPanel.add(trainingPanel,controlConstraints);
             controlConstraints.gridy++;
 
             controlsPanel.add(optionsPanel,controlConstraints);
             controlConstraints.gridy++;
 
+            all.add(controlsPanel,allConstraints);
+
+            // put canvas in place
+            allConstraints.gridx++;
             allConstraints.weightx = 1;
             allConstraints.weighty = 1;
-            allConstraints.gridheight = 1;
-            all.add(controlsPanel,allConstraints);
-            allConstraints.gridx++;
-
             all.add(canvas,allConstraints);
+
             allConstraints.gridy++;
             allConstraints.weightx = 0;
             allConstraints.weighty = 0;
@@ -571,7 +568,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             allConstraints.weighty = 0;
             allConstraints.gridheight = 1;
             all.add(scrollPanel,allConstraints);
-            allConstraints.gridx++;
 
             //Add listeners
             for(int i = 0; i< numClasses; ++i){
@@ -722,13 +718,16 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             displayedLists[classNum].addItemListener(itemListener);
             addExampleButton[classNum] = new JButton("Add to " + classes.get(classNum));
 
+            annotationsConstraints.fill = GridBagConstraints.HORIZONTAL;
             annotationsConstraints.insets = new Insets(5, 5, 6, 6);
 
+            boxAnnotation.setConstraints(addExampleButton[classNum], annotationsConstraints);
             annotationsPanel.add(addExampleButton[classNum], annotationsConstraints);
             annotationsConstraints.gridy++;
 
             annotationsConstraints.insets = new Insets(0, 0, 0, 0);
 
+            boxAnnotation.setConstraints(displayedLists[classNum], annotationsConstraints);
             annotationsPanel.add(displayedLists[classNum], annotationsConstraints);
             annotationsConstraints.gridy++;
 
@@ -741,8 +740,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             numClasses++;
             // recalculate minimum size of scroll panel
             scrollPanel.setMinimumSize( labelsJPanel.getPreferredSize() );
-
-
 
             repaintAll();
 
@@ -1936,11 +1933,17 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             classifier = new RandomForest();
             trainableSuperpixelSegmentation = new TrainableSuperpixelSegmentation(inputImage,supImage,features,classifier,classes);
             supImage = trainableSuperpixelSegmentation.getLabelImage(); //Update after remaping
-            win = new CustomWindow(inputImage);
+            // Build GUI
+    		SwingUtilities.invokeLater(
+    				new Runnable() {
+    					public void run() {
+    						win = new CustomWindow( inputImage );
+    						win.pack();
+    						win.setButtonsEnabled(0);
+    					}
+    				});
             Toolbar.getInstance().setTool( Toolbar.FREELINE );
         }
-        win.setButtonsEnabled(0);
-
     }
     /**
      * Main static method.
