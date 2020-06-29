@@ -1573,7 +1573,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             win.overlayOpacity = newOpacity;
             win.updateOverlay();
         }
-        boolean classNameChanged = false;
+
         for(int i = 0; i < numClasses; i++)
         {
             String s = gd.getNextString();
@@ -1589,7 +1589,6 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 }
 
                 classes.set(i,s);
-                classNameChanged = true;
                 win.addExampleButton[i].setText("Add to " + s);
             }
         }
