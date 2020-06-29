@@ -483,7 +483,7 @@ public class TrainableSuperpixelSegmentation {
 
     /**
      * Returns unlabeled instances
-     * @return unlabled instances
+     * @return unlabeled instances
      */
     public Instances getUnlabeled() {
         return RegionFeatures.calculateUnabeledInstances(unlabeledTable,classes);
