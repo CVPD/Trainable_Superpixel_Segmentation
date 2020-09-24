@@ -431,6 +431,25 @@ public class TrainableSuperpixelSegmentation {
     public void setTrainingData(Instances trainingData) {
         this.trainingData = trainingData;
     }
+    /**
+     * Add more training data to the current one (if available, otherwise it is set to the input one)
+     * @param data new set of training samples
+     * @return false if new data is not compatible with the current training set or an error occurs
+     */
+    public boolean addTrainingData( Instances data ){
+        if( null != this.trainingData )
+        {
+            try {
+                trainingData = Utils.merge( trainingData, data );
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        else
+            this.trainingData = data;
+        return true;
+    }
 
     /**
      * Returns provided input image
