@@ -22,9 +22,9 @@ import java.util.HashMap;
 public class Utils {
 
     /**
-     * Merge two instances
-     * @param data1
-     * @param data2
+     * Merge two set of instances
+     * @param data1 first set of instances
+     * @param data2 second set of instances
      * @return Instances object containing instances of both datasets
      * @throws Exception instances mismatch
      */
