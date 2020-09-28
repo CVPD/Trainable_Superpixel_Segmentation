@@ -1866,6 +1866,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         {
             IJ.log("Opening input image...");
             inputImage = IJ.openImage();
+            inputTitle = inputImage.getShortTitle();
             IJ.log("Opening superpixel image...");
             supImage = IJ.openImage();
         }
@@ -1886,6 +1887,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             {
                 int inputIndex = gd.getNextChoiceIndex();
                 int supIndex = gd.getNextChoiceIndex();
+                inputTitle = WindowManager.getImage( inputIndex + 1 ).getShortTitle();
                 inputImage = WindowManager.getImage( inputIndex + 1 ).duplicate();
                 supImage = WindowManager.getImage( supIndex + 1 ).duplicate();
             }
@@ -1900,7 +1902,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                     + " and superpixel images must have the same size" );
             return;
         }
-        inputTitle = inputImage.getShortTitle();
+
         inputImage.setTitle("Trainable Superpixel Segmentation");
 
         if(inputImage == null || supImage == null){
