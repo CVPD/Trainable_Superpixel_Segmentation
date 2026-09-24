@@ -36,12 +36,19 @@ The TSS plugin expects two input images:
 * A grayscale or RGB image (**original image** to be segmented).
 * Its corresponding superpixel image (**label image** resulting from applying a superpixel method to the original image).
 
-<figure align="center">
-  <img src="docs/images/Screenshot-original.png" alt="Original input image (RGB TMA)" width="30%">
-  <img src="docs/images/Screenshot-overlay-segmentation.png" alt="Overlay of SLIC superpixel results on top of original image" width="30%">
-  <img src="docs/images/Screenshot-segmentation.png" alt="SLIC superpixel label image" width="30%">
-  <figcaption><i><b>Figure 1:</b> Example of <b>input image</b> (RGB), with corresponding superpixel overlay (from SLIC), and superpixel (segmentation) <b>label image</b>.</i></figcaption>
-</figure>
+<table>
+  <tr>
+    <td><img src="docs/images/Screenshot-original.png" alt="Original input image (RGB TMA)" width="100%"></td>
+    <td><img src="docs/images/Screenshot-overlay-segmentation.png" alt="Overlay of SLIC superpixel results on top of original image" width="100%"></td>
+    <td><img src="docs/images/Screenshot-segmentation.png" alt="SLIC superpixel label image" width="100%"></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center">
+    <b>Figure 1:</b> Example of <b>input image</b> (RGB), with corresponding superpixel overlay (from SLIC), and superpixel (segmentation) <b>label image</b>.
+    </td>
+  </tr>
+</table>
+
 
 **Note**: Any superpixel segmentation method can be used to produce the label image. In our experiments, we mostly use [SLIC](https://imagej.net/plugins/cmp-bia-tools/#jslic---superpixels).
 
