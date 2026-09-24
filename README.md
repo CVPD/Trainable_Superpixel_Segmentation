@@ -33,8 +33,10 @@ This short tutorial helps you use the plugin once it is installed.
 
 ### Inputs
 The TSS plugin expects two images as input:
-* A grayscale or RGB **input image** (original image to be segmented).
-* Its corresponding **superpixel image** (label image resulting from applying a superpixel method to the original image).
+1. A grayscale or RGB **input image** (original image to be segmented).
+	* To test the plugin, you can use this [sample input image](docs/images/TMAs/Original.png).
+2. Its corresponding **superpixel image** (label image resulting from applying a superpixel method to the original image).
+	* To test the plugin, you can use this [sample superpixel image](docs/images/TMAs/Segmentation.png).
 
 <table>
   <tr>
