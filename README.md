@@ -32,9 +32,9 @@ mvn package
 This short tutorial helps you use the plugin once it is installed.
 
 ### Inputs
-The TSS plugin expects two input images:
-* A grayscale or RGB image (**original image** to be segmented).
-* Its corresponding superpixel image (**label image** resulting from applying a superpixel method to the original image).
+The TSS plugin expects two images as input:
+* A grayscale or RGB **input image** (original image to be segmented).
+* Its corresponding **superpixel image** (label image resulting from applying a superpixel method to the original image).
 
 <table>
   <tr>
@@ -44,7 +44,7 @@ The TSS plugin expects two input images:
   </tr>
   <tr>
     <td colspan="3" align="center">
-    <b>Figure 1:</b> Example of <b>input image</b> (RGB), with corresponding superpixel overlay (from SLIC), and superpixel (segmentation) <b>label image</b>.
+    <b>Figure 1:</b> Example of <b>input image</b> (left), with corresponding superpixel overlay from SLIC (center), and <b>superpixel image</b> with segmentation labels (right).
     </td>
   </tr>
 </table>
