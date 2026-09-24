@@ -37,8 +37,10 @@ The TSS plugin expects two input images:
 * Its corresponding superpixel image (**label image** resulting from applying a superpixel method to the original image).
 
 <figure align="center">
-  <img src="docs/images/original-overlap-segmentation.png" alt="Original image with corresponding superpixel overlay (from SLIC) and superpixel (segmentation) label image" width="700">
-  <figcaption><i>Figure 1: Original image with corresponding superpixel overlay (from SLIC) and superpixel (segmentation) label image.</i></figcaption>
+  <img src="docs/images/Screenshot-original.png" alt="Original input image (RGB TMA)" width="32%">
+  <img src="docs/images/Screenshot-overlay-segmentation.png" alt="Overlay of SLIC superpixel results on top of original image" width="32%">
+  <img src="docs/images/Screenshot-segmentation.png" alt="SLIC superpixel label image" width="32%">
+  <figcaption><i><b>Figure 1:</b> Example of <b>input image</b> (RGB), with corresponding superpixel overlay (from SLIC), and superpixel (segmentation) <b>label image</b>.</i></figcaption>
 </figure>
 
 **Note**: Any superpixel segmentation method can be used to produce the label image. In our experiments, we mostly use [SLIC](https://imagej.net/plugins/cmp-bia-tools/#jslic---superpixels).
