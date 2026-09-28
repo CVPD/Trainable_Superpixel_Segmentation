@@ -66,14 +66,74 @@ Select your grayscale or RGB image as "Input image" and your indexed (label) ima
 
 **Tip**: For better visualization of the superpixels, you can select a colorful lookup table. Before, calling the plugin, select the label image, click on *Image > Lookup Tables > Glasbey* (or any other lookup table).
 
-### Main GUI
+### The GUI
+
 After selecting the input and superpixel images, the main GUI of the plugin will pop up:
 
 <div style="text-align: center;">
 	<img src="docs/images/TSS-GUI.png" alt="Trainable Superpixel Segmentation main GUI" width="600"/>
 </div>
 
- 
+The Trainable Superpixel Segmentation GUI is organized into three main panels:
+
+1. **Controls panel** — contains the buttons for training and applying classifiers, creating results and probability maps, managing classes, and opening the settings.
+2. **Image panel** — displays the input image and, when enabled, an overlay showing the superpixels or the segmentation result. You can also click on the image here to select regions for training.
+3. **Classes panel** — contains the available classes and the regions assigned to each class.
+
+The workflow is simple: select representative regions in the image, assign them to classes, train a classifier, and apply it to the image.
+
+#### Controls panel
+
+The controls panel provides the main operations:
+
+- **Train classifier** — trains the selected classifier using the regions assigned to the different classes. The features used for training are those selected in **Settings**.
+- **Toggle overlay** — cycles through the available image views:
+   1. the original image,
+   2. the original image with the superpixel boundaries/labels overlaid, and
+   3. the image with the segmentation result overlaid.
+
+   If no result has been generated yet, only the first two views are available.
+- **Create result** — creates and displays the segmentation result. If a classifier has not yet been trained, the plugin will train one from the selected regions before generating the result.
+- **Get probability** — generates a probability map for each class using the trained classifier. The maps are returned as an image stack, with one slice per class.
+- **Plot result** — opens the statistics window provided by WEKA for the trained classifier.
+- **Apply classifier** — applies the current classifier to the image. If no classifier has been trained or loaded, one is trained from the currently selected regions first.
+- **Load classifier** — loads a previously saved WEKA classifier from a `.model` file. The plugin reads the classes stored in the model and updates the GUI accordingly.
+- **Save classifier** — saves the current classifier as a `.model` file so that it can be reused later.
+- **Create new class** — creates an additional class. The new class is added to the Classes panel alongside the default classes.
+- **Settings** — opens the settings dialog, where you can select the image features used for training, adjust the overlay opacity, and choose/configure the WEKA classifier.
+
+
+
+#### Image panel
+
+The image panel is where you interact with the image and select training examples.
+
+Click on the image to select one or more superpixels. The selected regions can then be assigned to one of the classes using the corresponding **Add to class** button in the Classes panel.
+
+The **Toggle overlay** button is particularly useful here: displaying the superpixel overlay makes it easier to see which region will be selected when you click on the image.
+
+#### Classes panel
+
+The Classes panel contains the classes used for training. Two classes are created by default, and additional classes can be added with **Create new class**.
+
+For each class:
+
+- Click **Add to class** to assign the currently selected regions to that class.
+- The list below the button shows the regions already assigned to the class.
+- Click an entry in the list to display the corresponding selected point in the image.
+- Double-click an entry to remove that region from the class.
+
+Try to select representative regions for each class. Once enough examples have been assigned, click **Train classifier** to train the model.
+
+#### Settings
+
+The **Settings** dialog controls the main parameters used by the plugin:
+
+- **Features** — select which region features are used to represent the superpixels during training and classification.
+- **Overlay opacity** — controls the transparency of the superpixel or result overlay. The value can be set from `0` to `1`.
+- **Classifier** — select the WEKA classifier and configure its available options.
+
+The selected features and classifier are used when training the model.
 
 ### Tips for best results
 - Label representative superpixels that cover intra-class variability and different images.
