@@ -91,6 +91,10 @@ The controls panel provides the main operations:
    1. the original image,
    2. the original image with the superpixel boundaries/labels overlaid, and
    3. the image with the segmentation result overlaid.
+   
+   <div style="text-align: center;">
+	 <img src="docs/images/TSS-Toggle.gif" alt="Trainable Superpixel Segmentation toggling views" width="500"/>
+   </div>
 
    If no result has been generated yet, only the first two views are available.
 - **Create result** — creates and displays the segmentation result. If a classifier has not yet been trained, the plugin will train one from the selected regions before generating the result.
