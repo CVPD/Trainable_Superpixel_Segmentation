@@ -5,6 +5,8 @@
 
 ![Trainable Superpixel Segmentation pipeline overview](docs/images/TSS-overview.png)
 
+<p align="center"><b>Figure 1:</b> Overview of the Trainable Superpixel Segmentation pipeline: superpixel generation, feature extraction, classifier training and segmentation.</p>
+
 ## Quick install
 
 1. Download the latest plugin jar from the GitHub [releases page](https://github.com/CVPD/Trainable_Superpixel_Segmentation/releases) for this project (look for `Trainable_Superpixel_Segmentation-<version>.jar`), for example:
@@ -46,7 +48,7 @@ The TSS plugin expects two images as input:
   </tr>
   <tr>
     <td colspan="3" align="center">
-    <b>Figure 1:</b> Example of <b>input image</b> (left), with corresponding superpixel overlay from SLIC (center), and <b>superpixel image</b> with segmentation labels (right).
+    <b>Figure 2:</b> Example of <b>input image</b> (left), with corresponding superpixel overlay from SLIC (center), and <b>superpixel image</b> with segmentation labels (right).
     </td>
   </tr>
 </table>
@@ -60,6 +62,7 @@ When clicking on *Plugins > Segmentation > Trainable Superpixel Segmentation*, t
 
 <div style="text-align: center;">
 	<img src="docs/images/TSS-input-dialog.png" alt="Trainable Superpixel Segmentation input dialog" width="300"/>
+	<p><b>Figure 3:</b> Input dialog to select the input image and its corresponding superpixel (label) image.</p>
 </div>
 
 Select your grayscale or RGB image as "Input image" and your indexed (label) image as "Superpixel image", and click "OK".
@@ -72,6 +75,7 @@ After selecting the input and superpixel images, the main GUI of the plugin will
 
 <div style="text-align: center;">
 	<img src="docs/images/TSS-GUI.png" alt="Trainable Superpixel Segmentation main GUI" width="600"/>
+	<p><b>Figure 4:</b> Main GUI of Trainable Superpixel Segmentation, showing the controls, image and classes panels.</p>
 </div>
 
 The Trainable Superpixel Segmentation GUI is organized into three main panels:
@@ -94,6 +98,7 @@ The controls panel provides the main operations:
    
    <div style="text-align: center;">
 	 <img src="docs/images/TSS-Toggle.gif" alt="Trainable Superpixel Segmentation toggling views" width="500"/>
+	 <p><b>Figure 5:</b> Toggling between the original image, the superpixel overlay and the segmentation result overlay.</p>
    </div>
 
    If no result has been generated yet, only the first two views are available.
@@ -139,6 +144,7 @@ The **Settings** dialog controls the main parameters used by the plugin:
 
 <div style="text-align: center;">
 	<img src="docs/images/TSS-Settings.png" alt="Trainable Superpixel Segmentation settings dialog" width="300"/>
+	<p><b>Figure 6:</b> Settings dialog for selecting features, overlay opacity and the WEKA classifier.</p>
 </div>
 
 The selected features and classifier are used when training the model.
