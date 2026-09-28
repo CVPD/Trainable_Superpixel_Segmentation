@@ -54,12 +54,32 @@ The TSS plugin expects two images as input:
 
 **Note**: Any superpixel segmentation method can be used to produce the label image. In our experiments, we mostly use [SLIC](https://imagej.net/plugins/cmp-bia-tools/#jslic---superpixels).
 
+
+### Input dialog
+When clicking on *Plugins > Segmentation > Trainable Superpixel Segmentation*, the following dialog will pop up:
+
+<div style="text-align: center;">
+	<img src="docs/images/TSS-input-dialog.png" alt="Trainable Superpixel Segmentation input dialog" width="300"/>
+</div>
+
+Select your grayscale or RGB image as "Input image" and your indexed (label) image as "Superpixel image", and click "OK".
+
+**Tip**: For better visualization of the superpixels, you can select a colorful lookup table. Before, calling the plugin, select the label image, click on *Image > Lookup Tables > Glasbey* (or any other lookup table).
+
+### Main GUI
+After selecting the input and superpixel images, the main GUI of the plugin will pop up:
+
+<div style="text-align: center;">
+	<img src="docs/images/TSS-GUI.png" alt="Trainable Superpixel Segmentation main GUI" width="600"/>
+</div>
+
+ 
+
 ### Tips for best results
 - Label representative superpixels that cover intra-class variability and different images.
 - Choose a superpixel size that respects the structures of interest.
 - Combine color and texture features for complex textures.
 - Try different classifiers and tune hyperparameters if results are unsatisfactory.
-
 
 
 Reference
