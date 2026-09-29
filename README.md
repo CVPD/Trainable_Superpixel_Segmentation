@@ -197,7 +197,7 @@ The **Settings** dialog controls the main parameters used by the plugin:
 - **Overlay opacity** — controls the transparency of the superpixel or result overlay. The value can be set from `0` to `1`.
 - **Classifier** — select the WEKA classifier and configure its available options.
 
-<table>
+<table style="width: min-content">
   <tr>
     <td align="center"><img src="docs/images/TSS-Settings.png" style="display: block;" alt="Trainable Superpixel Segmentation settings dialog" width="300"></td>
   </tr>
