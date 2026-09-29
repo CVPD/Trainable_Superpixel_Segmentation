@@ -67,7 +67,7 @@ The TSS plugin expects two images as input:
 ### Input dialog
 When clicking on *Plugins > Segmentation > Trainable Superpixel Segmentation*, the following dialog will pop up:
 
-<table>
+<table style="width: min-content">
   <tr>
     <td align="center"><img src="docs/images/TSS-input-dialog.png" alt="Trainable Superpixel Segmentation input dialog" width="300"></td>
   </tr>
@@ -86,7 +86,7 @@ Select your grayscale or RGB image as "Input image" and your indexed (label) ima
 
 After selecting the input and superpixel images, the main GUI of the plugin will pop up:
 
-<table>
+<table style="width: min-content">
   <tr>
     <td align="center"><img src="docs/images/TSS-GUI.png" alt="Trainable Superpixel Segmentation main GUI" width="600"></td>
   </tr>
@@ -115,7 +115,7 @@ The controls panel provides the main operations:
    2. the original image with the superpixel boundaries/labels overlaid, and
    3. the image with the segmentation result overlaid.
    
-   <table>
+   <table style="width: min-content">
      <tr>
        <td align="center"><img src="docs/images/TSS-Toggle.gif" alt="Trainable Superpixel Segmentation toggling views" width="500"></td>
      </tr>
@@ -128,7 +128,7 @@ The controls panel provides the main operations:
 
    If no result has been generated yet, only the first two views are available. Select "Display result only" to skip displaying the superpixels overlay. 
 - **Create result** — creates and displays the segmentation result. If a classifier has not yet been trained, the plugin will train one from the selected regions before generating the result.
-  <table>
+  <table style="width: min-content">
      <tr>
        <td align="center"><img src="docs/images/TSS-result.png" alt="Trainable Superpixel Segmentation result image example" width="400"></td>
      </tr>
@@ -139,7 +139,7 @@ The controls panel provides the main operations:
      </tr>
    </table>
 - **Get probability** — generates a probability map for each class using the trained classifier. The maps are returned as an image stack, with one slice per class.
-  <table>
+  <table style="width: min-content">
      <tr>
        <td align="center"><img src="docs/images/TSS-probabilities.png" alt="Trainable Superpixel Segmentation probability image example" width="400"></td>
      </tr>
