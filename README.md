@@ -173,7 +173,7 @@ The **Settings** dialog controls the main parameters used by the plugin:
   </tr>
   <tr>
     <td align="center">
-    <b>Figure 6:</b> Settings dialog for selecting features, overlay opacity and the WEKA classifier.
+    <b>Figure 6:</b> Settings dialog for selecting training features, overlay opacity and the WEKA classifier, and modifying the class names.
     </td>
   </tr>
 </table>
