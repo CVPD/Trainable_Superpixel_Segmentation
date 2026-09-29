@@ -126,7 +126,7 @@ The controls panel provides the main operations:
      </tr>
    </table>
 
-   If no result has been generated yet, only the first two views are available.
+   If no result has been generated yet, only the first two views are available. Select "Display result only" to skip displaying the superpixels overlay. 
 - **Create result** — creates and displays the segmentation result. If a classifier has not yet been trained, the plugin will train one from the selected regions before generating the result.
 - **Get probability** — generates a probability map for each class using the trained classifier. The maps are returned as an image stack, with one slice per class.
 - **Plot result** — opens the statistics window provided by WEKA for the trained classifier.
