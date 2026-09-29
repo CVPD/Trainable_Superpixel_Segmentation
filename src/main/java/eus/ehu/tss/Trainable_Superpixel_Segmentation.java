@@ -1951,10 +1951,21 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
      * @param args main arguments
      */
     public static void main(String[] args){
+    	// Initialize the actual ImageJ instance/GUI context
+    	new ij.ImageJ();
+
         Class<?> clazz = Trainable_Superpixel_Segmentation.class;
         String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
-        String pluginsDir = url.substring("file:".length(), url.length() - clazz.getName().length() - ".class".length());
+
+        // Strip down the protocols safely
+        String pluginsDir = url;
+        if (pluginsDir.startsWith("file:")) {
+            pluginsDir = pluginsDir.substring("file:".length());
+        }
+        pluginsDir = pluginsDir.substring(0, pluginsDir.length() - clazz.getName().length() - ".class".length());
+
         System.setProperty("plugins.dir", pluginsDir);
+
         IJ.runPlugIn(clazz.getName(),"");
 
     }
