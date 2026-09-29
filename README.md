@@ -92,7 +92,7 @@ After selecting the input and superpixel images, the main GUI of the plugin will
   </tr>
   <tr>
     <td align="center">
-    <b>Figure 4:</b> Main GUI of Trainable Superpixel Segmentation, showing the controls, image and classes panels.
+    <b>Figure 4:</b> Main GUI of Trainable Superpixel Segmentation, showing the controls (left), image (center) and labels (right) panels.
     </td>
   </tr>
 </table>
@@ -101,7 +101,7 @@ The Trainable Superpixel Segmentation GUI is organized into three main panels:
 
 1. **Controls panel** — contains the buttons for training and applying classifiers, creating results and probability maps, managing classes, and opening the settings.
 2. **Image panel** — displays the input image and, when enabled, an overlay showing the superpixels or the segmentation result. You can also click on the image here to select regions for training.
-3. **Classes panel** — contains the available classes and the regions assigned to each class.
+3. **Labels panel** — contains the available classes and the regions assigned to each class.
 
 The workflow is simple: select representative regions in the image, assign them to classes, train a classifier, and apply it to the image.
 
