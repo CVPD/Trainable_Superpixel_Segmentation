@@ -3,6 +3,7 @@
 ## Introduction
 **Trainable Superpixel Segmentation** (TSS) is an ImageJ 1.x / Fiji plugin that enables **interactive image segmentation** using features computed on **superpixels**. The plugin combines superpixel generation (for compact regions), feature extraction (color, texture and morphological features provided by [MorphoLibJ](https://imagej.net/plugins/morpholibj)), and standard classifiers (from [Weka](http://www.cs.waikato.ac.nz/ml/weka/)) so users can train classifiers from annotated superpixels and apply them to new images.
 
+<div align="center">
 <table>
   <tr>
     <td><img src="docs/images/TSS-overview.png" alt="Trainable Superpixel Segmentation pipeline overview" width="100%"></td>
@@ -13,6 +14,7 @@
     </td>
   </tr>
 </table>
+</div>
 
 ## Quick install
 
@@ -47,6 +49,7 @@ The TSS plugin expects two images as input:
 2. Its corresponding **superpixel image** (label image resulting from applying a superpixel method to the original image).
 	* To test the plugin, you can use this [sample superpixel image](docs/images/TMAs/Segmentation.png).
 
+<div align="center">
 <table>
   <tr>
     <td><img src="docs/images/Screenshot-original.png" alt="Original input image (RGB TMA)" width="100%"></td>
@@ -59,14 +62,14 @@ The TSS plugin expects two images as input:
     </td>
   </tr>
 </table>
-
+</div>
 
 **Note**: Any superpixel segmentation method can be used to produce the label image. In our experiments, we mostly use [SLIC](https://imagej.net/plugins/cmp-bia-tools/#jslic---superpixels).
 
 
 ### Input dialog
 When clicking on *Plugins > Segmentation > Trainable Superpixel Segmentation*, the following dialog will pop up:
-
+<div align="center">
 <table>
   <tr>
     <td align="center" width="300">
@@ -79,7 +82,7 @@ When clicking on *Plugins > Segmentation > Trainable Superpixel Segmentation*, t
 	  </td>
   <tr>
 </table>
-
+</div>
 Select your grayscale or RGB image as "Input image" and your indexed (label) image as "Superpixel image", and click "OK".
 
 **Tip**: For better visualization of the superpixels, you can select a colorful lookup table. Before, calling the plugin, select the label image, click on *Image > Lookup Tables > Glasbey* (or any other lookup table).
@@ -87,7 +90,7 @@ Select your grayscale or RGB image as "Input image" and your indexed (label) ima
 ### The GUI
 
 After selecting the input and superpixel images, the main GUI of the plugin will pop up:
-
+<div align="center">
 <table>
   <tr>
     <td align="center" width="600">
@@ -100,7 +103,7 @@ After selecting the input and superpixel images, the main GUI of the plugin will
   	</td>
   </tr>
 </table>
-
+</div>
 The Trainable Superpixel Segmentation GUI is organized into three main panels:
 
 1. **Controls panel** — contains the buttons for training and applying classifiers, creating results and probability maps, managing classes, and opening the settings.
@@ -118,22 +121,23 @@ The controls panel provides the main operations:
    1. the original image,
    2. the original image with the superpixel boundaries/labels overlaid, and
    3. the image with the segmentation result overlaid.
-  
-  <table>
-  <tr>
+   <div align="center">
+   <table>
+   <tr>
     <td align="center" width="500">
       <img src="docs/images/TSS-Toggle.gif" alt="Trainable Superpixel Segmentation toggling views" width="500">
     </td>
-  </tr>
-  <tr>
+   </tr>
+   <tr>
     <td align="center" width="500">
   		<b>Figure 5:</b> Toggling between the original image, the superpixel overlay and the segmentation result overlay.
   	</td>
-  </tr>
-  </table>
-
+   </tr>
+   </table>
+   </div>
    If no result has been generated yet, only the first two views are available. Select "Display result only" to skip displaying the superpixels overlay. 
 - **Create result** — creates and displays the segmentation result. If a classifier has not yet been trained, the plugin will train one from the selected regions before generating the result.
+  <div align="center">
   <table>
   <tr>
     <td align="center" width="400">
@@ -146,7 +150,9 @@ The controls panel provides the main operations:
     </td>
   </tr>
   </table>
+  </div>
 - **Get probability** — generates a probability map for each class using the trained classifier. The maps are returned as an image stack, with one slice per class.
+  <div align="center">
   <table>
   <tr>
     <td align="center" width="400">
@@ -159,7 +165,9 @@ The controls panel provides the main operations:
     </td>
   </tr>
   </table>
+  </div>
 - **Plot result** — opens the statistics window provided by WEKA for the trained classifier.
+  <div align="center">
   <table>
   <tr>
     <td align="center" width="300">
@@ -172,6 +180,7 @@ The controls panel provides the main operations:
     </td>
   </tr>
   </table>
+  </div>
 - **Apply classifier** — applies the current classifier to the image. If no classifier has been trained or loaded, one is trained from the currently selected regions first.
 - **Load classifier** — loads a previously saved WEKA classifier from a `.model` file. The plugin reads the classes stored in the model and updates the GUI accordingly.
 - **Save classifier** — saves the current classifier as a `.model` file so that it can be reused later.
@@ -208,7 +217,7 @@ The **Settings** dialog controls the main parameters used by the plugin:
 - **Features** — select which region features are used to represent the superpixels during training and classification.
 - **Overlay opacity** — controls the transparency of the superpixel or result overlay. The value can be set from `0` to `1`.
 - **Classifier** — select the WEKA classifier and configure its available options.
-
+<div align="center">
 <table>
   <tr>
     <td align="center" width="300">
@@ -221,7 +230,7 @@ The **Settings** dialog controls the main parameters used by the plugin:
     </td>
   </tr>
 </table>
-
+</div>
 The selected features and classifier are used when training the model.
 
 ### Tips for best results
