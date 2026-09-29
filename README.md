@@ -5,7 +5,7 @@
 
 <table>
   <tr>
-    <td><img src="docs/images/TSS-overview.png" alt="Trainable Superpixel Segmentation pipeline overview" width="100%"></td>
+    <td><img src="docs/images/TSS-overview.png" style="display: block;" alt="Trainable Superpixel Segmentation pipeline overview" width="100%"></td>
   </tr>
   <tr>
     <td align="center">
@@ -69,7 +69,7 @@ When clicking on *Plugins > Segmentation > Trainable Superpixel Segmentation*, t
 
 <table style="width: min-content">
   <tr>
-    <td align="center"><img src="docs/images/TSS-input-dialog.png" alt="Trainable Superpixel Segmentation input dialog" width="300"></td>
+    <td align="center"><img src="docs/images/TSS-input-dialog.png" style="display: block;" alt="Trainable Superpixel Segmentation input dialog" width="300"></td>
   </tr>
   <tr>
     <td align="center">
@@ -88,7 +88,7 @@ After selecting the input and superpixel images, the main GUI of the plugin will
 
 <table style="width: min-content">
   <tr>
-    <td align="center"><img src="docs/images/TSS-GUI.png" alt="Trainable Superpixel Segmentation main GUI" width="600"></td>
+    <td align="center"><img src="docs/images/TSS-GUI.png" style="display: block;" alt="Trainable Superpixel Segmentation main GUI" width="600"></td>
   </tr>
   <tr>
     <td align="center">
@@ -117,7 +117,7 @@ The controls panel provides the main operations:
    
    <table style="width: min-content">
      <tr>
-       <td align="center"><img src="docs/images/TSS-Toggle.gif" alt="Trainable Superpixel Segmentation toggling views" width="500"></td>
+       <td align="center"><img src="docs/images/TSS-Toggle.gif" style="display: block;" alt="Trainable Superpixel Segmentation toggling views" width="500"></td>
      </tr>
      <tr>
        <td align="center">
@@ -130,7 +130,7 @@ The controls panel provides the main operations:
 - **Create result** — creates and displays the segmentation result. If a classifier has not yet been trained, the plugin will train one from the selected regions before generating the result.
   <table style="width: min-content">
      <tr>
-       <td align="center"><img src="docs/images/TSS-result.png" alt="Trainable Superpixel Segmentation result image example" width="400"></td>
+       <td align="center"><img src="docs/images/TSS-result.png" style="display: block;" alt="Trainable Superpixel Segmentation result image example" width="400"></td>
      </tr>
      <tr>
        <td align="center">
@@ -141,7 +141,7 @@ The controls panel provides the main operations:
 - **Get probability** — generates a probability map for each class using the trained classifier. The maps are returned as an image stack, with one slice per class.
   <table style="width: min-content">
      <tr>
-       <td align="center"><img src="docs/images/TSS-probabilities.png" alt="Trainable Superpixel Segmentation probability image example" width="400"></td>
+       <td align="center"><img src="docs/images/TSS-probabilities.png" style="display: block;" alt="Trainable Superpixel Segmentation probability image example" width="400"></td>
      </tr>
      <tr>
        <td align="center">
@@ -152,7 +152,7 @@ The controls panel provides the main operations:
 - **Plot result** — opens the statistics window provided by WEKA for the trained classifier.
   <table style="width: min-content">
      <tr>
-       <td align="center"><img src="docs/images/TSS-plot-result.png" alt="Trainable Superpixel Segmentation plot result example" width="300"></td>
+       <td align="center"><img src="docs/images/TSS-plot-result.png" style="display: block;" alt="Trainable Superpixel Segmentation plot result example" width="300"></td>
      </tr>
      <tr>
        <td align="center">
