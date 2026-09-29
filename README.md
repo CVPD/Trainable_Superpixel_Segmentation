@@ -199,7 +199,7 @@ The **Settings** dialog controls the main parameters used by the plugin:
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/TSS-Settings.png" alt="Trainable Superpixel Segmentation settings dialog" width="300"></td>
+    <td align="center"><img src="docs/images/TSS-Settings.png" style="display: block;" alt="Trainable Superpixel Segmentation settings dialog" width="300"></td>
   </tr>
   <tr>
     <td align="center">
