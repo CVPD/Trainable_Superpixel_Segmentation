@@ -70,11 +70,14 @@ When clicking on *Plugins > Segmentation > Trainable Superpixel Segmentation*, t
 <table>
   <tr>
     <td align="center" width="300">
-      <img src="docs/images/TSS-input-dialog.png" alt="Trainable Superpixel Segmentation input dialog" width="300">
-      <br><br>
-      <b>Figure 3:</b> Input dialog to select the input image and its corresponding superpixel (label) image.
+      <img src="docs/images/TSS-input-dialog.png" alt="Trainable Superpixel Segmentation input dialog" width="300">      
     </td>
   </tr>
+  <tr>
+	  <td align="center" width="300">
+	      <b>Figure 3:</b> Input dialog to select the input image and its corresponding superpixel (label) image.
+	  </td>
+  <tr>
 </table>
 
 Select your grayscale or RGB image as "Input image" and your indexed (label) image as "Superpixel image", and click "OK".
