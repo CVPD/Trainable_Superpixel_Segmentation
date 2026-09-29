@@ -32,7 +32,7 @@ public class RegionColorFeatures {
      * @param classes ArrayList of possible classes
      * @return Callable with calculated instances
      */
-    private static Callable<Instances> getUnlabeledInstances(ImagePlus inputImage,
+    public static Callable<Instances> getUnlabeledInstances(ImagePlus inputImage,
                                                              ImagePlus labelImage,
                                                              ArrayList<RegionFeatures.Feature> selectedFeatures,
                                                              ArrayList<String> classes){
@@ -79,7 +79,7 @@ public class RegionColorFeatures {
      * @param classes ArrayList of possible classes
      * @return Callable with Instances
      */
-    private static Callable<Instances> getLabeledInstances(ImagePlus inputImage,
+    public static Callable<Instances> getLabeledInstances(ImagePlus inputImage,
                                                              ImagePlus labelImage,
                                                              ImagePlus groundtruth,
                                                              ArrayList<RegionFeatures.Feature> selectedFeatures,
