@@ -368,12 +368,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             trainingPanel.setBorder(BorderFactory.createTitledBorder("Training"));
             GridBagConstraints trainingConstraints = new GridBagConstraints();
             trainingConstraints.anchor = GridBagConstraints.NORTHWEST;
-            trainingConstraints.fill = GridBagConstraints.VERTICAL;
+            trainingConstraints.fill = GridBagConstraints.HORIZONTAL;
             trainingConstraints.gridwidth = 1;
             trainingConstraints.gridheight = 1;
             trainingConstraints.gridx = 0;
             trainingConstraints.gridy = 0;
-            trainingConstraints.weightx = 0;
+            trainingConstraints.weightx = 1;
             trainingConstraints.weighty = 0;
             trainingConstraints.insets = new Insets(5, 5, 6, 6);
 
@@ -383,12 +383,12 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             optionsPanel.setBorder(BorderFactory.createTitledBorder("Options"));
             GridBagConstraints optionsConstraints = new GridBagConstraints();
             optionsConstraints.anchor = GridBagConstraints.NORTHWEST;
-            optionsConstraints.fill = GridBagConstraints.VERTICAL;
+            optionsConstraints.fill = GridBagConstraints.HORIZONTAL;
             optionsConstraints.gridwidth = 1;
             optionsConstraints.gridheight = 1;
             optionsConstraints.gridx = 0;
             optionsConstraints.gridy = 0;
-            optionsConstraints.weightx = 0;
+            optionsConstraints.weightx = 1;
             optionsConstraints.weighty = 0;
             optionsConstraints.insets = new Insets(5, 5, 6, 6);
 
@@ -403,6 +403,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
             controlConstraints.gridheight = 1;
             controlConstraints.gridx = 0;
             controlConstraints.gridy = 0;
+            controlConstraints.weightx = 1;
             controlConstraints.insets = new Insets(5, 5, 6, 6);
 
 
