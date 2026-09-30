@@ -19,7 +19,6 @@ import ij.process.LUT;
 import ij.process.ColorProcessor;
 
 
-import inra.ijpb.label.LabelImages;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.EvaluationUtils;
 import weka.classifiers.evaluation.Prediction;
