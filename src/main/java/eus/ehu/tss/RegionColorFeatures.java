@@ -197,6 +197,7 @@ public class RegionColorFeatures {
                                                           ArrayList<RegionFeatures.Feature> selectedFeatures,
                                                           ArrayList<String> classes) {
         HashMap<Integer, int[]> labelCoord = Utils.calculateLabelCoordinates(labelImage);
+        int[] allLabels = Utils.getAllLabels(labelImage);
         ResultsTable mergedTable = calculateFeaturesTable(inputImage,labelImage,selectedFeatures);
         //mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
@@ -212,7 +213,7 @@ public class RegionColorFeatures {
             for(int j=0;j<numFeatures;++j){
                 inst.setValue(j,mergedTable.getValueAsDouble(j,i));
             }
-            int[] coord = labelCoord.get(i+1);
+            int[] coord = labelCoord.get(allLabels[i]);
             ImageProcessor gtProcessor = gtImage.getProcessor();
             float value = (float) gtProcessor.getf(coord[0],coord[1]);
             inst.setValue( numFeatures, (int) value );

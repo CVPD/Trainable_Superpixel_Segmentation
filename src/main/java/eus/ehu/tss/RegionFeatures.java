@@ -136,7 +136,12 @@ public class RegionFeatures {
             ImagePlus labelImage,
             ArrayList<Feature> selectedFeatures)
     {
-        IntensityMeasures calculator = new IntensityMeasures(inputImage, labelImage);
+        // MorphoLibJ ignores label 0 (background). If the label image has a
+        // region with value 0 (e.g. first SLIC superpixel), measure on a copy
+        // where all labels are shifted by one so that region is also measured.
+        final boolean shifted = Utils.hasZeroLabel(labelImage);
+        final ImagePlus measureLabels = shifted ? Utils.shiftLabels(labelImage) : labelImage;
+        IntensityMeasures calculator = new IntensityMeasures(inputImage, measureLabels);
         int progress = 0;
         ArrayList<ResultsTable> results = new ArrayList<ResultsTable>();
         for (Feature selectedFeature : selectedFeatures) {
@@ -199,6 +204,14 @@ public class RegionFeatures {
         for (int i = 0; i < numLabels; ++i) {
             mergedTable.incrementCounter();
             String label = results.get(0).getLabel(i);
+            if (shifted && label != null) {
+                // restore original label value
+                try {
+                    label = Integer.toString(Integer.parseInt(label.trim()) - 1);
+                } catch (NumberFormatException e) {
+                    // keep label as is
+                }
+            }
             mergedTable.addLabel(label);
 
             for (ResultsTable result : results) {
@@ -284,6 +297,8 @@ public class RegionFeatures {
             ArrayList<String> classes)
     {
         HashMap<Integer, int[]> labelCoord = Utils.calculateLabelCoordinates(labelImage);
+        // table rows follow ascending label order (including label 0 if present)
+        int[] allLabels = Utils.getAllLabels(labelImage);
         ResultsTable mergedTable = calculateFeaturesTable(inputImage,labelImage,selectedFeatures);
         //mergedTable.show( inputImage.getShortTitle() + "-intensity-measurements" );
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
@@ -299,7 +314,7 @@ public class RegionFeatures {
             for(int j=0;j<numFeatures;++j){
                 inst.setValue(j,mergedTable.getValueAsDouble(j,i));
             }
-            int[] coord = labelCoord.get(i+1);
+            int[] coord = labelCoord.get(allLabels[i]);
             ImageProcessor gtProcessor = gtImage.getProcessor();
             float value = (float) gtProcessor.getf(coord[0],coord[1]);
             inst.setValue( numFeatures, (int) value );

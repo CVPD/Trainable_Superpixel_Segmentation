@@ -1077,7 +1077,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                         for(int l=0;l<inputImage.getNSlices();++l) {
                             for (int j = 0; j < aRoiList[l].get(i).size(); ++j) {
                                 supImage.setSlice(l+1);
-                                ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
+                                ArrayList<Float> floats = eus.ehu.tss.Utils.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
                                 for (int k = 0; k < floats.size(); ++k) {
                                     t.add(floats.get(k).intValue());
                                     regionSelected = true;
@@ -1118,8 +1118,8 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                                 }
                                 attributes.add(new Attribute("Class", classes));
                                 Instances trainingData = new Instances("training data", attributes, 0);
-                                int[] labels = LabelImages.findAllLabels(supImage);
-                                HashMap<Integer, Integer> labelIndices = LabelImages.mapLabelIndices(labels);
+                                int[] labels = eus.ehu.tss.Utils.getAllLabels(supImage);
+                                HashMap<Integer, Integer> labelIndices = eus.ehu.tss.Utils.mapLabelIndices(labels);
 
                                 for (int i = 0; i < tags.size(); ++i) { //For each class in classRegions
                                     for (int j = 0; j < tags.get(i).length; ++j) {
@@ -1677,7 +1677,7 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
                 for(int l=0;l<inputImage.getNSlices();++l) {
                     for (int j = 0; j < aRoiList[l].get(i).size(); ++j) {
                         supImage.setSlice(l+1);
-                        ArrayList<Float> floats = LabelImages.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
+                        ArrayList<Float> floats = eus.ehu.tss.Utils.getSelectedLabels(supImage, aRoiList[l].get(i).get(j));
                         for (int k = 0; k < floats.size(); ++k) {
                             t.add(floats.get(k).intValue());
                         }

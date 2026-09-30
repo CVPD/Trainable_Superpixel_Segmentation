@@ -111,8 +111,8 @@ public class TrainableSuperpixelSegmentation {
         }
         attributes.add(new Attribute("Class",classes));
         Instances newTrainingData = new Instances("training data",attributes,0);
-        int[] labels = LabelImages.findAllLabels(labelImage);
-        HashMap<Integer,Integer> labelIndices = LabelImages.mapLabelIndices(labels);
+        int[] labels = Utils.getAllLabels(labelImage);
+        HashMap<Integer,Integer> labelIndices = Utils.mapLabelIndices(labels);
 
         for(int i=0;i<classRegions.size();++i){ //For each class in classRegions
             for(int j=0;j<classRegions.get(i).length;++j){
@@ -212,7 +212,7 @@ public class TrainableSuperpixelSegmentation {
                 classesTable.addValue("Class",classLabel);
             }
             resultsBuilder.addResult(classesTable);
-            ImageStack res = LabelImages.applyLut(labelImage.getImageStack(),values);
+            ImageStack res = Utils.applyLut(labelImage.getImageStack(),values);
             ImagePlus result = new ImagePlus(inputImage.getShortTitle()+"-classified",res);
             return result;
         } catch (Exception e) {
@@ -280,6 +280,7 @@ public class TrainableSuperpixelSegmentation {
             }
         }
         ImageStack stackLabels = labelImage.getStack();
+        final HashMap<Integer,Integer> labelIndices = Utils.mapLabelIndices(Utils.getAllLabels(labelImage));
         double tags[] = new double[height*width];
         for (int slice = 1; slice <= inputImage.getNSlices(); ++slice) {
             for(int k = 0;k<numClasses;++k) {
@@ -287,10 +288,11 @@ public class TrainableSuperpixelSegmentation {
                 for (int x = 0; x < width; ++x) {
                     for (int y = 0; y < height; ++y) {
                         int index = (int) ip.getPixelValue(x, y);
-                        if (index == 0) { //edge pixel
-                            tags[x + y * width] = index;
+                        Integer regionIndex = labelIndices.get(index);
+                        if (regionIndex == null) {
+                            tags[x + y * width] = 0;
                         } else {
-                            tags[x + y * width] = classificationResult[k][index-1];
+                            tags[x + y * width] = classificationResult[k][regionIndex];
                         }
                     }
                 }
@@ -318,10 +320,10 @@ public class TrainableSuperpixelSegmentation {
         ImageStack imageStack = new ImageStack(labelImage.getWidth(),labelImage.getHeight());
         for(int i=0;i<columns;++i){
             double[] values = new double[features.getCounter()];
-            for(int j=1;j<features.getCounter();++j){
+            for(int j=0;j<features.getCounter();++j){
                 values[j]=features.getValueAsDouble(i,j);
             }
-            ImageStack stack = LabelImages.applyLut(labelImage.getImageStack(),values);
+            ImageStack stack = Utils.applyLut(labelImage.getImageStack(),values);
             ImageProcessor ip = stack.getProcessor(1);
             imageStack.addSlice(features.getColumnHeading(i),ip);
         }

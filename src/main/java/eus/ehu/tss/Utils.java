@@ -3,8 +3,11 @@ package eus.ehu.tss;
 
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.gui.Roi;
 import ij.measure.ResultsTable;
+import ij.process.FloatProcessor;
 import ij.process.ImageConverter;
+import ij.process.ShortProcessor;
 import ij.process.ImageProcessor;
 import ij.process.StackConverter;
 import inra.ijpb.data.image.Images3D;
@@ -14,6 +17,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -81,6 +85,130 @@ public class Utils {
                     result.putIfAbsent(labelValue,coord);
                 }
         }
+        return result;
+    }
+
+    /**
+     * Checks whether a label image contains any pixel with value 0.
+     * MorphoLibJ treats 0 as background, but superpixel algorithms such as SLIC
+     * usually assign 0 to their first superpixel.
+     * @param labelImage input label image
+     * @return true if at least one pixel has value 0
+     */
+    public static boolean hasZeroLabel(ImagePlus labelImage){
+        final ImageStack stack = labelImage.getImageStack();
+        final int width = stack.getWidth();
+        final int height = stack.getHeight();
+        for(int z=1; z<=stack.getSize(); z++){
+            final ImageProcessor ip = stack.getProcessor(z);
+            for(int y=0; y<height; y++)
+                for(int x=0; x<width; x++)
+                    if(ip.getf(x,y) == 0)
+                        return true;
+        }
+        return false;
+    }
+
+    /**
+     * Gets all labels of a label image in ascending order, including the 0 label if present.
+     * @param labelImage input label image
+     * @return sorted array of labels
+     */
+    public static int[] getAllLabels(ImagePlus labelImage){
+        int[] labels = LabelImages.findAllLabels(labelImage);
+        if(!hasZeroLabel(labelImage))
+            return labels;
+        int[] result = new int[labels.length+1];
+        result[0] = 0;
+        System.arraycopy(labels, 0, result, 1, labels.length);
+        return result;
+    }
+
+    /**
+     * Maps each label to its index in the (sorted) array of labels
+     * @param labels array of labels
+     * @return map from label to index
+     */
+    public static HashMap<Integer,Integer> mapLabelIndices(int[] labels){
+        HashMap<Integer,Integer> map = new HashMap<>();
+        for(int i=0; i<labels.length; i++)
+            map.put(labels[i], i);
+        return map;
+    }
+
+    /**
+     * Creates a copy of the label image where all labels are increased by one,
+     * so no region is 0 (background for MorphoLibJ).
+     * @param labelImage input label image
+     * @return new label image with shifted labels
+     */
+    public static ImagePlus shiftLabels(ImagePlus labelImage){
+        final ImageStack stack = labelImage.getImageStack();
+        final int width = stack.getWidth();
+        final int height = stack.getHeight();
+        double max = 0;
+        for(int z=1; z<=stack.getSize(); z++){
+            final ImageProcessor ip = stack.getProcessor(z);
+            for(int y=0; y<height; y++)
+                for(int x=0; x<width; x++)
+                    max = Math.max(max, ip.getf(x,y));
+        }
+        final boolean useShort = max + 1 <= 65535;
+        final ImageStack result = new ImageStack(width, height);
+        for(int z=1; z<=stack.getSize(); z++){
+            final ImageProcessor ip = stack.getProcessor(z);
+            final ImageProcessor out = useShort ? new ShortProcessor(width, height) : new FloatProcessor(width, height);
+            for(int y=0; y<height; y++)
+                for(int x=0; x<width; x++)
+                    out.setf(x, y, ip.getf(x,y) + 1);
+            result.addSlice(stack.getSliceLabel(z), out);
+        }
+        final ImagePlus shifted = new ImagePlus(labelImage.getTitle(), result);
+        shifted.setCalibration(labelImage.getCalibration());
+        return shifted;
+    }
+
+    /**
+     * Applies a look-up table to a label image, taking into account the 0 label
+     * (if present in the image it is treated as one more region).
+     * @param labelStack label image stack
+     * @param values one value per label, ordered as the sorted labels (0 first if present)
+     * @return 32-bit stack with the value of each region
+     */
+    public static ImageStack applyLut(ImageStack labelStack, double[] values){
+        final int width = labelStack.getWidth();
+        final int height = labelStack.getHeight();
+        final int size = labelStack.getSize();
+        final ImagePlus tmp = new ImagePlus("labels", labelStack);
+        final HashMap<Integer,Integer> indices = mapLabelIndices(getAllLabels(tmp));
+        final ImageStack result = ImageStack.create(width, height, size, 32);
+        for(int z=0; z<size; z++)
+            for(int y=0; y<height; y++)
+                for(int x=0; x<width; x++){
+                    Integer index = indices.get((int) labelStack.getVoxel(x,y,z));
+                    result.setVoxel(x, y, z, (index == null || index >= values.length) ? Double.NaN : values[index]);
+                }
+        return result;
+    }
+
+    /**
+     * Gets the labels selected by a ROI, including the 0 label if present in the label image
+     * (MorphoLibJ's LabelImages.getSelectedLabels always ignores 0).
+     * @param labelImage label image (its ROI is set to the provided one)
+     * @param roi selection
+     * @return list of selected labels
+     */
+    public static ArrayList<Float> getSelectedLabels(ImagePlus labelImage, Roi roi){
+        if(!hasZeroLabel(labelImage))
+            return LabelImages.getSelectedLabels(labelImage, roi);
+        // shift labels so 0 is not ignored, then restore the original values
+        final ImagePlus shifted = shiftLabels(labelImage);
+        shifted.setPosition(labelImage.getCurrentSlice());
+        final ArrayList<Float> selected = LabelImages.getSelectedLabels(shifted, roi);
+        final ArrayList<Float> result = new ArrayList<>();
+        for(Float f : selected)
+            result.add(f - 1f);
+        labelImage.setRoi(roi);
         return result;
     }
 
