@@ -5,8 +5,11 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
+import ij.gui.PointRoi;
 import ij.gui.Roi;
+import ij.gui.ShapeRoi;
 import ij.gui.StackWindow;
+import ij.process.FloatPolygon;
 import ij.gui.ImageRoi;
 import ij.gui.Overlay;
 import ij.gui.Toolbar;
@@ -55,7 +58,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Path2D;
+import java.awt.image.BufferedImage;
 import java.awt.Checkbox;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -890,21 +900,56 @@ public class Trainable_Superpixel_Segmentation implements PlugIn {
         void overlayTraces()
         {
         	boolean noTraces = true;
-        	ColorProcessor cp = new ColorProcessor(inputImage.getWidth(),inputImage.getHeight());
+        	// Draw traces in a transparent ARGB image so anti-aliased edges keep
+        	// their alpha (instead of blending with black)
+        	BufferedImage bi = new BufferedImage(inputImage.getWidth(), inputImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        	Graphics2D g2d = bi.createGraphics();
+        	g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             for(int i = 0; i < numClasses; i++)
             {
                 for(int j=0;j<aRoiList[inputImage.getCurrentSlice()-1].get(i).size();++j){
                     Roi r = aRoiList[inputImage.getCurrentSlice()-1].get(i).get(j);
                     r.setStrokeColor(colors[i]);
                     r.setFillColor(colors[i]);
-                    cp.drawRoi(r);
+                    g2d.setColor(colors[i]);
+                    if( r instanceof PointRoi )
+                    {
+                        FloatPolygon p = r.getFloatPolygon();
+                        for(int k=0;k<p.npoints;++k)
+                            g2d.fill(new Ellipse2D.Float(p.xpoints[k]-1.5f, p.ypoints[k]-1.5f, 3f, 3f));
+                    }
+                    else if( r.isLine() )
+                    {
+                        g2d.setStroke(new BasicStroke(Math.max(1f, r.getStrokeWidth()),
+                                BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                        FloatPolygon p = r.getFloatPolygon();
+                        Path2D.Float path = new Path2D.Float();
+                        for(int k=0;k<p.npoints;++k)
+                        {
+                            if(k==0)
+                                path.moveTo(p.xpoints[k], p.ypoints[k]);
+                            else
+                                path.lineTo(p.xpoints[k], p.ypoints[k]);
+                        }
+                        g2d.draw(path);
+                    }
+                    else
+                    {
+                        // ShapeRoi shapes are relative to the ROI location, so translate
+                        Shape shape = (r instanceof ShapeRoi) ? ((ShapeRoi) r).getShape() : new ShapeRoi(r).getShape();
+                        java.awt.Rectangle bounds = r.getBounds();
+                        java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
+                        g2d.translate(bounds.x, bounds.y);
+                        g2d.fill(shape);
+                        g2d.setTransform(oldTransform);
+                    }
                     noTraces = false;
                 }
             }
+            g2d.dispose();
             if( noTraces )
             	return;
-        	ImageRoi imgRoi = new ImageRoi(0,0,cp);
-            imgRoi.setZeroTransparent(true);
+        	ImageRoi imgRoi = new ImageRoi(0,0,bi);
             imgRoi.setOpacity( 0.5 );
             Overlay overlayList = inputImage.getOverlay();
             if( null == overlayList )
