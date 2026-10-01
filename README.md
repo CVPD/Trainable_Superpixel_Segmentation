@@ -1,7 +1,25 @@
 # Trainable Superpixel Segmentation
 
+<p align="center">
+  <img src="docs/images/TSS-demo-video.gif" alt="Trainable Superpixel Segmentation live demonstration" width="75%">
+</p>
+
+<p align="center">
+  <strong>Interactive image segmentation using trainable classifiers and superpixel-level features.</strong>
+</p>
+
+**Trainable Superpixel Segmentation (TSS)** is an ImageJ 1.x / Fiji plugin for interactively
+segmenting images by annotating superpixels, training a classifier, and applying it to the image.
+
 ## Introduction
-**Trainable Superpixel Segmentation** (TSS) is an ImageJ 1.x / Fiji plugin that enables **interactive image segmentation** using features computed on **superpixels**. The plugin combines superpixel generation (for compact regions), feature extraction (color, texture and morphological features provided by [MorphoLibJ](https://imagej.net/plugins/morpholibj)), and standard classifiers (from [Weka](http://www.cs.waikato.ac.nz/ml/weka/)) so users can train classifiers from annotated superpixels and apply them to new images.
+Trainable Superpixel Segmentation (TSS) combines **superpixel generation**, **feature extraction**,
+and **machine-learning classification** to provide an interactive workflow for image segmentation.
+Features describing each superpixel include colour, texture and morphological measurements provided
+by [MorphoLibJ](https://imagej.net/plugins/morpholibj), while classification is performed using
+standard classifiers from [Weka](http://www.cs.waikato.ac.nz/ml/weka/).
+
+Users can select representative regions directly on the image, assign them to classes, train a
+classifier, and apply the resulting model to obtain a segmentation.
 
 <div align="center">
 <table>
