@@ -174,7 +174,7 @@ The controls panel provides the main operations:
   <table>
   <tr>
     <td align="center" width="400">
-      <img src="docs/images/TSS-probabilities.png" alt="Trainable Superpixel Segmentation probability map example" width="400">
+      <img src="docs/images/TSS-probabilities.gif" alt="Trainable Superpixel Segmentation probability map example" width="400">
     </td>
   </tr>
   <tr>
