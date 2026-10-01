@@ -34,14 +34,14 @@ classifier, and apply the resulting model to obtain a segmentation.
 </table>
 </div>
 
-## Quick install
+## 📦 Quick install
 
 1. Download the latest plugin jar from the GitHub [releases page](https://github.com/CVPD/Trainable_Superpixel_Segmentation/releases) for this project (look for `Trainable_Superpixel_Segmentation-<version>.jar`), for example: [Trainable_Superpixel_Segmentation-1.0.0.jar](https://github.com/CVPD/Trainable_Superpixel_Segmentation/releases/download/v1.0.0/Trainable_Superpixel_Segmentation-1.0.0.jar)
 2. Copy the jar into your ImageJ/Fiji `plugins/` directory.
 3. Make sure [MorphoLibJ is installed](https://imagej.net/plugins/morpholibj#installation) in your ImageJ/Fiji instance (you can install it from the ImageJ update site or by copying the MorphoLibJ jar into `plugins/`).
 4. Restart ImageJ. The plugin appears under the Plugins menu ("Segmentation > Trainable Superpixel Segmentation").
 
-## Build from source
+## 🔧 Build from source
 
 Requirements
 - Java JDK (8 or later)
@@ -57,10 +57,10 @@ mvn package
 2. The build produces a jar under `target/` (for example `target/Trainable_Superpixel_Segmentation-0.0.1-SNAPSHOT.jar`).
 3. To test locally, copy that jar into ImageJ's `plugins/` folder and restart ImageJ.
 
-## Step-by-step tutorial
+## 📖 Step-by-step tutorial
 This short tutorial helps you use the plugin once it is installed.
 
-### Inputs
+### 🖼️ Inputs
 The TSS plugin expects two images as input:
 1. A grayscale or RGB **input image** (original image to be segmented).
 	* To test the plugin, you can use this [sample input image](src/test/resources/TMA.png).
@@ -85,7 +85,7 @@ The TSS plugin expects two images as input:
 **Note**: Any superpixel segmentation method can be used to produce the label image. In our experiments, we mostly use [SLIC](https://imagej.net/plugins/cmp-bia-tools/#jslic---superpixels).
 
 
-### Input dialog
+### ⚙️ Input dialog
 When clicking on *Plugins > Segmentation > Trainable Superpixel Segmentation*, the following dialog will pop up:
 <div align="center">
 <table>
@@ -105,7 +105,7 @@ Select your grayscale or RGB image as "Input image" and your indexed (label) ima
 
 **Tip**: For better visualization of the superpixels, you can select a colorful lookup table. Before, calling the plugin, select the label image, click on *Image > Lookup Tables > Glasbey* (or any other lookup table).
 
-### The GUI
+### 🖥️ The GUI
 
 After selecting the input and superpixel images, the main GUI of the plugin will pop up:
 <div align="center">
@@ -130,7 +130,7 @@ The Trainable Superpixel Segmentation GUI is organized into three main panels:
 
 The workflow is simple: select representative regions in the image, assign them to classes, train a classifier, and apply it to the image.
 
-#### Controls panel
+#### 🎛️ Controls panel
 
 The controls panel provides the main operations:
 
@@ -207,7 +207,7 @@ The controls panel provides the main operations:
 
 
 
-#### Image panel
+#### 🖼️ Image panel
 
 The image panel is where you interact with the image and select training examples.
 
@@ -215,9 +215,9 @@ Click on the image to select one or more superpixels. The selected regions can t
 
 The **Toggle overlay** button is particularly useful here: displaying the superpixel overlay makes it easier to see which region will be selected when you click on the image.
 
-#### Classes panel
+#### 🏷️ Labels panel
 
-The Classes panel contains the classes used for training. Two classes are created by default, and additional classes can be added with **Create new class**.
+The Labels panel contains the classes used for training. Two classes are created by default, and additional classes can be added with **Create new class**.
 
 For each class:
 
@@ -228,7 +228,7 @@ For each class:
 
 Try to select representative regions for each class. Once enough examples have been assigned, click **Train classifier** to train the model.
 
-#### Settings
+#### ⚙️ Settings
 
 The **Settings** dialog controls the main parameters used by the plugin:
 
@@ -251,7 +251,7 @@ The **Settings** dialog controls the main parameters used by the plugin:
 </div>
 The selected features and classifier are used when training the model.
 
-### Tips for best results
+### 💡 Tips for best results
 - Label representative superpixels that cover intra-class variability and different images.
 - Choose a superpixel size that respects the structures of interest.
 - Combine color and texture features for complex textures.
