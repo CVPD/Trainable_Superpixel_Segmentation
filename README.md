@@ -18,7 +18,7 @@
 
 ## Quick install
 
-1. Download the latest plugin jar from the GitHub [releases page](https://github.com/CVPD/Trainable_Superpixel_Segmentation/releases) for this project (look for `Trainable_Superpixel_Segmentation-<version>.jar`), for example:
+1. Download the latest plugin jar from the GitHub [releases page](https://github.com/CVPD/Trainable_Superpixel_Segmentation/releases) for this project (look for `Trainable_Superpixel_Segmentation-<version>.jar`), for example: [Trainable_Superpixel_Segmentation-1.0.0.jar](https://github.com/CVPD/Trainable_Superpixel_Segmentation/releases/download/v1.0.0/Trainable_Superpixel_Segmentation-1.0.0.jar)
 2. Copy the jar into your ImageJ/Fiji `plugins/` directory.
 3. Make sure [MorphoLibJ is installed](https://imagej.net/plugins/morpholibj#installation) in your ImageJ/Fiji instance (you can install it from the ImageJ update site or by copying the MorphoLibJ jar into `plugins/`).
 4. Restart ImageJ. The plugin appears under the Plugins menu ("Segmentation > Trainable Superpixel Segmentation").
