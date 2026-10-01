@@ -14,7 +14,7 @@
 
 	<groupId>EHU</groupId>
 	<artifactId>Trainable_Superpixel_Segmentation</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<name>Trainable Superpixel Segmentation</name>
 	<description>A Maven project implementing an ImageJ 1.x plugin.</description>
