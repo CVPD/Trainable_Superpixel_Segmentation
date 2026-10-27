@@ -258,6 +258,16 @@ The selected features and classifier are used when training the model.
 - Try different classifiers and tune hyperparameters if results are unsatisfactory.
 
 
+## 🧪 Applications
+
+The [MEL-quantification](https://github.com/UPNa-Biomedical-Engineering-Group/MEL-quantification) repository, maintained by the [UPNa Biomedical Engineering Group](https://github.com/UPNa-Biomedical-Engineering-Group), provides Fiji macros that use TSS to quantify marker expression level (MEL) in haematoxylin-DAB immunohistochemistry (IHC) images, as described in the preprint below.
+
+## 📄 Citation
+
+If you use TSS in your research, please cite our preprint:
+
+> Preprint available on medRxiv: [https://doi.org/10.64898/2026.10.22.26366204](https://doi.org/10.64898/2026.10.22.26366204) ([full text](https://www.medrxiv.org/content/10.64898/2026.10.22.26366204v1))
+
 Reference
 ---------
 This plugin is part of a final degree project by [Josu Salinas](https://github.com/96jsalinas). The full report (methodology, experiments and results) is available [here](https://addi.ehu.eus/handle/10810/29096). 
