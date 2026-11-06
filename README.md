@@ -260,14 +260,14 @@ The selected features and classifier are used when training the model.
 
 ## 🧪 Applications
 
-The [MEL-quantification](https://github.com/UPNa-Biomedical-Engineering-Group/MEL-quantification) repository, maintained by the [UPNa Biomedical Engineering Group](https://github.com/UPNa-Biomedical-Engineering-Group), provides Fiji macros that use TSS to quantify marker expression level (MEL) in haematoxylin-DAB immunohistochemistry (IHC) images, as described in the preprint below.
+The [MEL-quantification](https://github.com/UPNa-Biomedical-Engineering-Group/MEL-quantification) repository, maintained by the [UPNa Biomedical Engineering Group](https://github.com/UPNa-Biomedical-Engineering-Group), provides Fiji macros that use TSS to quantify marker expression level (MEL) in haematoxylin-DAB immunohistochemistry (IHC) images, as described in the following preprint: [https://doi.org/10.64898/2026.10.22.26366204](https://doi.org/10.64898/2026.10.22.26366204) ([full text](https://www.medrxiv.org/content/10.64898/2026.10.22.26366204v1)).
 
 ## 📄 Citation
 
-If you use TSS in your research, please cite our preprint:
+If you use TSS in your research, please cite the software using the **"Cite this repository"** button on GitHub (generated from [`CITATION.cff`](CITATION.cff)).
 
-> Preprint available on medRxiv: [https://doi.org/10.64898/2026.10.22.26366204](https://doi.org/10.64898/2026.10.22.26366204) ([full text](https://www.medrxiv.org/content/10.64898/2026.10.22.26366204v1))
+To cite the method, please cite the original final degree project, which describes its methodology, experiments and results:
 
-Reference
----------
-This plugin is part of a final degree project by [Josu Salinas](https://github.com/96jsalinas). The full report (methodology, experiments and results) is available [here](https://addi.ehu.eus/handle/10810/29096). 
+> Salinas Colina, J. (2018). *Trainable Superpixel Segmentation*. Bachelor's thesis, University of the Basque Country (UPV/EHU). [http://hdl.handle.net/10810/29096](http://hdl.handle.net/10810/29096)
+
+If you use TSS together with the MEL quantification macros, please also cite the MEL preprint listed under [Applications](#-applications).

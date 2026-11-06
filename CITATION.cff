@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: "Trainable Superpixel Segmentation"
+abstract: >-
+  Trainable Superpixel Segmentation (TSS) is an ImageJ 1.x / Fiji plugin for interactively segmenting images by annotating superpixels, training a classifier, and applying it to the image.
+authors:
+  - family-names: "Salinas Colina"
+    given-names: "Josu"
+    affiliation: "University of the Basque Country (UPV/EHU)"
+    orcid: "https://orcid.org/0009-0005-4361-9967"
+  - family-names: "Arganda-Carreras"
+    given-names: "Ignacio"
+    affiliation: "University of the Basque Country (UPV/EHU)"
+    orcid: "https://orcid.org/0000-0003-0229-5722"
+repository-code: "https://github.com/CVPD/Trainable_Superpixel_Segmentation"
+license: AGPL-3.0-or-later
+keywords:
+  - Fiji
+  - ImageJ
+  - superpixels
+  - image segmentation
+  - machine learning
+references:
+  - type: thesis
+    title: "Trainable Superpixel Segmentation"
+    authors:
+      - family-names: "Salinas Colina"
+        given-names: "Josu"
+    year: 2018
+    thesis-type: "Bachelor's thesis"
+    institution:
+      name: "University of the Basque Country (UPV/EHU)"
+    url: "http://hdl.handle.net/10810/29096"
