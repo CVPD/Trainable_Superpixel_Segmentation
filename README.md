@@ -14,7 +14,7 @@ segmenting images by annotating superpixels, training a classifier, and applying
 ## Introduction
 Trainable Superpixel Segmentation (TSS) combines **superpixel generation**, **feature extraction**,
 and **machine-learning classification** to provide an interactive workflow for image segmentation.
-Features describing each superpixel include colour, texture and morphological measurements provided
+Features describing each superpixel include statistical intensity measurements and neighbourhood features provided
 by [MorphoLibJ](https://imagej.net/plugins/morpholibj), while classification is performed using
 standard classifiers from [Weka](http://www.cs.waikato.ac.nz/ml/weka/).
 
